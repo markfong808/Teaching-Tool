@@ -1,0 +1,10 @@
+Flask==3.0.0
+flask_cors==4.0.0
+flask_sqlalchemy==3.1.1
+python-dotenv==1.0.0
+email_validator==2.1.0.post1
+sendgrid==6.10.0
+pymysql==1.1.0
+ics==0.7.2
+flask-jwt-extended==4.5.3
+flask_migrate==4.0.5

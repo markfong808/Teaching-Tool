@@ -1,0 +1,78 @@
+# Backend API for TechPrep
+
+This is the backend API for the TechPrep platform, which includes various blueprints for handling different aspects of the application, such as user management, appointment scheduling, and more.
+
+## Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- You have a basic understanding of Python and Flask.
+- You have Python 3.9 installed on your machine.
+- Create a new sendgrid API Key
+
+## Configuring SendGrid for Email Functionality
+
+TechPrep requires SendGrid for handling email functionalities. Follow these steps to configure SendGrid:
+
+1. **Create a SendGrid Account**:
+   - If you don't already have a SendGrid account, sign up at [SendGrid](https://sendgrid.com/).
+   - Verify your account if required.
+
+2. **Generate a SendGrid API Key**:
+   - Once logged in, go to the [API Keys section](https://app.sendgrid.com/settings/api_keys) in your SendGrid dashboard.
+   - Click on 'Create API Key'. Give it a name and select 'Full Access'.
+   - Copy the API key generated. Keep it secure as you won't be able to see it again.
+
+3. **Configure Your `.env` File**:
+   - In your `.env` file within the TechPrep backend project, set the `SENDGRID_API_KEY` variable to your newly created SendGrid API key.
+   - For the `FROM_EMAIL` variable in `.env`, use the email address associated with your SendGrid account.
+   
+   Example `.env` entries:
+
+## API Setup
+
+To set up the TechPrep backend API, follow these steps:
+
+1. **Change Directory to the backend dir** (if you haven't already):
+   ```bash
+   cd mentor-network/backend
+   ```
+2. **Create a virtual environment in the backend directory:**
+    ```bash
+    python3.9 -m venv venv
+    ```
+3. **Activate the virtual environment**:
+    - On Windows:
+    ```bash
+    venv\Scripts\activate
+    ```
+    - On macOS or Linux:
+    ```bash
+    source venv/bin/activate
+    ```
+4. **Install the required dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+5. **Create a .env file based on the sample.env file and update the required environment variables**:
+    ```bash
+    cp sample.env .env
+    ```
+    Edit the `.env` file and set your environment variables.
+
+## Running the API
+To run the API, use the following command from the `backend` directory:
+
+```bash
+python3.9 main.py
+```
+
+This will start the Flask server, and the API will be accessible at `http://localhost:5000`.
+
+## Running the Tests
+- Important: Prior to executing the test file, please navigate to the file containing the endpoints and temporarily comment out the @jwt_required() decorator.
+### To run the tests, navigate to the `test` folder and execute:
+```bash
+python <fileName_test.py>
+```
