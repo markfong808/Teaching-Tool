@@ -4,6 +4,7 @@ import Meetings from "./components/Meetings";
 import CreateAvailability from "./components/CreateAvailability";
 import ManageAvailability from "./components/ManageAvailability";
 import ClassDetails from "./components/ClassDetails";
+import Courses from "./components/Courses"
 import ViewFeedback from "./components/ViewFeedback";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
@@ -85,6 +86,13 @@ function App() {
             element={
               <ProtectedRoute allowedAccountTypes={['student']}>
                 <Meetings />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/student/courses"
+            element={
+              <ProtectedRoute allowedAccountTypes={['student']}>
+                <Courses />
               </ProtectedRoute>
             }
           />

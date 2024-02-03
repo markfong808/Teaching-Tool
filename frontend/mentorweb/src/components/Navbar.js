@@ -40,6 +40,7 @@ export default function Navbar() {
                                 {user.account_type === "student" && (
                                     <>
                                         <CustomLink to="/student/meetings" className="hover:text-gold font-headlines">MEETINGS</CustomLink>
+                                        <CustomLink to="/student/courses" className="hover:text-gold font-headlines">COURSES</CustomLink>
                                         <CustomLink to="/student/schedule-session" className="hover:text-gold font-headlines">RESERVE APPOINTMENT</CustomLink>
                                     </>
                                 )}
