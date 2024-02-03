@@ -48,6 +48,7 @@ export default function Navbar() {
                                         <CustomLink to="/mentor/meetings" className="hover:text-gold font-headlines">MEETINGS</CustomLink>
                                         <CustomLink to="/mentor/add-availability" className="hover:text-gold font-headlines">ADD AVAILABILITY</CustomLink>
                                         <CustomLink to="/mentor/manage-availability" className="hover:text-gold font-headlines">MANAGE AVAILABILITY</CustomLink>
+                                        <CustomLink to="/mentor/edit-class-details" className="hover:text-gold font-headlines">CLASS DETAILS</CustomLink>
                                     </>
                                 )}
                             </>

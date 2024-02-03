@@ -3,6 +3,7 @@ import Footer from "./components/Footer";
 import Meetings from "./components/Meetings";
 import CreateAvailability from "./components/CreateAvailability";
 import ManageAvailability from "./components/ManageAvailability";
+import ClassDetails from "./components/ClassDetails";
 import ViewFeedback from "./components/ViewFeedback";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
@@ -114,6 +115,13 @@ function App() {
             element={
               <ProtectedRoute allowedAccountTypes={['mentor']}>
                 <ManageAvailability />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/mentor/edit-class-details"
+            element={
+              <ProtectedRoute allowedAccountTypes={['mentor']}>
+                <ClassDetails />
               </ProtectedRoute>
             }
           />
