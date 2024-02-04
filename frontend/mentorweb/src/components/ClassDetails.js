@@ -3,6 +3,7 @@ import { UserContext } from '../context/UserContext';
 import { capitalizeFirstLetter } from '../utils/FormatDatetime';
 import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
+import WeeklyCalendar from './WeeklyCalendar';
 
 export default function ClassDetails() {
   const { user, setUser } = useContext(UserContext);
@@ -260,6 +261,11 @@ export default function ClassDetails() {
               <button className="bg-purple text-white rounded-md p-2 hover:text-gold" onClick={handleCancelChanges}>Discard Class Changes</button>
             </div>
           )}
+
+            {/* Second Box */}
+            <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+                <WeeklyCalendar />
+            </div>
         </div>
       </div>
     </div>
