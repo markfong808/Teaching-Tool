@@ -530,26 +530,12 @@ export default function WeeklyCalendar() {
             </div>
             <div id="table" className="w-full mb-4">
                 <table className="w-full border">
-                    <thead className="bg-purple text-white">
-                        <tr>
+                    {/*<tr key={meeting.appointment_id} onClick={() => handleMeetingClick(meeting)} className="hover:bg-gray border-b"></tr>*/} 
                             <th className="border-r text-start">Monday</th>
                             <th className="border-r text-start">Tuesday</th>
                             <th className="border-r text-start">Wednesday</th>
                             <th className="border-r text-start">Thursday</th>
                             <th className="text-start">Friday</th> {/* Removed border-r from the last th */}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((meeting) => (
-                            <tr key={meeting.appointment_id} onClick={() => handleMeetingClick(meeting)} className="hover:bg-gray border-b">
-                                <td className="cursor-pointer text-blue underline border-r">{meeting.type}</td>
-                                <td className='border-r'>{getDayFromDate(meeting.date)}</td>
-                                <td className='border-r'>{formatDate(meeting.date)}</td>
-                                <td className='border-r'>{formatTime(meeting.start_time)} - {formatTime(meeting.end_time)}</td>
-                                <td>{capitalizeFirstLetter(meeting.status)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
                 </table>
             </div>
         </div>
