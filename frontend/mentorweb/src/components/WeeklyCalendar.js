@@ -4,540 +4,126 @@ import { formatTime, formatDate, getDayFromDate, capitalizeFirstLetter } from ".
 import { getCookie } from "../utils/GetCookie.js"
 import { Tooltip } from "../components/Tooltip.js";
 import Comment from "../components/Comment.js";
+import TimeRangePicker from '@wojtekmaj/react-timerange-picker';
 
-export default function WeeklyCalendar() {
-    const [data, setData] = useState([]);
-    const [activeTab, setActiveTab] = useState('upcoming');
-    const [selectedMeeting, setSelectedMeeting] = useState(null);
-    const { user } = useContext(UserContext);
-    const [typeDescriptions, setTypeDescriptions] = useState({}); // [type: string]: string
-    const [isProvidingFeedback, setIsProvidingFeedback] = useState(false);
-    const [feedbackPresent, setFeedbackPresent] = useState(false);
-    const [feedbackData, setFeedbackData] = useState({
-        satisfaction: '',
-        additional_comments: ''
-    });
-    const [formData, setFormData] = useState({
-        notes: '',
-        meeting_url: '',
-    });
+/*
+TO DO
+ - need to connect class instance to user logged in
+ - Make a custom TimeRangePicker, so it looks like wireframe
+ - let use choose time blocks
+ - fix createTimeSlot to actually publish new time slots
+ - let the title be decided from parent function
+*/
+
+export default function WeeklyCalendar({ isClassTimes }) {
     const [changesMade, setChangesMade] = useState(false);
 
+    // date variables
+    const WeekdayList = {
+        Monday: false,
+        Tuesday: false,
+        Wednesday: false,
+        Thursday: false,
+        Friday: false,
+    };
+      
+    const [weekdays, setWeekdays] = useState(WeekdayList);
+    const [timeRange, setTimeRange] = useState(['00:00', '00:30']);
+    const [availableTimeType, setAvailableTimeType] = useState('');
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
-    useEffect(() => {
-        if (selectedMeeting) {
-            setFormData({
-                notes: selectedMeeting.notes || '',
-                meeting_url: selectedMeeting.meeting_url || '',
-                status: selectedMeeting.status || '',
-            });
-            setChangesMade(false);
-        }
-    }, [selectedMeeting]);
-
-    const fetchMeetings = async () => {
-        if (!user) return; // If there's no user, we can't fetch meetings
-        const apiEndpoint = user.account_type === "mentor"
-            ? `/mentor/appointments`
-            : `/student/appointments`;
-
-        try {
-            const response = await fetch(`${apiEndpoint}?type=${activeTab}`, {
-                credentials: 'include',
-            });
-            const apiData = await response.json();
-            const key = user.account_type === "mentor" ? 'mentor_appointments' : 'student_appointments';
-
-            // Sort the meetings based on the date and start time
-            const sortedData = (apiData[key] || []).sort((a, b) => {
-                // Convert date and time to Date objects for comparison
-                const dateTimeA = new Date(`${a.date}T${a.start_time}`);
-                const dateTimeB = new Date(`${b.date}T${b.start_time}`);
-                return dateTimeA - dateTimeB; // This will sort in ascending order
-            });
-
-            setData(sortedData);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
+    // when the time is changed after the user clicks the days
+    const handleTimeChange = (event) => {
+        setTimeRange(event);
+        console.log(timeRange);
+        console.log(timeRange[0]);
+        console.log(timeRange[1]);
     };
 
-    useEffect(() => {
-        fetchMeetings();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, activeTab]);
-
-    const fetchProgramTypeDetails = async () => {
-        if (!user) return;
-        try {
-            const response = await fetch(`/programs`, {
-                credentials: 'include',
-            });
-            const apiData = await response.json();
-            const programDetails = apiData.map(program => ({
-                name: program.name,
-                description: program.description
-            }));
-            setTypeDescriptions(programDetails);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    };
-
-    useEffect(() => {
-        fetchProgramTypeDetails();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-        setChangesMade(true);
-    };
-
-    const handleSaveChanges = async () => {
-        if (!selectedMeeting) return;
-
-        // Get CSRF token from the cookie.
-        const csrfToken = getCookie('csrf_access_token');
-        const payload = {
-            ...formData,
-            appointment_id: selectedMeeting.appointment_id,
-        };
-        try {
-            const response = await fetch(`/meetings/update`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                // Update the selected meeting with the new formData
-                setSelectedMeeting({ ...selectedMeeting, ...formData });
-                setChangesMade(false);
-                alert("Meeting updated successfully!");
-                fetchMeetings(); // Re-fetch meetings to update the list
-            } else {
-                throw new Error('Failed to update the meeting');
-            }
-        } catch (error) {
-            console.error("Error updating meeting:", error);
-        }
-    };
-
-    const handleTabClick = (tabName) => {
-        setActiveTab(tabName); // Update the active tab state
-        setSelectedMeeting(null); // Reset the selected meeting details
-    };
-
-    const handleMeetingClick = (meeting) => {
-        setSelectedMeeting(meeting);
-        fetchFeedback();
-    };
-
-    const handleStatusUpdate = async (appointmentId, newStatus) => {
-        // Get CSRF token from the cookie.
-        const csrfToken = getCookie('csrf_access_token');
-        const payload = {
-            appointment_id: appointmentId,
-            status: newStatus,
-        };
-        try {
-            const response = await fetch(`/meeting/update/status`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                // Update the selected meeting with the new formData
-                setSelectedMeeting({ ...selectedMeeting, status: newStatus });
-                alert("Meeting status updated successfully!");
-                fetchMeetings(); // Re-fetch meetings to update 
-            } else {
-                throw new Error('Failed to update the meeting status');
-            }
-        } catch (error) {
-            console.error("Error updating meeting status:", error);
-        }
-    };
-
-    const fetchFeedback = async () => {
-        if (!selectedMeeting) return;
-
-        try {
-            const response = await fetch(`/feedback/${selectedMeeting.appointment_id}`, {
-                credentials: 'include',
-            });
-            const apiData = await response.json();
-
-            let feedbackExists = false;
-            if (user.account_type === 'student') {
-                feedbackExists = apiData.student_rating || apiData.student_notes;
-            } else if (user.account_type === 'mentor') {
-                feedbackExists = apiData.mentor_rating || apiData.mentor_notes;
-            }
-
-            setFeedbackPresent(feedbackExists);
-
-        } catch (error) {
-            console.error("Error fetching feedback:", error);
-        }
-    };
-
-    useEffect(() => {
-        fetchFeedback();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedMeeting]);
-
-    const handleFeedbackInputChange = (e) => {
-        const { name, value } = e.target;
-        setFeedbackData({ ...feedbackData, [name]: value });
-        setChangesMade(true);
-    };
-
-    const handleCancelFeedbackChanges = () => {
-        setFeedbackData({
-            satisfaction: '',
-            additional_comments: ''
+    // when the user clicks on a new day to schedule class or office hour times
+    const handleCalendarChange = (day) => {
+        setWeekdays((prevWeekdays) => {
+            const updatedWeekdays = { ...prevWeekdays, [day]: !prevWeekdays[day] };
+            const allFalse = Object.values(updatedWeekdays).every(value => value === false);
+        
+            setShowTimePicker(!allFalse);
+            console.log('Updated weekdays:', updatedWeekdays);
+        
+            return updatedWeekdays;
         });
-        setChangesMade(false);
-    }
-
-    const handleFeedbackClick = () => {
-        setIsProvidingFeedback(true);
-        // Set the initial state for feedbackData including the appointment_id from the selected meeting
-        setFeedbackData({
-            satisfaction: '',
-            additional_comments: '',
-            appointment_id: selectedMeeting ? selectedMeeting.appointment_id : null
-        });
-        setChangesMade(false);
     };
+      
 
-    const handleProvideFeedback = async (event) => {
-        event.preventDefault();
-
-        const csrfToken = getCookie('csrf_access_token');
-        const payload = {
-            ...feedbackData
-        };
-
-        try {
-            const response = await fetch(`/feedback/add`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                alert("Thank you for your feedback!");
-                setIsProvidingFeedback(false);
-                setChangesMade(false);
-                setFeedbackData({
-                    satisfaction: '',
-                    additional_comments: '',
-                    appointment_id: null
-                });
-                fetchMeetings();
-            } else {
-                throw new Error('Failed to provide feedback');
-            }
-        } catch (error) {
-            console.error("Error providing feedback:", error);
-        }
-    };
-
-    const renderProvideFeedbackForm = () => {
-        if (!isProvidingFeedback) {
-            return null;
-        }
-
-        // Define the satisfaction levels and the statements to rate
-        const satisfactionLevels = ['Very Dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Highly Satisfied'];
-        const statements = [
-            'How satisfied are you with the meeting?'
-        ];
-
-        return (
-            <div id="feedback-form">
-                <div className="flex flex-row justify-between mt-5">
-                    <h2 className="text-2xl font-bold">Feedback Form</h2>
-                    <div className="cursor-pointer" onClick={() => setIsProvidingFeedback(false)}>
-                        <i className="fas fa-times"></i>
-                    </div>
-                </div>
-                <div>
-                    <div className="flex flex-col">
-                        <label htmlFor="rating" className="font-bold pt-5">
-                            How satisfied are you with the meeting?
-                        </label>
-                        <div className="flex flex-row justify-between">
-                            {satisfactionLevels.map(level => (
-                                <div key={level} className="flex flex-col">
-                                    <label htmlFor={level}>{level}</label>
-                                    <input
-                                        type="radio"
-                                        name="satisfaction" // This should match the key in feedbackData
-                                        value={level}
-                                        checked={feedbackData.satisfaction === level}
-                                        onChange={handleFeedbackInputChange}
-                                        required
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                        <div id="additional-comments" className="mt-5">
-                            <label htmlFor="explanation" className="font-bold">
-                                Please Explain
-                            </label>
-                            <textarea className="w-full border border-light-gray h-20"
-                                name="additional_comments" // This should match the key in feedbackData
-                                value={feedbackData.additional_comments}
-                                onChange={handleFeedbackInputChange}
-                            />
-                        </div>
-                    </div>
-                </div>
-                <br />
-                {changesMade && (
-                    <div className="flex flex-row justify-end pb-10">
-                        <button className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md" onClick={handleProvideFeedback}>Save Changes</button>
-                        <button className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md" onClick={handleCancelFeedbackChanges}>Cancel Changes</button>
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    const handleCancelChanges = () => {
-        // Reset form data to initial meeting data
-        setFormData({
-            notes: selectedMeeting.notes || '',
-            meeting_url: selectedMeeting.meeting_url || '',
-            status: selectedMeeting.status || '',
-        });
-        setChangesMade(false); // Reset changes made
-    }
-
-    const handleCancelMeeting = async (appointmentId) => {
-        if (window.confirm("Are your sure you want to cancel this meeting?")) {
-            // Construct the endpoint based on account type
-            const cancelEndpoint = user.account_type === "mentor"
-                ? `/mentor/appointments/cancel/${appointmentId}`
-                : `/student/appointments/cancel/${appointmentId}`;
-
-            // Get CSRF token from the cookie. You might need a utility function to parse cookies.
+    // called when user adds a new day to class time or office hours
+    const createTimeSlot = async () => {
+        if (WeekdayList && timeRange) {
             const csrfToken = getCookie('csrf_access_token');
-
-            try {
-                const response = await fetch(cancelEndpoint, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken, // Include the CSRF token in the request header
-                    },
-                });
-
-                if (response.ok) {
-                    // If the cancellation was successful, update the state to reflect that
-                    alert("Meeting canceled successfully!")
-                    setActiveTab('upcoming')
-                    setSelectedMeeting(null); // Deselect the meeting as it is now cancelled
-                    fetchMeetings(); // Re-fetch meetings to update the list
-                } else {
-                    throw new Error('Failed to cancel the meeting');
-                }
-            } catch (error) {
-                console.error("Error cancelling meeting:", error);
+            const data = {
+                type: availableTimeType,
+                weekdays: weekdays,
+                start_time: timeRange[0],
+                end_time: timeRange[1],
             }
+            console.log('data:' + data);
+            fetch(`/mentor/add-availability`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify(data),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to create availability');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to create availability')
+                })
         }
-    };
-
-    // Render the meeting details if a meeting is selected
-    const renderMeetingDetails = () => {
-        if (!selectedMeeting) {
-            return null;
-        }
-
-        return (
-            <div id="details-panel" className="flex flex-col font-body border border-light-gray rounded-md shadow-md p-5">
-                <div className="flex flex-row ">
-                    <h2 className="m-auto text-2xl font-body font-bold">Meeting Details</h2>
-                    <div className="cursor-pointer" onClick={() => { setSelectedMeeting(null); setIsProvidingFeedback(false); }}>
-                        <i className="fas fa-times"></i>
-                    </div>
-                </div>
-
-                <div className="flex justify-end">
-                    <div className="flex">
-                        {((user.account_type === 'student' && activeTab !== 'past') ||
-                            (user.account_type === 'mentor' && activeTab === 'upcoming')) && (
-                                <button className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                                    onClick={() => handleCancelMeeting(selectedMeeting.appointment_id)}>
-                                    Cancel Meeting
-                                </button>
-                            )}
-                        {user.account_type === 'mentor' && activeTab === 'pending' && (
-                            <div >
-                                <button className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(selectedMeeting.appointment_id, 'reserved')}
-                                >
-                                    Approve Meeting
-                                </button>
-                                <button className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                                    type="button"
-                                    onClick={() => handleCancelMeeting(selectedMeeting.appointment_id)}
-                                >
-                                    Cancel Meeting
-                                </button>
-                            </div>
-                        )}
-                        {user.account_type === 'mentor' && activeTab === 'past' && (
-                            <div className="flex flex-row">
-                                <button className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(selectedMeeting.appointment_id, 'completed')}
-                                >
-                                    Attended
-                                </button>
-                                <button className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(selectedMeeting.appointment_id, 'missed')}
-                                >
-                                    Missed
-                                </button>
-                            </div>
-                        )}
-                        {activeTab === 'past' && !feedbackPresent && (
-                            <div className="flex flex-row ml-2 mt-3">
-                                <br />
-                                <button className=" bg-purple text-white hover:bg-gold rounded-md p-2" onClick={handleFeedbackClick}>Provide Feedback</button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {isProvidingFeedback && renderProvideFeedbackForm()}
-                <br />
-                <div id="meeting-info" className="flex flex-col">
-                    <div className="flex flex-row">
-                        <label htmlFor="type" className="font-bold">
-                            Type&nbsp;
-                        </label>
-                        <Tooltip text={typeDescriptions.find(desc => desc.name === selectedMeeting.type).description}>
-                            <span>ⓘ
-
-                            </span>
-                        </Tooltip>
-                    </div>
-                    {selectedMeeting.type}
-
-
-                    <label htmlFor="date" className="font-bold pt-2">Date</label>
-                    {getDayFromDate(selectedMeeting.date) + ", " + formatDate(selectedMeeting.date)}
-
-                    <label htmlFor="time" className="font-bold pt-2">Time</label>
-                    {`${formatTime(selectedMeeting.start_time)} - ${formatTime(selectedMeeting.end_time)} (PST)`}
-
-                    <label htmlFor="status" className="font-bold pt-2">Current Status</label>
-                    {capitalizeFirstLetter(selectedMeeting.status)}
-
-                    <label htmlFor="notes" className="font-bold pt-2">Meeting Notes</label>
-                    <textarea className="w-full border border-light-gray h-20"
-                        name="notes"
-                        value={formData.notes}
-                        onChange={handleInputChange}
-                    />
-
-                    <label htmlFor="meeting_url" className="font-bold pt-2">Student's Meeting URL</label>
-                    <input className="w-full border border-light-gray bg-gray"
-                        type="text"
-                        name="meeting_url"
-                        value={formData.meeting_url}
-                        onChange={handleInputChange}
-                        disabled={activeTab === 'past'}
-                    />
-                    {/* display student details if mentor view */}
-                    {user.account_type === 'mentor' && selectedMeeting.student && (
-                        <div className="flex flex-col pt-5">
-                            <h2 className="text-2xl font-bold">Student Info</h2>
-                            <label htmlFor="name" className="font-bold pt-2">Name</label>
-                            {selectedMeeting.student.first_name}
-
-                            <label htmlFor="email" className="font-bold pt-2">Email</label>
-                            {selectedMeeting.student.email}
-
-                            <label htmlFor="about" className="font-bold pt-2">About</label>
-                            {selectedMeeting.student.about}
-
-                            <label htmlFor="social_url" className="font-bold pt-2">Social URL</label>
-                            {selectedMeeting.student.social_url}
-                        </div>
-                    )}
-                    {/* display mentor details if student view */}
-                    {user.account_type === 'student' && selectedMeeting.mentor && activeTab !== 'pending' && (
-                        <div className="flex flex-col pt-5">
-                            <h2 className="text-2xl font-bold">Mentor Info</h2>
-                            <label htmlFor="name" className="font-bold pt-2">Name</label>
-                            {selectedMeeting.mentor.first_name}
-
-                            <label htmlFor="email" className="font-bold pt-2">Email</label>
-                            {selectedMeeting.mentor.email}
-
-                            <label htmlFor="about" className="font-bold pt-2">About</label>
-                            {selectedMeeting.mentor.about}
-
-                            <label htmlFor="social_url" className="font-bold pt-2">Social URL</label>
-                            {selectedMeeting.mentor.social_url}
-                        </div>
-                    )}
-                </div>
-                {changesMade && (
-                    <div className="flex justify-end">
-                        <button className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md" onClick={handleSaveChanges}>Save Changes</button>
-                        <button className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md" onClick={handleCancelChanges}>Cancel Changes</button>
-                    </div>
-                )}
-                <br />
-                <Comment appointmentId={selectedMeeting.appointment_id} />
-
-
-            </div>
-        );
-    };
+        window.alert("Availability created successfully!");
+    }
 
     // Display meeting list
     return (
         <div id=" content-container" className="flex w-full m-auto items-start">
-            <div className="flex-1 pr-4"> {/* Added flex-1 class to make the first div take up remaining space */}
+            <div className="flex-1 pr-4">
                 <div className="font-bold text-2xl mb-4">
-                    <label style={{ whiteSpace: 'nowrap' }}>Set Class Times: </label>
+                    <label style={{ whiteSpace: 'nowrap' }}>{isClassTimes ? "Set Class Time:" : "Set Office Hours:"}</label>
                 </div>
             </div>
             <div id="table" className="w-full mb-4">
                 <table className="w-full border">
-                    {/*<tr key={meeting.appointment_id} onClick={() => handleMeetingClick(meeting)} className="hover:bg-gray border-b"></tr>*/} 
-                            <th className="border-r text-start">Monday</th>
-                            <th className="border-r text-start">Tuesday</th>
-                            <th className="border-r text-start">Wednesday</th>
-                            <th className="border-r text-start">Thursday</th>
-                            <th className="text-start">Friday</th> {/* Removed border-r from the last th */}
+                    <th className={`border-r text-start ${weekdays["Monday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Monday")}>Monday</th>
+                    <th className={`border-r text-start ${weekdays["Tuesday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Tuesday")}>Tuesday</th>
+                    <th className={`border-r text-start ${weekdays["Wednesday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Wednesday")}>Wednesday</th>
+                    <th className={`border-r text-start ${weekdays["Thursday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Thursday")}>Thursday</th>
+                    <th className={`border-r text-start ${weekdays["Friday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Friday")}>Friday</th>
                 </table>
+                <br />
+                    {showTimePicker && (
+                        <div className='flex flex-col py-5'>
+                            <label htmlFor="time">Select time:</label>
+                            <TimeRangePicker
+                                onChange={handleTimeChange}
+                                value={timeRange}
+                                disableClock={true}
+                                autoFocus={true}
+                            /> 
+                            <br />
+                            <button className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold' onClick={createTimeSlot}>Create</button>
+                        </div>
+                    )}
+
             </div>
+            
         </div>
     );
 }
