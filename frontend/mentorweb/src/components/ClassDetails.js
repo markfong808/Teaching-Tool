@@ -5,7 +5,7 @@ import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
 import WeeklyCalendar from './WeeklyCalendar';
 import { ClassContext } from "../context/ClassContext.js";
-
+import MeetingLocation from './MeetingLocation.js';
 export default function ClassDetails() {
   const { user, setUser } = useContext(UserContext);
   const [formData, setFormData] = useState({
@@ -163,6 +163,13 @@ export default function ClassDetails() {
           <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
               <WeeklyCalendar isClassTimes={false}/>
           </div>
+
+          {/* Meeting Location and Recording Link */}
+          <div>
+            <MeetingLocation />
+          </div>
+  
+         
 
           {changesMade && (
             <div className="flex flex-row justify-end my-5">
