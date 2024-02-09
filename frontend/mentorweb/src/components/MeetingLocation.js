@@ -22,24 +22,32 @@ export default function MeetingLocation() {
     };
 
     return (
-        <div className="flex ml-10">
+        <div>
             {/* Set Class Location Box */}
-            <div className="flex flex-col w-1/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-                <div className="font-bold text-2xl mb-4 flex items-center">
-                    <label style={{ whiteSpace: 'nowrap' }}>{"Set Class Location:"}</label>
-                    <button className="border-2 border-black px-3 py-3 square ml-4 mt-1" onClick={showBox}></button>
-                    <span className="px-2 py-2" style={{ fontWeight: 'normal', fontSize: '14px', whiteSpace: 'nowrap' }}>In-Person?</span>
+            <div className="flex flex-col w-1/2 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+                <div className="flex items-center">
+                <label className="font-bold text-2xl">Set Class Location:</label>
+                    <input type="checkbox" id="myCheckbox" class="form-checkbox h-5 w-5 text-blue-600 ml-5" onClick={showBox}></input>
+                    <span className="px-2 py-2 text-sm font-normal">In-Person?</span>
+                    
                     {boxShown && (
-                        <textarea
-                            className='border border-light-gray mb-2 px-2 py-0 ml-4 mt-3 w-20 h-15 text-sm'
+                        <input
+                            className='border border-light-gray ml-2 text-sm font-normal'
                         />
                     )}
                 </div>
             </div>
+
             {/* Meeting Location and Recording Link */}
-            <div className="flex flex-col w-1/3 p-5 border border-light-gray rounded-md shadow-md mt-5 pl-10 mr-10">
-                <div className="font-bold text-2xl mb-4 flex items-center">
-                <label style={{ whiteSpace: 'nowrap' }}>{"Class Recording Link:"}</label>
+            <div className="flex flex-col w-1/2 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+                <div className="flex items-center">
+                    <label className="font-bold text-2xl">Class Recording Link:</label>
+                    <input className='border border-light-gray ml-5 text-sm font-normal w-1/2'
+                        /*type="text"
+                        name="meeting_url"
+                        value={formData.meeting_url}
+                        onChange={handleInputChange}*/  // implement
+                    />
                 </div>
             </div>
         </div>
