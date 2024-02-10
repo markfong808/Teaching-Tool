@@ -7,6 +7,7 @@ import Meetings from './Meetings';
 import { ClassContext } from "../context/ClassContext.js";
 
 export default function Courses() {
+    const csrfToken = getCookie('csrf_access_token');
     const { user, setUser } = useContext(UserContext);
     const [courseIds, setCourseIds] = useState([]);
     const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -21,8 +22,8 @@ export default function Courses() {
     const contextValue = useContext(ClassContext);
     const { classInstance } = contextValue || {};
     const [classData, setClassData] = useState({
-        name: classInstance?.class_name || '',
-        info: classInstance?.class_comment || '',
+        class_name: classInstance?.class_name || '',
+        class_comment: classInstance?.class_comment || '',
         class_time: classInstance?.class_time || '',
         class_location: classInstance?.class_location || '',
         class_link: classInstance?.class_link || '',
@@ -37,39 +38,58 @@ export default function Courses() {
         fetchCourseList();
     }, [user, classInstance]); // maybe dont need
 
+    // can use teaching tools function
     const fetchCourseList = async () => {
         if (user.account_type !== "student") return;
-
-        const apiEndpoint = `/student/courses`;
-
+    
         try {
-            const response = await fetch(apiEndpoint, {
+            const response = await fetch(`/student/courses`, {
                 credentials: 'include',
             });
+    
             const fetchedCourseIds = await response.json();
+    
+            // Check if fetchedCourseIds is an array before updating state
             setCourseIds(fetchedCourseIds);
         } catch (error) {
             console.error("Error fetching course list:", error);
         }
     };
+    
 
-    const fetchCourseInfo = async (courseId) => {
-        if (user.account_type !== "student") return;
+    const updateCourseInfo = (courseId) => {
+        if (!courseId) {
+            // Handle the case where courseId is not provided or is invalid
+            return;
+        }
+    
+        const selectedCourse = courseIds.find(course => course.id === courseId);
 
-        try {
-            const courseInfoResponse = await fetch(`/student/course-info/${courseId}`, {
-                credentials: 'include',
-            });
-
-            const courseTempData = await courseInfoResponse.json();
-
-            fetchInstructorInfo(courseTempData.teacher_id);  // make sure this works
-
-            setClassData(courseTempData);
-        } catch (error) {
-            console.error("Error fetching course info:", error);
+        //console.log(selectedCourse);
+    
+        if (selectedCourse) {
+            // Update classData state with the data from the selected course
+            setClassData(prevClassData => ({
+                ...prevClassData,
+                class_name: selectedCourse.class_name || '',
+                class_comment: selectedCourse.class_comment || '',
+                class_time: selectedCourse.class_time || '',
+                class_location: selectedCourse.class_location || '',
+                class_link: selectedCourse.class_link || '',
+                class_recordings_link: selectedCourse.class_recordings_link || '',
+                office_hours_time: selectedCourse.office_hours_time || '',
+                office_hours_location: selectedCourse.office_hours_location || '',
+                office_hours_link: selectedCourse.office_hours_link || '',
+                discord_link: selectedCourse.discord_link || '',
+            }));
+            console.log(classData);
+        } else {
+            // Handle the case where the selected course is not found in courseIds
+            console.error("Selected course not found in courseIds");
         }
     };
+    
+    
 
     const fetchInstructorInfo = async (teacherId) => {
         try {
@@ -86,9 +106,9 @@ export default function Courses() {
     };
 
     const handleCourseChange = (e) => {
-        const selectedCourse = e.target.value;
+        const selectedCourse = parseInt(e.target.value);
         setSelectedCourseId(selectedCourse);
-        fetchCourseInfo(selectedCourse);
+        updateCourseInfo(selectedCourse);
     };
     
 
@@ -96,18 +116,10 @@ export default function Courses() {
         <div className="flex flex-col w-7/8 m-auto">
             <div className="flex flex-col w-2/3 p-5 m-auto">
                 <div id="dropdown" className=''>
-                    <h1><strong>Select Course:</strong></h1>
-                    <select
-                        className='border border-light-gray rounded'
-                        id="course-dropdown"
-                        value={selectedCourseId}
-                        onChange={handleCourseChange}
-                    >
-                        <option value="">Select...</option>
-                        {courseIds.map((courseId) => (
-                            <option key={courseId} value={courseId}>
-                                Course {courseId}
-                            </option>
+                    <label className='font-bold' htmlFor="courseDropdown">Select a Course:</label>
+                    <select id="courseDropdown" className='ml-1' onChange={(e) => handleCourseChange(e)}>
+                        {courseIds.map((course) => (
+                            <option key={course.id} value={course.id}>{course.class_name}</option>
                         ))}
                     </select>
                 </div>
@@ -115,27 +127,27 @@ export default function Courses() {
 
             <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
                 <h2 className='pb-10 text-center font-bold text-2xl'>{classData.class_name}</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 font-bold">
                     <div className="flex flex-col">
-                        <label className='font-bold'>Class Times: <span style={{ fontWeight: 'normal' }}>{classData.class_time}</span></label>
-                        <label className='font-bold'>Class Location: <span style={{ fontWeight: 'normal' }}>{classData.class_location}</span></label>
-                        <label className='font-bold'>Class Recordings Link: <span style={{ fontWeight: 'normal' }}>{classData.class_recordings_link}</span></label>
-                        <label className='font-bold'>Comments: &nbsp; <p style={{ fontWeight: 'normal' }}>{classData.class_comment}</p></label>
+                        <label>Class Times: <span>{classData.class_time}</span></label>
+                        <label>Class Location: <span>{classData.class_location}</span></label>
+                        <label>Class Recordings Link: <span>{classData.class_recordings_link}</span></label>
+                        <label>Comments: &nbsp; <p>{classData.class_comment}</p></label>
                     </div>
                     <div className="flex flex-col justify-self-end">
-                        <label className='font-bold'>Office Hours: <span style={{ fontWeight: 'normal' }}>{classData.office_hours_time}</span></label>
-                        <label className='font-bold'>Office Hours Location: <span style={{ fontWeight: 'normal' }}>{classData.office_hours_location}</span></label>
-                        <label className='font-bold'>Instructor: 
-                            <span style={{ fontWeight: 'normal' }}>{instructorData.title}</span>
-                            <span style={{ fontWeight: 'normal' }}>{instructorData.last_name}</span>
+                        <label>Office Hours: <span>{classData.office_hours_time}</span></label>
+                        <label>Office Hours Location: <span >{classData.office_hours_location}</span></label>
+                        <label>Instructor: 
+                            <span>{instructorData.title}</span>
+                            <span>{instructorData.last_name}</span>
                         </label>
-                        <label className='font-bold'>Discord:  <span style={{ fontWeight: 'normal' }}>{instructorData.discord_link}</span></label>
+                        <label>Discord:  <span>{instructorData.discord_link}</span></label>
                     </div>
                 </div>
             </div>
 
             {/*REDO CSS CODE HERE*/}
-            <div style={{ padding: '10px' }}>
+            <div className='p-2.5'>
             </div>
 
             {/* Second Box */}
@@ -143,12 +155,12 @@ export default function Courses() {
                 <Meetings />
             </div>
 
-            <div style={{ padding: '10px' }}>
+            <div className='p-2.5'>
             </div>
 
             {/* Third Box */}
-            <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
-                <button className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold" /*onClick={() => handleTabClick('upcoming') }*/>Schedule New Meeting</button >
+            <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md">
+                <button className="bg-purple p-2 rounded-md text-white hover:text-gold" /*onClick={() => handleTabClick('upcoming') }*/>Schedule New Meeting</button >
             </div>
         </div >
     );

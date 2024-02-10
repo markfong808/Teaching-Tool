@@ -33,6 +33,10 @@ export default function MeetingLocation() {
                     {boxShown && (
                         <input
                             className='border border-light-gray ml-2 text-sm font-normal'
+                            /*type="text"
+                            name="meeting_url"
+                            value={formData.meeting_url}
+                            onChange={handleInputChange}*/  // implement
                         />
                     )}
                 </div>

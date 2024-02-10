@@ -2,11 +2,12 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, \
     set_access_cookies, get_jwt, create_access_token
 from sqlalchemy import extract, or_, func
-from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment
+from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment, ClassInformation, CourseMembers
 from . import db
 from datetime import datetime, timedelta, timezone
 from .mail import send_email
 from ics import Calendar, Event
+import numpy as np
 
 student = Blueprint('student', __name__)
 program_types = [
@@ -31,6 +32,39 @@ def refresh_expiring_jwts(response):
     except (RuntimeError, KeyError):
         # Case where there is not a valid JWT. Just return the original response
         return response
+    
+
+# Get all courses a user is registered in
+@student.route('/student/courses', methods=['GET'])
+@jwt_required()
+def get_courses():
+    try:
+        user_id = get_jwt_identity()
+        student = User.query.get(user_id)
+        
+        if student:
+            courses = ClassInformation.query.all()
+            courses_list = []
+            for course in courses:
+                course_info = {
+                    'id': course.id,
+                    'class_name': course.class_name,
+                    'class_comment': course.class_comment,
+                    'class_time': course.class_time,
+                    'class_location': course.class_location,
+                    'class_link': course.class_link,
+                    'class_recordings_link': course.class_recordings_link,
+                    'office_hours_time': course.office_hours_time,
+                    'office_hours_location': course.office_hours_location,
+                    'office_hours_link': course.office_hours_link,
+                    'discord_link': course.discord_link,
+                }
+                courses_list.append(course_info)
+            return jsonify(courses_list), 200
+        else:
+            return jsonify({"error": "student not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @student.route('/program/description', methods=['GET'])
