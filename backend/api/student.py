@@ -58,6 +58,7 @@ def get_courses():
                     'office_hours_location': course.office_hours_location,
                     'office_hours_link': course.office_hours_link,
                     'discord_link': course.discord_link,
+                    'teacher_id': course.teacher_id,
                 }
                 courses_list.append(course_info)
             return jsonify(courses_list), 200

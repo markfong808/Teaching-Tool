@@ -12,11 +12,11 @@ export default function Courses() {
     const [courseIds, setCourseIds] = useState([]);
     const [selectedCourseId, setSelectedCourseId] = useState('');
     const [instructorData, setInstructorData] = useState({
-        name: user?.name || '',
-        email: user?.email || '',
-        title: user?.title || '',
-        last_name: user?.last_name || '',
-        pronouns: user?.pronouns || '',
+        id: '',
+        email: '',
+        title: '',
+        last_name: '',
+        pronouns: '',
     });
 
     const contextValue = useContext(ClassContext);
@@ -32,13 +32,14 @@ export default function Courses() {
         office_hours_location: classInstance?.office_hours_location || '',
         office_hours_link: classInstance?.office_hours_link || '',
         discord_link: classInstance?.discord_link || '',
+        teacher_id: classInstance?.teacher_id || '',
     });
 
     useEffect(() => {
         fetchCourseList();
-    }, [user, classInstance]); // maybe dont need
+    });
 
-    // can use teaching tools function
+    // fetch all courses the student is associated with from database
     const fetchCourseList = async () => {
         if (user.account_type !== "student") return;
     
@@ -47,59 +48,44 @@ export default function Courses() {
                 credentials: 'include',
             });
     
-            const fetchedCourseIds = await response.json();
+            const fetchedCourseList = await response.json();
     
-            // Check if fetchedCourseIds is an array before updating state
-            setCourseIds(fetchedCourseIds);
+            setCourseIds(fetchedCourseList);
         } catch (error) {
             console.error("Error fetching course list:", error);
         }
     };
     
-
+    // update the course information being displayed on the webpage
     const updateCourseInfo = (courseId) => {
         if (!courseId) {
-            // Handle the case where courseId is not provided or is invalid
             return;
         }
     
         const selectedCourse = courseIds.find(course => course.id === courseId);
-
-        //console.log(selectedCourse);
     
         if (selectedCourse) {
-            // Update classData state with the data from the selected course
-            setClassData(prevClassData => ({
-                ...prevClassData,
-                class_name: selectedCourse.class_name || '',
-                class_comment: selectedCourse.class_comment || '',
-                class_time: selectedCourse.class_time || '',
-                class_location: selectedCourse.class_location || '',
-                class_link: selectedCourse.class_link || '',
-                class_recordings_link: selectedCourse.class_recordings_link || '',
-                office_hours_time: selectedCourse.office_hours_time || '',
-                office_hours_location: selectedCourse.office_hours_location || '',
-                office_hours_link: selectedCourse.office_hours_link || '',
-                discord_link: selectedCourse.discord_link || '',
-            }));
-            console.log(classData);
+            // Update classData with selectedCourse
+            setClassData(selectedCourse);
+
+            // fetch instructor information from selected course
+            fetchInstructorInfo(selectedCourse.teacher_id);
         } else {
-            // Handle the case where the selected course is not found in courseIds
-            console.error("Selected course not found in courseIds");
+            console.error("Selected course not found");
         }
     };
     
-    
-
+    // fetch instructor information from a user based on their ID
     const fetchInstructorInfo = async (teacherId) => {
         try {
-            const response = await fetch(`/profile/${teacherId}`, { // syntax prob not right
+            const response = await fetch(`/profile/instructor/${encodeURIComponent(teacherId)}`, {
                 credentials: 'include',
             });
 
-            const apiData = await response.json();
+            const fetchedInstructorInfo = await response.json();
 
-            setInstructorData(apiData);
+            // set instructor data with fetched data
+            setInstructorData(fetchedInstructorInfo);
         } catch (error) {
             console.error("Error fetching course info:", error);
         }
@@ -115,9 +101,15 @@ export default function Courses() {
     return (
         <div className="flex flex-col w-7/8 m-auto">
             <div className="flex flex-col w-2/3 p-5 m-auto">
-                <div id="dropdown" className=''>
-                    <label className='font-bold' htmlFor="courseDropdown">Select a Course:</label>
-                    <select id="courseDropdown" className='ml-1' onChange={(e) => handleCourseChange(e)}>
+                <div id="dropdown">
+                    <h1 className='inline-block'><strong>Select Course:</strong></h1>
+                    <select
+                        className='border border-light-gray rounded ml-2'
+                        id="course-dropdown"
+                        value={selectedCourseId}
+                        onChange={(e) => handleCourseChange(e)}
+                    >
+                        <option value="">Select...</option>
                         {courseIds.map((course) => (
                             <option key={course.id} value={course.id}>{course.class_name}</option>
                         ))}
@@ -126,22 +118,19 @@ export default function Courses() {
             </div>
 
             <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
-                <h2 className='pb-10 text-center font-bold text-2xl'>{classData.class_name}</h2>
+                <h2 className='pb-10 text-center font-bold text-4xl'>{classData.class_name}</h2>
                 <div className="grid grid-cols-2 gap-4 font-bold">
                     <div className="flex flex-col">
-                        <label>Class Times: <span>{classData.class_time}</span></label>
-                        <label>Class Location: <span>{classData.class_location}</span></label>
-                        <label>Class Recordings Link: <span>{classData.class_recordings_link}</span></label>
-                        <label>Comments: &nbsp; <p>{classData.class_comment}</p></label>
+                        <label>Class Times: <span className='font-normal'>{classData.class_time}</span></label>
+                        <label>Class Location: <span className='font-normal'>{classData.class_location}</span></label>
+                        <label>Class Recordings Link: <span className='font-normal'>{classData.class_recordings_link}</span></label>
+                        <label>Comments: &nbsp; <p className='font-normal'>{classData.class_comment}</p></label>
                     </div>
                     <div className="flex flex-col justify-self-end">
-                        <label>Office Hours: <span>{classData.office_hours_time}</span></label>
-                        <label>Office Hours Location: <span >{classData.office_hours_location}</span></label>
-                        <label>Instructor: 
-                            <span>{instructorData.title}</span>
-                            <span>{instructorData.last_name}</span>
-                        </label>
-                        <label>Discord:  <span>{instructorData.discord_link}</span></label>
+                        <label>Office Hours: <span className='font-normal'>{classData.office_hours_time}</span></label>
+                        <label>Office Hours Location: <span className='font-normal'>{classData.office_hours_location}</span></label>
+                        <label>Instructor: <span className='font-normal'>{instructorData.title} {instructorData.last_name}</span></label>
+                        <label>Discord: <span className='font-normal'>{classData.discord_link}</span></label>
                     </div>
                 </div>
             </div>
