@@ -7,7 +7,6 @@ from . import db
 from datetime import datetime, timedelta, timezone
 from .mail import send_email
 from ics import Calendar, Event
-import numpy as np
 
 student = Blueprint('student', __name__)
 program_types = [
@@ -43,7 +42,7 @@ def get_courses():
         student = User.query.get(user_id)
         
         if student:
-            courses = ClassInformation.query.all()
+            courses = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).all()
             courses_list = []
             for course in courses:
                 course_info = {

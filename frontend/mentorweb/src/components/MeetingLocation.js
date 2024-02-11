@@ -11,7 +11,7 @@ export default function MeetingLocation(param) {
 
     const [formData, setFormData] = useState({
         class_location: '',
-        class_recording_link: ''
+        class_recordings_link: ''
     });
 
     // Meeting Location show box
@@ -24,12 +24,12 @@ export default function MeetingLocation(param) {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        console.log(e);
-        let newValue = value;
-        setFormData({ ...formData, [name]: newValue });
-        param.param(formData);
-    }
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        param.functionPassed({
+            name: e.target.name,
+            value: e.target.value
+        });
+    };
 
     return (
         <div>
@@ -50,11 +50,11 @@ export default function MeetingLocation(param) {
             <div className="flex flex-col w-1/2 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
                 <div className="flex items-center">
                     <label className="font-bold text-2xl">Class Recording Link:</label>
-                    <input className='border border-light-gray ml-5 text-sm font-normal w-1/2'
-                        name="class_recording_link"
-                        value={formData.class_recording_link}
-                        onChange={handleInputChange}
-                    />
+                    <input className='border border-light-gray ml-2 text-sm font-normal'
+                            name="class_recordings_link"
+                            value={formData.class_recordings_link}
+                            onChange={handleInputChange}
+                        />
                 </div>
             </div>
         </div>

@@ -27,6 +27,7 @@ export default function ClassDetails() {
     office_hours_link: classInstance?.office_hours_link || ''
   });
 
+
   useEffect(() => {
     // Update form data when user context updates
     if (user.account_type === "mentor") {
@@ -45,16 +46,12 @@ export default function ClassDetails() {
 
   // handle to update local variables when user is editing attributes
   const handleInputChange = (e) => {
-    console.log(e);
-    
-    setClassData({
-      class_location: e.class_location,
-      class_recordings_link: e.class_recording_link
-    });
-
-    console.log(classData.class_location);
-    console.log(classData.class_recordings_link);
+    setClassData({ ...classData, [e.name]: e.value });
   };
+
+  useEffect(() => {
+    console.log(classData);
+  }, [classData]);
 
   // handle to cancel webpage changes when user is done editing details
   const handleCancelChanges = () => {
@@ -140,7 +137,7 @@ export default function ClassDetails() {
 
           {/* Meeting Location and Recording Link */}
           <div>
-            <MeetingLocation param={handleInputChange}/>
+            <MeetingLocation functionPassed={handleInputChange}/>
           </div>
 
           {changesMade && (
