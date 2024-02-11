@@ -5,26 +5,23 @@ import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
 import WeeklyCalendar from './WeeklyCalendar';
 import { ClassContext } from "../context/ClassContext.js";
+import MeetingLocation from './MeetingLocation.js';
 
 
 export default function ClassDetails() {
+  // global
   const { user, setUser } = useContext(UserContext);
   const [changesMade, setChangesMade] = useState(false);
 
-  // From MeetingLocation File
-  const [inPerson, setInPerson] = useState(false);
-  const [boxShown, setBoxShown] = useState(false);
-  const [location, setLocation] = useState(''); // location is never being set in this file
-  const [meeting_url, setMeetingUrl] = useState(''); // meeting_url is never being set in this file
-
-  // set class instance
+  // class variables
   const contextValue = useContext(ClassContext);
   const { classInstance } = contextValue || {};
   const [classData, setClassData] = useState({
-    info: classInstance?.class_comment || '',
+    class_comment: classInstance?.class_comment || '',
     class_time: classInstance?.class_time || '',
     class_location: classInstance?.class_location || '',
     class_link: classInstance?.class_link || '',
+    class_recordings_link: classInstance?.class_recordings_link || '',
     office_hours_time: classInstance?.office_hours_time || '',
     office_hours_location: classInstance?.office_hours_location || '',
     office_hours_link: classInstance?.office_hours_link || ''
@@ -34,46 +31,40 @@ export default function ClassDetails() {
     // Update form data when user context updates
     if (user.account_type === "mentor") {
       setClassData({
-        info: classInstance?.class_comment || '',
+        class_comment: classInstance?.class_comment || '',
         class_time: classInstance?.class_time || '',
         class_location: classInstance?.class_location || '',
         class_link: classInstance?.class_link || '',
+        class_recordings_link: classInstance?.class_recordings_link || '',
         office_hours_time: classInstance?.office_hours_time || '',
         office_hours_location: classInstance?.office_hours_location || '',
         office_hours_link: classInstance?.office_hours_link || ''
       });
-    } 
+    }
   }, [user, classInstance]);
 
- const handleInputChange = (e) => {
-    const {name, value} = e.target;
-    let newValue = value;
-
-
-    setClassData({ ...classData, [name]: newValue });
-
-    // Check if changes were made
-    const formIsSameAsClass = (
-      (name === 'info' && value === classInstance.class_comment) ||
-      (name === 'class_time' && value === classInstance.class_time) ||
-      (name === 'class_location' && value === classInstance.class_location) ||
-      (name === 'class_link' && value === classInstance.class_link) ||
-      (name === 'office_hours_time' && value === classInstance.office_hours_time) ||
-      (name === 'office_hours_location' && value === classInstance.office_hours_location) ||
-      (name === 'office_hours_link' && value === classInstance.office_hours_link)
-    );
+  // handle to update local variables when user is editing attributes
+  const handleInputChange = (e) => {
+    console.log(e);
     
-    // Set changesMade to true if form data does not match initial class data
-    setChangesMade(!formIsSameAsClass);
+    setClassData({
+      class_location: e.class_location,
+      class_recordings_link: e.class_recording_link
+    });
+
+    console.log(classData.class_location);
+    console.log(classData.class_recordings_link);
   };
 
+  // handle to cancel webpage changes when user is done editing details
   const handleCancelChanges = () => {
     // Reset form data to initial class data
     setClassData({
-      info: classInstance.class_comment || '',
+      class_comment: classInstance.class_comment || '',
       class_time: classInstance.class_time || '',
       class_location: classInstance.class_location || '',
       class_link: classInstance.class_link || '',
+      class_recordings_link: classInstance.class_recordings_link || '',
       office_hours_time: classInstance.office_hours_time || '',
       office_hours_location: classInstance.office_hours_location || '',
       office_hours_link: classInstance.office_hours_link || '',
@@ -81,6 +72,7 @@ export default function ClassDetails() {
     setChangesMade(false); // Reset changes made
   };
 
+  // handle to save webpage changes when user is done editing details
   const handleSaveChanges = async () => {
     const csrfToken = getCookie('csrf_access_token');
     try {
@@ -106,22 +98,10 @@ export default function ClassDetails() {
       console.error('Error updating profile:', error);
     }
   };
- // Meeting Location show box
-  const showBox = () => {
-    if (boxShown) {
-      setBoxShown(false);
-      //setInPerson(false);
-    }
-    else {
-      setBoxShown(true);
-      setInPerson(true);
-    }
-  };
 
   if (!user) {
     return <div>Loading user data...</div>;
   }
-
 
   return (
     <div className="flex flex-col w-7/8 m-auto">
@@ -142,8 +122,8 @@ export default function ClassDetails() {
           </div>
 
           <textarea className='border border-light-gray mb-3'
-            name="info"
-            value={classData.info}
+            name="class_comment"
+            value={classData.class_comment}
             onChange={handleInputChange}
           />
 
@@ -160,36 +140,8 @@ export default function ClassDetails() {
 
           {/* Meeting Location and Recording Link */}
           <div>
-            {/* Set Class Location Box */}
-            <div className="flex flex-col w-1/2 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-              <div className="flex items-center">
-                <label className="font-bold text-2xl">Set Class Location:</label>
-                <input type="checkbox" id="myCheckbox" class="form-checkbox h-5 w-5 text-blue-600 ml-5" onClick={showBox}></input>
-                <span className="px-2 py-2 text-sm font-normal">In-Person?</span>
-                {boxShown && (
-                  <input
-                    className='border border-light-gray ml-2 text-sm font-normal'
-                    name='location'
-                    value={location}
-                    onChange={handleInputChange}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Meeting Location and Recording Link */}
-            <div className="flex flex-col w-1/2 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-              <div className="flex items-center">
-                <label className="font-bold text-2xl">Class Recording Link:</label>
-                <input className='border border-light-gray ml-5 text-sm font-normal w-1/2'
-                  name='meeting_url'
-                  value={meeting_url}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
+            <MeetingLocation param={handleInputChange}/>
           </div>
-
 
           {changesMade && (
             <div className="flex flex-row justify-end my-5">

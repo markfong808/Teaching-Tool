@@ -20,13 +20,13 @@ export default function WeeklyCalendar({ isClassTimes }) {
 
     // date variables
     const WeekdayList = {
-        Monday: false,
-        Tuesday: false,
-        Wednesday: false,
-        Thursday: false,
-        Friday: false,
+        Monday: [],
+        Tuesday: [],
+        Wednesday: [],
+        Thursday: [],
+        Friday: [],
     };
-      
+
     const [weekdays, setWeekdays] = useState(WeekdayList);
     const [timeRange, setTimeRange] = useState(['00:00', '00:30']);
     const [availableTimeType, setAvailableTimeType] = useState('');
@@ -45,27 +45,26 @@ export default function WeeklyCalendar({ isClassTimes }) {
         setWeekdays((prevWeekdays) => {
             const updatedWeekdays = { ...prevWeekdays, [day]: !prevWeekdays[day] };
             const allFalse = Object.values(updatedWeekdays).every(value => value === false);
-        
+
             setShowTimePicker(!allFalse);
             console.log('Updated weekdays:', updatedWeekdays);
-        
+
             return updatedWeekdays;
         });
     };
-      
+
 
     // called when user adds a new day to class time or office hours
-    const createTimeSlot = async () => {
+    const setClassTime = async () => {
         if (WeekdayList && timeRange) {
             const csrfToken = getCookie('csrf_access_token');
             const data = {
-                type: availableTimeType,
                 weekdays: weekdays,
                 start_time: timeRange[0],
                 end_time: timeRange[1],
             }
-            console.log('data:' + data);
-            fetch(`/mentor/add-availability`, {
+            console.log('classTime object:' + data);
+            fetch(`/course/setTime`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -85,10 +84,10 @@ export default function WeeklyCalendar({ isClassTimes }) {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to create availability')
+                    alert('Failed to create add class times')
                 })
         }
-        window.alert("Availability created successfully!");
+        window.alert("Class time added successfully!");
     }
 
     // Display meeting list
@@ -108,22 +107,22 @@ export default function WeeklyCalendar({ isClassTimes }) {
                     <th className={`border-r text-start ${weekdays["Friday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Friday")}>Friday</th>
                 </table>
                 <br />
-                    {showTimePicker && (
-                        <div className='flex flex-col py-5'>
-                            <label htmlFor="time">Select time:</label>
-                            <TimeRangePicker
-                                onChange={handleTimeChange}
-                                value={timeRange}
-                                disableClock={true}
-                                autoFocus={true}
-                            /> 
-                            <br />
-                            <button className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold' onClick={createTimeSlot}>Create</button>
-                        </div>
-                    )}
+                {showTimePicker && (
+                    <div className='flex flex-col py-5'>
+                        <label htmlFor="time">Select time:</label>
+                        <TimeRangePicker
+                            onChange={handleTimeChange}
+                            value={timeRange}
+                            disableClock={true}
+                            autoFocus={true}
+                        />
+                        <br />
+                        <button className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold' onClick={setClassTime}>Create</button>
+                    </div>
+                )}
 
             </div>
-            
+
         </div>
     );
 }

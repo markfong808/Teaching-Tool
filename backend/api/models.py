@@ -112,3 +112,10 @@ class CourseMembers(db.Model):                                                  
     class_id = db.Column(db.Integer, db.ForeignKey('classinformation.id'))                                 # ADDED
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                              # ADDED
     role=db.Column(db.String(50)) # student, mentor, admin                                                 # ADDED
+
+class ClassTimes(db.Model):                                                                                # ADDED
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
+    class_id = db.Column(db.Integer, db.ForeignKey('classinformation.id'))                                 # ADDED
+    day = db.Column(db.String(50))                                                                         # ADDED
+    start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                          # ADDED
+    end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                            # ADDED

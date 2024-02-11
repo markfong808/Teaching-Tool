@@ -42,28 +42,28 @@ export default function Courses() {
     // fetch all courses the student is associated with from database
     const fetchCourseList = async () => {
         if (user.account_type !== "student") return;
-    
+
         try {
             const response = await fetch(`/student/courses`, {
                 credentials: 'include',
             });
-    
+
             const fetchedCourseList = await response.json();
-    
+
             setCourseIds(fetchedCourseList);
         } catch (error) {
             console.error("Error fetching course list:", error);
         }
     };
-    
+
     // update the course information being displayed on the webpage
     const updateCourseInfo = (courseId) => {
         if (!courseId) {
             return;
         }
-    
+
         const selectedCourse = courseIds.find(course => course.id === courseId);
-    
+
         if (selectedCourse) {
             // Update classData with selectedCourse
             setClassData(selectedCourse);
@@ -74,7 +74,7 @@ export default function Courses() {
             console.error("Selected course not found");
         }
     };
-    
+
     // fetch instructor information from a user based on their ID
     const fetchInstructorInfo = async (teacherId) => {
         try {
@@ -96,7 +96,7 @@ export default function Courses() {
         setSelectedCourseId(selectedCourse);
         updateCourseInfo(selectedCourse);
     };
-    
+
 
     return (
         <div className="flex flex-col w-7/8 m-auto">
