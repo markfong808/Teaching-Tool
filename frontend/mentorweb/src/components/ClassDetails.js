@@ -5,6 +5,7 @@ import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
 import WeeklyCalendar from './WeeklyCalendar';
 import { ClassContext } from "../context/ClassContext.js";
+import { TimesContext } from "../context/TimesContext.js";
 import MeetingLocation from './MeetingLocation.js';
 
 
@@ -26,6 +27,10 @@ export default function ClassDetails() {
     office_hours_location: classInstance?.office_hours_location || '',
     office_hours_link: classInstance?.office_hours_link || ''
   });
+
+  const timesContextValue = useContext(TimesContext);
+  const { timesInstance } = timesContextValue || {};
+  const [timesData, setTimesData] = useState([]);
 
 
   useEffect(() => {
@@ -49,9 +54,26 @@ export default function ClassDetails() {
     setClassData({ ...classData, [e.name]: e.value });
   };
 
+  const handleTimesChange = (e) => {
+    const tempDay = e.name;
+    const tempValue = e.value;
+    console.log(tempDay);
+    console.log(tempValue[0]);
+
+    setTimesData((prevTimesData) => [
+      ...prevTimesData,
+      {
+          day: tempDay,
+          start_time: tempValue[0],
+          end_time: tempValue[1],
+      },
+    ]);
+  };
+
   useEffect(() => {
     console.log(classData);
-  }, [classData]);
+    console.log(timesData);
+  }, [classData, timesData]);
 
   // handle to cancel webpage changes when user is done editing details
   const handleCancelChanges = () => {
@@ -66,6 +88,12 @@ export default function ClassDetails() {
       office_hours_location: classInstance.office_hours_location || '',
       office_hours_link: classInstance.office_hours_link || '',
     });
+
+    setTimesData([{
+      day: timesInstance.day || '',
+      start_time: timesInstance.start_time || '',
+      end_time: timesInstance.end_time || '',
+    }]);
     setChangesMade(false); // Reset changes made
   };
 
@@ -127,17 +155,21 @@ export default function ClassDetails() {
 
           {/* Class Times */}
           <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={true} />
+            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange }}/>
           </div>
 
           {/* Office Hours Times */}
           <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={false} />
+            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange }}/>
           </div>
 
-          {/* Meeting Location and Recording Link */}
+          {/* Class Location and Recording Link */}
           <div>
-            <MeetingLocation functionPassed={handleInputChange}/>
+            <MeetingLocation isClassLocation={true} param={{functionpassed: handleInputChange }} />
+          </div>
+          {/* Office Hours Location and Link */}
+          <div>
+            <MeetingLocation isClassLocation={false} param={{functionpassed : handleInputChange}}/>
           </div>
 
           {changesMade && (

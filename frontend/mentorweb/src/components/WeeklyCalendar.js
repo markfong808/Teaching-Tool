@@ -15,47 +15,43 @@ TO DO
  - let the title be decided from parent function
 */
 
-export default function WeeklyCalendar({ isClassTimes }) {
-    const [changesMade, setChangesMade] = useState(false);
+export default function WeeklyCalendar({ isClassTimes, param }) {
 
-    // date variables
-    const WeekdayList = {
+    const [timePickersList, setTimePickers] = useState({
+        Monday: false,
+        Tuesday: false,
+        Wednesday: false,
+        Thursday: false,
+        Friday: false,
+    });
+
+    const [weekdaysList, setWeekdaysList] = useState({
         Monday: [],
         Tuesday: [],
         Wednesday: [],
         Thursday: [],
         Friday: [],
-    };
+    });
 
-    const [weekdays, setWeekdays] = useState(WeekdayList);
     const [timeRange, setTimeRange] = useState(['00:00', '00:30']);
-    const [availableTimeType, setAvailableTimeType] = useState('');
-    const [showTimePicker, setShowTimePicker] = useState(false);
 
-    // when the time is changed after the user clicks the days
+    // edit timeRange onChange for TimeRangePicker
     const handleTimeChange = (event) => {
         setTimeRange(event);
-        console.log(timeRange);
-        console.log(timeRange[0]);
-        console.log(timeRange[1]);
     };
 
-    // when the user clicks on a new day to schedule class or office hour times
-    const handleCalendarChange = (day) => {
-        setWeekdays((prevWeekdays) => {
-            const updatedWeekdays = { ...prevWeekdays, [day]: !prevWeekdays[day] };
-            const allFalse = Object.values(updatedWeekdays).every(value => value === false);
-
-            setShowTimePicker(!allFalse);
-            console.log('Updated weekdays:', updatedWeekdays);
-
-            return updatedWeekdays;
+    // create button to push time block to parent function
+    const handleCreateChange = (day, newTimeRange) => {
+        setWeekdaysList({ ...weekdaysList, day: newTimeRange });
+        param.functionPassed({
+            name: day,
+            value: newTimeRange
         });
     };
 
-
     // called when user adds a new day to class time or office hours
-    const setClassTime = async () => {
+    // do not need for now
+    /*const setClassTime = async () => {
         if (WeekdayList && timeRange) {
             const csrfToken = getCookie('csrf_access_token');
             const data = {
@@ -88,7 +84,7 @@ export default function WeeklyCalendar({ isClassTimes }) {
                 })
         }
         window.alert("Class time added successfully!");
-    }
+    }*/
 
     // Display meeting list
     return (
@@ -100,24 +96,140 @@ export default function WeeklyCalendar({ isClassTimes }) {
             </div>
             <div id="table" className="w-full mb-4">
                 <table className="w-full border">
-                    <th className={`border-r text-start ${weekdays["Monday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Monday")}>Monday</th>
-                    <th className={`border-r text-start ${weekdays["Tuesday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Tuesday")}>Tuesday</th>
-                    <th className={`border-r text-start ${weekdays["Wednesday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Wednesday")}>Wednesday</th>
-                    <th className={`border-r text-start ${weekdays["Thursday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Thursday")}>Thursday</th>
-                    <th className={`border-r text-start ${weekdays["Friday"] ? 'bg-light-gray' : 'bg-white'}`} onClick={() => handleCalendarChange("Friday")}>Friday</th>
+                    <th
+                        className={`border-r text-start ${timePickersList.Monday ? 'bg-light-gray' : 'bg-white'}`}
+                        name="Monday"
+                        onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Monday: !prevTimePickers.Monday }))}>
+                        Monday
+                    </th>
+
+                    <th
+                        className={`border-r text-start ${timePickersList.Tuesday ? 'bg-light-gray' : 'bg-white'}`}
+                        name="Tuesday"
+                        onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Tuesday: !prevTimePickers.Tuesday }))}>
+                        Tuesday
+                    </th>
+
+                    <th
+                        className={`border-r text-start ${timePickersList.Wednesday ? 'bg-light-gray' : 'bg-white'}`}
+                        name="Wednesday"
+                        onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Wednesday: !prevTimePickers.Wednesday }))}>
+                        Wednesday
+                    </th>
+
+                    <th
+                        className={`border-r text-start ${timePickersList.Thursday ? 'bg-light-gray' : 'bg-white'}`}
+                        name="Thursday"
+                        onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Thursday: !prevTimePickers.Thursday }))}>
+                        Thursday
+                    </th>
+
+                    <th
+                        className={`border-r text-start ${timePickersList.Friday ? 'bg-light-gray' : 'bg-white'}`}
+                        name="Friday"
+                        onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Friday: !prevTimePickers.Friday }))}>
+                        Friday
+                    </th>
                 </table>
                 <br />
-                {showTimePicker && (
+                
+                {timePickersList.Monday && (
                     <div className='flex flex-col py-5'>
                         <label htmlFor="time">Select time:</label>
                         <TimeRangePicker
-                            onChange={handleTimeChange}
                             value={timeRange}
+                            onChange={handleTimeChange}
                             disableClock={true}
                             autoFocus={true}
                         />
                         <br />
-                        <button className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold' onClick={setClassTime}>Create</button>
+                        <button
+                            className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold'
+                            name="Monday"
+                            onClick={() => handleCreateChange("Monday", timeRange)}
+                        >
+                            Create
+                        </button>
+                    </div>
+                )}
+
+                {timePickersList.Tuesday && (
+                    <div className='flex flex-col py-5'>
+                        <label htmlFor="time">Select time:</label>
+                        <TimeRangePicker
+                            value={timeRange}
+                            onChange={handleTimeChange}
+                            disableClock={true}
+                            autoFocus={true}
+                        />
+                        <br />
+                        <button
+                            className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold'
+                            name="Tuesday"
+                            onClick={() => handleCreateChange("Tuesday", timeRange)}
+                        >
+                            Create
+                        </button>
+                    </div>
+                )}
+
+                {timePickersList.Wednesday && (
+                    <div className='flex flex-col py-5'>
+                        <label htmlFor="time">Select time:</label>
+                        <TimeRangePicker
+                            value={timeRange}
+                            onChange={handleTimeChange}
+                            disableClock={true}
+                            autoFocus={true}
+                        />
+                        <br />
+                        <button
+                            className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold'
+                            name="Wednesday"
+                            onClick={() => handleCreateChange("Wednesday", timeRange)}
+                        >
+                            Create
+                        </button>
+                    </div>
+                )}
+
+                {timePickersList.Thursday && (
+                    <div className='flex flex-col py-5'>
+                        <label htmlFor="time">Select time:</label>
+                        <TimeRangePicker
+                            value={timeRange}
+                            onChange={handleTimeChange}
+                            disableClock={true}
+                            autoFocus={true}
+                        />
+                        <br />
+                        <button
+                            className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold'
+                            name="Thursday"
+                            onClick={() => handleCreateChange("Thursday", timeRange)}
+                        >
+                            Create
+                        </button>
+                    </div>
+                )}
+
+                {timePickersList.Friday && (
+                    <div className='flex flex-col py-5'>
+                        <label htmlFor="time">Select time:</label>
+                        <TimeRangePicker
+                            value={timeRange}
+                            onChange={handleTimeChange}
+                            disableClock={true}
+                            autoFocus={true}
+                        />
+                        <br />
+                        <button
+                            className='bg-purple text-white p-2 rounded-md m-2 hover:text-gold'
+                            name="Friday"
+                            onClick={() => handleCreateChange("Friday", timeRange)}
+                        >
+                            Create
+                        </button>
                     </div>
                 )}
 

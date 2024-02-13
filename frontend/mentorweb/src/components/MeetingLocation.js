@@ -1,10 +1,4 @@
 import React, { useEffect, useState, useContext } from "react";
-import { UserContext } from "../context/UserContext";
-import { formatTime, formatDate, getDayFromDate, capitalizeFirstLetter } from "../utils/FormatDatetime.js"
-import { getCookie } from "../utils/GetCookie.js";
-import { Tooltip } from "./Tooltip.js";
-import Comment from "./Comment.js";
-import TimeRangePicker from "@wojtekmaj/react-timerange-picker";
 
 export default function MeetingLocation({isClassLocation, param}) {
     const [boxShown, setBoxShown] = useState(false);
