@@ -11,13 +11,18 @@ import MeetingLocation from './MeetingLocation.js';
 
 export default function ClassDetails() {
   // global
+  const csrfToken = getCookie('csrf_access_token');
   const { user, setUser } = useContext(UserContext);
   const [changesMade, setChangesMade] = useState(false);
+  const [courseIds, setCourseIds] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
 
   // class variables
   const contextValue = useContext(ClassContext);
   const { classInstance } = contextValue || {};
   const [classData, setClassData] = useState({
+    id: classInstance?.id || '',
     class_comment: classInstance?.class_comment || '',
     class_time: classInstance?.class_time || '',
     class_location: classInstance?.class_location || '',
@@ -32,11 +37,19 @@ export default function ClassDetails() {
   const { timesInstance } = timesContextValue || {};
   const [timesData, setTimesData] = useState([]);
 
+  const [instructorData, setInstructorData] = useState({
+    id: '',
+    email: '',
+    title: '',
+    last_name: '',
+    pronouns: '',
+  });
 
   useEffect(() => {
     // Update form data when user context updates
     if (user.account_type === "mentor") {
       setClassData({
+        id: classInstance?.id || '',
         class_comment: classInstance?.class_comment || '',
         class_time: classInstance?.class_time || '',
         class_location: classInstance?.class_location || '',
@@ -52,9 +65,11 @@ export default function ClassDetails() {
   // handle to update local variables when user is editing attributes
   const handleInputChange = (e) => {
     setClassData({ ...classData, [e.name]: e.value });
+    setChangesMade(true);
   };
 
   const handleTimesChange = (e) => {
+    const tempType = e.type;
     const tempDay = e.name;
     const tempValue = e.value;
     console.log(tempDay);
@@ -63,22 +78,29 @@ export default function ClassDetails() {
     setTimesData((prevTimesData) => [
       ...prevTimesData,
       {
-          day: tempDay,
-          start_time: tempValue[0],
-          end_time: tempValue[1],
+        type: tempType,
+        day: tempDay,
+        start_time: tempValue[0],
+        end_time: tempValue[1],
       },
     ]);
   };
 
   useEffect(() => {
+    if (!isPageLoaded) {
+      fetchCourseList();
+      setIsPageLoaded(!isPageLoaded);
+    }
     console.log(classData);
     console.log(timesData);
-  }, [classData, timesData]);
+    console.log(courseIds);
+  }, [isPageLoaded, classData, timesData, courseIds]);
 
   // handle to cancel webpage changes when user is done editing details
   const handleCancelChanges = () => {
     // Reset form data to initial class data
     setClassData({
+      id: classInstance.id || '',
       class_comment: classInstance.class_comment || '',
       class_time: classInstance.class_time || '',
       class_location: classInstance.class_location || '',
@@ -99,9 +121,50 @@ export default function ClassDetails() {
 
   // handle to save webpage changes when user is done editing details
   const handleSaveChanges = async () => {
-    const csrfToken = getCookie('csrf_access_token');
+    const timeEndpoint = `/course/setTime`
+    const classEndpoint = `/course/setClassDetails`
+    callSetTime(timeEndpoint);
+    callSetTime(classEndpoint);
+  };
+
+  // handleSaveChanges helper to update ClassTimes table in database
+  const callSetTime = async (endpoint) => {
+    const payload = {
+      ...timesData,
+      id: classInstance.id,
+    };
+    console.log(payload);
     try {
-      const response = await fetch('/profile/update', {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Profile update failed');
+      }
+
+      setChangesMade(false); // Reset changes made
+
+      // Update the times context with the new data
+      const updatedTimes = await response.json();
+      setTimesData((currentTimes) => ({ ...currentTimes, ...updatedTimes }));
+    } catch (error) {
+      console.error('Error updating time profile:', error);
+    }
+
+  };
+
+  // handleSaveChanges helper to update ClassInformation table in database
+  const callSetClassDetails = async (endpoint) => {
+    try {
+      const response = await fetch(endpoint, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -115,13 +178,74 @@ export default function ClassDetails() {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Profile update failed');
       }
+
       setChangesMade(false); // Reset changes made
-      // Update the user context with the new data
-      const updatedUser = await response.json();
-      setUser((currentUser) => ({ ...currentUser, ...updatedUser }));
+
+      // Update the class context with the new data
+      const updatedData = await response.json();
+      setClassData((currentData) => ({ ...currentData, ...updatedData }));
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating class profile:', error);
     }
+
+  };
+
+  // fetch all courses the student is associated with from database
+  const fetchCourseList = async () => {
+    if (user.account_type !== "mentor") return;
+
+    try {
+      const response = await fetch(`/student/courses`, {
+        credentials: 'include',
+      });
+
+      const fetchedCourseList = await response.json();
+
+      setCourseIds(fetchedCourseList);
+    } catch (error) {
+      console.error("Error fetching course list:", error);
+    }
+  };
+
+  // update the course information being displayed on the webpage
+  const updateCourseInfo = (courseId) => {
+    if (!courseId) {
+      return;
+    }
+
+    const selectedCourse = courseIds.find(course => course.id === courseId);
+
+    if (selectedCourse) {
+      // Update classData with selectedCourse
+      setClassData(selectedCourse);
+
+      // fetch instructor information from selected course
+      fetchInstructorInfo(selectedCourse.teacher_id);
+    } else {
+      console.error("Selected course not found");
+    }
+  };
+
+  // fetch instructor information from a user based on their ID
+  const fetchInstructorInfo = async (teacherId) => {
+    try {
+      const response = await fetch(`/profile/instructor/${encodeURIComponent(teacherId)}`, {
+        credentials: 'include',
+      });
+
+      const fetchedInstructorInfo = await response.json();
+
+      // set instructor data with fetched data
+      setInstructorData(fetchedInstructorInfo);
+    } catch (error) {
+      console.error("Error fetching course info:", error);
+    }
+  };
+
+  const handleCourseChange = (e) => {
+    const selectedCourse = parseInt(e.target.value);
+    setSelectedCourseId(selectedCourse);
+    updateCourseInfo(selectedCourse);
   };
 
   if (!user) {
@@ -130,6 +254,23 @@ export default function ClassDetails() {
 
   return (
     <div className="flex flex-col w-7/8 m-auto">
+      <div className="flex flex-col w-2/3 p-5 m-auto">
+        <div id="dropdown">
+          <h1 className='inline-block'><strong>Select Course:</strong></h1>
+          <select
+            className='border border-light-gray rounded ml-2'
+            id="course-dropdown"
+            value={selectedCourseId}
+            onChange={(e) => handleCourseChange(e)}
+          >
+            <option value="">Select...</option>
+            {courseIds.map((course) => (
+              <option key={course.id} value={course.id}>{course.class_name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
         <h2 className='pb-10 text-center font-bold text-2xl'>Class Details</h2>
         <div className="flex flex-col">
@@ -149,27 +290,27 @@ export default function ClassDetails() {
           <textarea className='border border-light-gray mb-3'
             name="class_comment"
             value={classData.class_comment}
-            onChange={handleInputChange}
+            onChange={(event) => handleInputChange(event.target)}
           />
 
 
           {/* Class Times */}
           <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange }}/>
+            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange }} />
           </div>
 
           {/* Office Hours Times */}
           <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange }}/>
+            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange }} />
           </div>
 
           {/* Class Location and Recording Link */}
           <div>
-            <MeetingLocation isClassLocation={true} param={{functionpassed: handleInputChange }} />
+            <MeetingLocation isClassLocation={true} param={{ functionpassed: handleInputChange }} />
           </div>
           {/* Office Hours Location and Link */}
           <div>
-            <MeetingLocation isClassLocation={false} param={{functionpassed : handleInputChange}}/>
+            <MeetingLocation isClassLocation={false} param={{ functionpassed: handleInputChange }} />
           </div>
 
           {changesMade && (

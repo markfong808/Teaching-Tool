@@ -24,6 +24,7 @@ def create_app():
     from .profile import profile
     from .programs import programs
     from .feedback import feedback
+    from .courses import courses
     from .models import User
     ##create MySQL database##    
     load_dotenv()
@@ -46,6 +47,7 @@ def create_app():
     app.register_blueprint(profile, url_prefix='/')
     app.register_blueprint(programs, url_prefix='/')
     app.register_blueprint(feedback, url_prefix='/')
+    app.register_blueprint(courses, url_prefix='/')
     
     with app.app_context():
         db.create_all()

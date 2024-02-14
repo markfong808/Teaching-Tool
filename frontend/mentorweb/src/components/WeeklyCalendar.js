@@ -6,15 +6,6 @@ import { Tooltip } from "../components/Tooltip.js";
 import Comment from "../components/Comment.js";
 import TimeRangePicker from '@wojtekmaj/react-timerange-picker';
 
-/*
-TO DO
- - need to connect class instance to user logged in
- - Make a custom TimeRangePicker, so it looks like wireframe
- - let use choose time blocks
- - fix createTimeSlot to actually publish new time slots
- - let the title be decided from parent function
-*/
-
 export default function WeeklyCalendar({ isClassTimes, param }) {
 
     const [timePickersList, setTimePickers] = useState({
@@ -44,6 +35,7 @@ export default function WeeklyCalendar({ isClassTimes, param }) {
     const handleCreateChange = (day, newTimeRange) => {
         setWeekdaysList({ ...weekdaysList, day: newTimeRange });
         param.functionPassed({
+            type: `${isClassTimes ? 'class_times' : 'office_hours'}`,
             name: day,
             value: newTimeRange
         });

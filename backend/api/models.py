@@ -91,11 +91,11 @@ class ClassInformation(db.Model):                                               
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
     teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                           # ADDED
     class_name = db.Column(db.String(255))                                                                 # ADDED
-    class_time = db.Column(db.String(255))                                                                 # ADDED
+    class_time = db.Column(db.String(255))                                                                 # ADDED    DEPRECATED
     class_location = db.Column(db.String(255))                                                             # ADDED
     class_link = db.Column(db.String(255))                                                                 # ADDED
     class_recordings_link = db.Column(db.String(255))                                                      # ADDED
-    office_hours_time = db.Column(db.String(255))                                                          # ADDED
+    office_hours_time = db.Column(db.String(255))                                                          # ADDED    DEPRECATED
     office_hours_location = db.Column(db.String(255))                                                      # ADDED
     office_hours_link = db.Column(db.String(255))                                                          # ADDED
     discord_link = db.Column(db.String(255))                                                               # ADDED
@@ -116,6 +116,7 @@ class CourseMembers(db.Model):                                                  
 class ClassTimes(db.Model):                                                                                # ADDED
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
     class_id = db.Column(db.Integer, db.ForeignKey('classinformation.id'))                                 # ADDED
+    type = db.Column(db.String(50))                                                                        # ADDED
     day = db.Column(db.String(50))                                                                         # ADDED
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                          # ADDED
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                            # ADDED
