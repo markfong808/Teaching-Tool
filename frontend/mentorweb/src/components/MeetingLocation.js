@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 
-export default function MeetingLocation({isClassLocation, param}) {
+export default function MeetingLocation({isClassLocation, param, data, loadPage}) {
     const [boxShown, setBoxShown] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -28,14 +28,43 @@ export default function MeetingLocation({isClassLocation, param}) {
         });
     };
 
+    useEffect(() => {
+
+        // if table should be loaded with values
+        if (loadPage) {
+            // load formData
+            if (isClassLocation) {
+                setFormData({
+                    class_location: data.class_location,
+                    class_recordings_link: data.class_recordings_link
+                });
+                if (data.class_location !== '') {
+                    setBoxShown(true);
+                }
+            } else {
+                setFormData({
+                    office_hours_location: data.office_hours_location,
+                    office_hours_link: data.office_hours_link
+                });
+                if (data.office_hours_location !== '') {
+                    setBoxShown(true);
+                }
+            }
+
+            //console.log(formData.class_location);
+
+            param.loadPageFunction(!loadPage);
+        }
+    }, [data, formData, param, loadPage, isClassLocation]);
+
     return (
         <div>
             <div className="flex flex-col w-1/2 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
                 <div className="flex items-center">
                     <label className="font-bold text-2xl">{isClassLocation ? "Set Class Location:" : "Set Office Location:"}</label>
-                    <input type="checkbox" id="myCheckbox" class="form-checkbox h-5 w-5 text-blue-600 ml-5" onClick={showBox}></input>
+                    <input type="checkbox" id="myCheckbox" class="form-checkbox h-5 w-5 text-blue-600 ml-5" checked={boxShown} onChange={showBox}></input>
                     <span className="px-2 py-2 text-sm font-normal">In-Person?</span>
-                    {boxShown &&(
+                    {boxShown && (
                         <input className='border border-light-gray ml-2 text-sm font-normal'
                             name = {isClassLocation ? "class_location" : "office_hours_location"}
                             value= {isClassLocation ? formData.class_location : formData.office_hours_location}

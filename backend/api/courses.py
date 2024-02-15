@@ -25,42 +25,61 @@ def refresh_expiring_jwts(response):
         return response
     
 
-# WORKING ON RN
+# Get all courses a user is registered in
+@courses.route('/course/times/<course_id>', methods=['GET'])
+@jwt_required()
+def get_times(course_id):
+    try:
+        courseTimes = ClassTimes.query.filter_by(class_id=course_id).all()
+        
+        if courseTimes:
+            course_times_list = []
+            for courseTime in courseTimes:
+                course_time_info = {
+                    'type': courseTime.type,
+                    'day': courseTime.day,
+                    'start_time': courseTime.start_time,
+                    'end_time': courseTime.end_time,
+                }
+                course_times_list.append(course_time_info)
+            return jsonify(course_times_list), 200
+        else:
+            return jsonify({"error": "student not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
 # Set the classtime of a course
 @courses.route('/course/setTime', methods=['POST'])
 @jwt_required()
 def set_class_time():
     try:
         data = request.get_json()
-        course_id = data[0].get('id')
+        course_id = data.get('id')
         classTimesTuples = []
-        for entry in data:
-            classTimeInformation = {
-                'class_id': entry.get('id'),
-                'type': entry.get('type'),
-                'day': entry.get('day'),
-                'start_time': entry.get('start_time'),
-                'end_time': entry.get('end_time'),
-            }
-            classTimesTuples.append(classTimeInformation)
+
+        if data:
+            for i in range(len(data) - 1):
+                time_data = data.get(str(i), {})
+
+                new_time = ClassTimes(
+                    class_id=course_id,
+                    type=time_data.get('type'),
+                    day=time_data.get('day'),
+                    start_time=time_data.get('start_time'),
+                    end_time=time_data.get('end_time'),
+                )
+                classTimesTuples.append(new_time)
         
-        courses = ClassTimes.query.filter_by(class_id=course_id).all()
+            courses = ClassTimes.query.filter_by(class_id=course_id).all()
         
         # if course already exists in the class times table, i.e. columns are populated
-        if data:
             if courses:
                 for course in courses:
                     db.session.delete(course)
             
             for classTimesTuple in classTimesTuples:
-                new_time = ClassTimes(
-                    id = classTimesTuple.class_id,
-                    type = classTimesTuple.type,
-                    day = classTimesTuple.day,
-                    start_time = classTimesTuple.start_time,
-                    end_time = classTimesTuple.end_time,
-                )
-                db.session.add(new_time)
+                db.session.add(classTimesTuple)
             db.session.commit()
             return jsonify({"message": "Times updated successfully"}), 200
         else:
@@ -84,8 +103,11 @@ def set_class_details():
         office_hours_time = data.get('office_hours_time')
         office_hours_location = data.get('office_hours_location')
         office_hours_link = data.get('office_hours_link')
-        course = ClassInformation.query(id=course_id)
+
+        course = ClassInformation.query.filter_by(id=course_id).first()
+
         if course:
+            db.session.delete(course)
             new_details = ClassInformation(
                 id=course_id,
                 class_comment=class_comment,
@@ -99,6 +121,7 @@ def set_class_details():
             )
             db.session.add(new_details)
             db.session.commit()
+            
             return jsonify({"message": "Class times updated successfully"}), 200
         else:
             return jsonify({"error": "Class doesn't exist"}), 404

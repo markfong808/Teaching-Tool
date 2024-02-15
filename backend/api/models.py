@@ -115,7 +115,7 @@ class CourseMembers(db.Model):                                                  
 
 class ClassTimes(db.Model):                                                                                # ADDED
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
-    class_id = db.Column(db.Integer, db.ForeignKey('classinformation.id'))                                 # ADDED
+    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                # ADDED
     type = db.Column(db.String(50))                                                                        # ADDED
     day = db.Column(db.String(50))                                                                         # ADDED
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                          # ADDED

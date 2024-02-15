@@ -17,6 +17,10 @@ export default function ClassDetails() {
   const [courseIds, setCourseIds] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [loadClassTimesTable, setClassTimesTable] = useState(false);
+  const [loadOfficeHoursTable, setOfficeHoursTable] = useState(false);
+  const [loadClassLocRec, setClassLocRec] = useState(false);
+  const [loadOfficeHoursLocRec, setOfficeHoursLocRec] = useState(false);
 
   // class variables
   const contextValue = useContext(ClassContext);
@@ -35,7 +39,12 @@ export default function ClassDetails() {
 
   const timesContextValue = useContext(TimesContext);
   const { timesInstance } = timesContextValue || {};
+  // all times Data
   const [timesData, setTimesData] = useState([]);
+  // class times data
+  const [classTimesData, setClassTimesData] = useState([]);
+  // office hours times data
+  const [officeHoursTimesData, setOfficeHoursTimesData] = useState([]);
 
   const [instructorData, setInstructorData] = useState({
     id: '',
@@ -72,11 +81,9 @@ export default function ClassDetails() {
     const tempType = e.type;
     const tempDay = e.name;
     const tempValue = e.value;
-    console.log(tempDay);
-    console.log(tempValue[0]);
 
     setTimesData((prevTimesData) => [
-      ...prevTimesData,
+      ...(Array.isArray(prevTimesData) ? prevTimesData : []),
       {
         type: tempType,
         day: tempDay,
@@ -84,17 +91,8 @@ export default function ClassDetails() {
         end_time: tempValue[1],
       },
     ]);
+    
   };
-
-  useEffect(() => {
-    if (!isPageLoaded) {
-      fetchCourseList();
-      setIsPageLoaded(!isPageLoaded);
-    }
-    console.log(classData);
-    console.log(timesData);
-    console.log(courseIds);
-  }, [isPageLoaded, classData, timesData, courseIds]);
 
   // handle to cancel webpage changes when user is done editing details
   const handleCancelChanges = () => {
@@ -112,6 +110,7 @@ export default function ClassDetails() {
     });
 
     setTimesData([{
+      type: timesInstance.type || '',
       day: timesInstance.day || '',
       start_time: timesInstance.start_time || '',
       end_time: timesInstance.end_time || '',
@@ -123,17 +122,20 @@ export default function ClassDetails() {
   const handleSaveChanges = async () => {
     const timeEndpoint = `/course/setTime`
     const classEndpoint = `/course/setClassDetails`
-    callSetTime(timeEndpoint);
-    callSetTime(classEndpoint);
+    if (timesData != null) {
+      callSetTime(timeEndpoint);
+    }
+    if (classData != null) {
+      callSetClassDetails(classEndpoint);
+    }
   };
 
   // handleSaveChanges helper to update ClassTimes table in database
   const callSetTime = async (endpoint) => {
     const payload = {
+      id: classData.id,
       ...timesData,
-      id: classInstance.id,
     };
-    console.log(payload);
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -151,10 +153,6 @@ export default function ClassDetails() {
       }
 
       setChangesMade(false); // Reset changes made
-
-      // Update the times context with the new data
-      const updatedTimes = await response.json();
-      setTimesData((currentTimes) => ({ ...currentTimes, ...updatedTimes }));
     } catch (error) {
       console.error('Error updating time profile:', error);
     }
@@ -180,10 +178,6 @@ export default function ClassDetails() {
       }
 
       setChangesMade(false); // Reset changes made
-
-      // Update the class context with the new data
-      const updatedData = await response.json();
-      setClassData((currentData) => ({ ...currentData, ...updatedData }));
     } catch (error) {
       console.error('Error updating class profile:', error);
     }
@@ -218,42 +212,91 @@ export default function ClassDetails() {
     if (selectedCourse) {
       // Update classData with selectedCourse
       setClassData(selectedCourse);
-
-      // fetch instructor information from selected course
-      fetchInstructorInfo(selectedCourse.teacher_id);
     } else {
       console.error("Selected course not found");
     }
   };
 
-  // fetch instructor information from a user based on their ID
-  const fetchInstructorInfo = async (teacherId) => {
+  const fetchTimesData = async (courseId) => {
     try {
-      const response = await fetch(`/profile/instructor/${encodeURIComponent(teacherId)}`, {
+      const response = await fetch(`/course/times/${encodeURIComponent(courseId)}`, {
         credentials: 'include',
       });
 
-      const fetchedInstructorInfo = await response.json();
+      const fetchedCourseTimes = await response.json();
 
       // set instructor data with fetched data
-      setInstructorData(fetchedInstructorInfo);
+      setTimesData(fetchedCourseTimes);
+
+      const tempClassTimesData = fetchedCourseTimes
+      .filter(item => item.type === 'class_times')
+      .reduce((acc, item) => {
+        acc[item.day] = {
+          start_time: item.start_time,
+          end_time: item.end_time
+        };
+        return acc;
+      }, {});
+
+      const tempOfficeHoursData = fetchedCourseTimes
+      .filter(item => item.type === 'office_hours')
+      .reduce((acc, item) => {
+        acc[item.day] = {
+          start_time: item.start_time,
+          end_time: item.end_time
+        };
+        return acc;
+      }, {});
+
+      setClassTimesData(tempClassTimesData);
+      setOfficeHoursTimesData(tempOfficeHoursData);
     } catch (error) {
       console.error("Error fetching course info:", error);
     }
   };
 
   const handleCourseChange = (e) => {
+
+    // get all courses' details from database related to user
+    fetchCourseList();
+
     const selectedCourse = parseInt(e.target.value);
+
+    // change selectedCourseId
     setSelectedCourseId(selectedCourse);
+
+    // update course info displayed on page
     updateCourseInfo(selectedCourse);
+
+    // update timesData
+    fetchTimesData(selectedCourse);
+
+    handleLoadPage();
   };
+
+  const handleLoadPage = () => {
+    setClassTimesTable(!loadClassTimesTable);
+    setOfficeHoursTable(!loadOfficeHoursTable);
+    setClassLocRec(!loadClassLocRec);
+    setOfficeHoursLocRec(!loadOfficeHoursLocRec);
+  };
+
+  useEffect(() => {
+    if (!isPageLoaded) {
+      fetchCourseList();
+      setIsPageLoaded(!isPageLoaded);
+    }
+    console.log(classData);
+    console.log(timesData);
+    console.log(courseIds);
+  }, [isPageLoaded, classData, timesData, courseIds]);
 
   if (!user) {
     return <div>Loading user data...</div>;
   }
 
   return (
-    <div className="flex flex-col w-7/8 m-auto">
+    <div className="flex flex-col m-auto">
       <div className="flex flex-col w-2/3 p-5 m-auto">
         <div id="dropdown">
           <h1 className='inline-block'><strong>Select Course:</strong></h1>
@@ -295,22 +338,22 @@ export default function ClassDetails() {
 
 
           {/* Class Times */}
-          <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange }} />
+          <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable }} times={classTimesData} loadPage={loadClassTimesTable}/>
           </div>
 
           {/* Office Hours Times */}
-          <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange }} />
+          <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable}/>
           </div>
 
           {/* Class Location and Recording Link */}
           <div>
-            <MeetingLocation isClassLocation={true} param={{ functionpassed: handleInputChange }} />
+            <MeetingLocation isClassLocation={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassLocRec }} data={{class_location: classData.class_location, class_recordings_link: classData.class_recordings_link }} loadPage={loadClassLocRec}/>
           </div>
           {/* Office Hours Location and Link */}
           <div>
-            <MeetingLocation isClassLocation={false} param={{ functionpassed: handleInputChange }} />
+            <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec }} data={{office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec}/>
           </div>
 
           {changesMade && (
