@@ -139,7 +139,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
                         <tbody>
                                 <td>
                                     {timePickersList.Monday && (
-                                        <div className={`flex flex-col items-center ${buttonVisible.Monday ? '' : 'mb-14'}`}>
+                                        <div className={`flex flex-col items-center`}>
                                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                                 <SingleInputTimeRangeField
                                                     label="Set Time"
@@ -157,7 +157,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
 
                                 <td>
                                     {timePickersList.Tuesday && (
-                                        <div className={`flex flex-col items-center ${buttonVisible.Tuesday ? '' : 'mb-14'}`}>
+                                        <div className={`flex flex-col items-center`}>
                                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                                 <SingleInputTimeRangeField
                                                     label="Set Time"
@@ -175,7 +175,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
 
                                 <td>
                                     {timePickersList.Wednesday && (
-                                        <div className={`flex flex-col items-center ${buttonVisible.Wednesday ? '' : 'mb-14'}`}>
+                                        <div className={`flex flex-col items-center`}>
                                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                                 <SingleInputTimeRangeField
                                                     label="Set Time"
@@ -193,7 +193,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
 
                                 <td>
                                     {timePickersList.Thursday && (
-                                        <div className={`flex flex-col items-center ${buttonVisible.Thursday ? '' : 'mb-14'}`}>
+                                        <div className={`flex flex-col items-center`}>
                                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                                 <SingleInputTimeRangeField
                                                     label="Set Time"
@@ -211,7 +211,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
 
                                 <td>
                                     {timePickersList.Friday && (
-                                        <div className={`flex flex-col items-center ${buttonVisible.Friday ? '' : 'mb-14'}`}>
+                                        <div className={`flex flex-col items-center`}>
                                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                                 <SingleInputTimeRangeField
                                                     label="Set Time"
