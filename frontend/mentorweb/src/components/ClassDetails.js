@@ -316,7 +316,11 @@ export default function ClassDetails() {
       </div>
 
       <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
+        <div className="relative">
+          <button className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6">Auto Generate Details</button>
+        </div>
         <h2 className='pb-10 text-center font-bold text-2xl'>Class Details</h2>
+         
         <div className="flex flex-col">
 
           <div>
