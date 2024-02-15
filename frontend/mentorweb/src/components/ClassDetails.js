@@ -91,7 +91,7 @@ export default function ClassDetails() {
         end_time: tempValue[1],
       },
     ]);
-    
+
   };
 
   // handle to cancel webpage changes when user is done editing details
@@ -229,24 +229,24 @@ export default function ClassDetails() {
       setTimesData(fetchedCourseTimes);
 
       const tempClassTimesData = fetchedCourseTimes
-      .filter(item => item.type === 'class_times')
-      .reduce((acc, item) => {
-        acc[item.day] = {
-          start_time: item.start_time,
-          end_time: item.end_time
-        };
-        return acc;
-      }, {});
+        .filter(item => item.type === 'class_times')
+        .reduce((acc, item) => {
+          acc[item.day] = {
+            start_time: item.start_time,
+            end_time: item.end_time
+          };
+          return acc;
+        }, {});
 
       const tempOfficeHoursData = fetchedCourseTimes
-      .filter(item => item.type === 'office_hours')
-      .reduce((acc, item) => {
-        acc[item.day] = {
-          start_time: item.start_time,
-          end_time: item.end_time
-        };
-        return acc;
-      }, {});
+        .filter(item => item.type === 'office_hours')
+        .reduce((acc, item) => {
+          acc[item.day] = {
+            start_time: item.start_time,
+            end_time: item.end_time
+          };
+          return acc;
+        }, {});
 
       setClassTimesData(tempClassTimesData);
       setOfficeHoursTimesData(tempOfficeHoursData);
@@ -298,7 +298,7 @@ export default function ClassDetails() {
   return (
     <div className="flex flex-col m-auto">
       <div className="w-2/3 p-5 m-auto">
-        <div className='flex'>
+        <div className='flex items-center'>
           <h1><strong>Select Course:</strong></h1>
           <select
             className='border border-light-gray rounded ml-2'
@@ -312,15 +312,16 @@ export default function ClassDetails() {
             ))}
           </select>
           <button className='ms-auto font-bold w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
+          <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 absolute right-0 mr-14">Create Course</button>
         </div>
       </div>
 
-      <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
+      <div className="flex flex-col p-5 m-auto border border-light-gray rounded-md shadow-md">
         <div className="relative">
-          <button className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6">Auto Generate Details</button>
+          <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6">Auto Generate Details</button>
         </div>
         <h2 className='pb-10 text-center font-bold text-2xl'>Class Details</h2>
-         
+
         <div className="flex flex-col">
 
           <div>
@@ -343,22 +344,22 @@ export default function ClassDetails() {
 
 
           {/* Class Times */}
-          <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable }} times={classTimesData} loadPage={loadClassTimesTable}/>
+          <div className="flex flex-col w-2/3 p-5 border border-light-gray rounded-md shadow-md mt-5">
+            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable }} times={classTimesData} loadPage={loadClassTimesTable} />
           </div>
 
           {/* Office Hours Times */}
           <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable}/>
+            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable} />
           </div>
 
           {/* Class Location and Recording Link */}
           <div>
-            <MeetingLocation isClassLocation={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassLocRec }} data={{class_location: classData.class_location, class_recordings_link: classData.class_recordings_link }} loadPage={loadClassLocRec}/>
+            <MeetingLocation isClassLocation={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassLocRec }} data={{ class_location: classData.class_location, class_recordings_link: classData.class_recordings_link }} loadPage={loadClassLocRec} />
           </div>
           {/* Office Hours Location and Link */}
           <div>
-            <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec }} data={{office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec}/>
+            <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec }} data={{ office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec} />
           </div>
 
           {changesMade && (
