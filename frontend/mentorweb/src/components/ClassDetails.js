@@ -297,9 +297,9 @@ export default function ClassDetails() {
 
   return (
     <div className="flex flex-col m-auto">
-      <div className="flex flex-col w-2/3 p-5 m-auto">
-        <div id="dropdown">
-          <h1 className='inline-block'><strong>Select Course:</strong></h1>
+      <div className="w-2/3 p-5 m-auto">
+        <div className='flex'>
+          <h1><strong>Select Course:</strong></h1>
           <select
             className='border border-light-gray rounded ml-2'
             id="course-dropdown"
@@ -311,6 +311,7 @@ export default function ClassDetails() {
               <option key={course.id} value={course.id}>{course.class_name}</option>
             ))}
           </select>
+          <button className='ms-auto w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
         </div>
       </div>
 
