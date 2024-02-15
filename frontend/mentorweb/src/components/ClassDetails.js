@@ -311,7 +311,7 @@ export default function ClassDetails() {
               <option key={course.id} value={course.id}>{course.class_name}</option>
             ))}
           </select>
-          <button className='ms-auto w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
+          <button className='ms-auto font-bold w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
         </div>
       </div>
 
