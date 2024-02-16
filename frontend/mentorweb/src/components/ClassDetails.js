@@ -35,7 +35,8 @@ export default function ClassDetails() {
     class_recordings_link: classInstance?.class_recordings_link || '',
     office_hours_time: classInstance?.office_hours_time || '',
     office_hours_location: classInstance?.office_hours_location || '',
-    office_hours_link: classInstance?.office_hours_link || ''
+    office_hours_link: classInstance?.office_hours_link || '',
+    discord_link: classInstance?.discord_link || ''
   });
 
   const timesContextValue = useContext(TimesContext);
@@ -67,7 +68,8 @@ export default function ClassDetails() {
         class_recordings_link: classInstance?.class_recordings_link || '',
         office_hours_time: classInstance?.office_hours_time || '',
         office_hours_location: classInstance?.office_hours_location || '',
-        office_hours_link: classInstance?.office_hours_link || ''
+        office_hours_link: classInstance?.office_hours_link || '',
+        discord_link: classInstance?.discord_link || ''
       });
     }
   }, [user, classInstance]);
@@ -137,6 +139,7 @@ export default function ClassDetails() {
       office_hours_time: classInstance.office_hours_time || '',
       office_hours_location: classInstance.office_hours_location || '',
       office_hours_link: classInstance.office_hours_link || '',
+      discord_link: classInstance?.discord_link || ''
     });
 
     setTimesData([{
@@ -431,7 +434,25 @@ export default function ClassDetails() {
             <div>
               <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec, changesMade: setChangesMade }} data={{ office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec} changes={changesMade}/>
             </div>
+
+            <div className="w-2/3 m-auto">
+              <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+                <div className="flex">
+                  <label className="whitespace-nowrap font-bold text-2xl mb-2">Set Discord Link:</label>
+                </div>
+                  <div className="flex flex-row ">
+                    <label className="whitespace-nowrap">Discord Link:</label>
+                    <input className='border border-light-gray ml-2 text-sm font-normal w-40 mt-1'
+                      name= "discord_link"
+                      value={classData.discord_link}
+                      onChange={(event) => handleInputChange(event.target)}
+                    />
+                  </div>
+                </div>
+              </div>
           </div>
+
+
 
           {changesMade && (
             <div className="flex flex-row justify-end my-5">
