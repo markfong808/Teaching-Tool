@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { UserContext } from '../context/UserContext';
 import { capitalizeFirstLetter } from '../utils/FormatDatetime';
 import { getCookie } from '../utils/GetCookie';
@@ -215,21 +215,23 @@ export default function ClassDetails() {
   };
 
   // fetch all courses the student is associated with from database
-  const fetchCourseList = async () => {
+  const fetchCourseList = useCallback(async () => {
     if (user.account_type !== "mentor") return;
-
+  
     try {
       const response = await fetch(`/student/courses`, {
         credentials: 'include',
       });
-
+  
       const fetchedCourseList = await response.json();
 
+      console.log(fetchedCourseList);
+  
       setCourseIds(fetchedCourseList);
     } catch (error) {
       console.error("Error fetching course list:", error);
     }
-  };
+  }, [user, setCourseIds]);
 
   // update the course information being displayed on the webpage
   const updateCourseInfo = (courseId) => {
@@ -294,49 +296,23 @@ export default function ClassDetails() {
 
   const handleCreateCourse = async () => {
     try {
-      const response = await fetch(`/course/add-course`, {
+      const payload = {
+        class_name: courseName, 
+        user_id: user.id, 
+        role: user.account_type
+      };
+
+      await fetch(`/course/add-course`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': csrfToken,
         },
-        body: JSON.stringify({ user_id: user.id, class_name: courseName }),
+        body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Course creation failed');
-      }
-
-      const createdCourseId = await response.json();
-
-      handleAddInstructorToCourse(createdCourseId);
 
       setIsPageLoaded(false);
-    } catch (error) {
-      console.error('Error creating course:', error);
-    }
-  };
-
-
-  const handleAddInstructorToCourse = async (courseId) => {
-    try {
-      const response = await fetch(`/course/add-user`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-        },
-        body: JSON.stringify({ user_id: user.id, class_id: courseId, role: user.account_type }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Course creation failed');
-      }
-
     } catch (error) {
       console.error('Error creating course:', error);
     }
@@ -376,7 +352,7 @@ export default function ClassDetails() {
     console.log(classData);
     console.log(timesData);
     console.log(courseIds);
-  }, [isPageLoaded, classData, timesData, courseIds]);
+  }, [isPageLoaded, classData, timesData, courseIds, fetchCourseList]);
 
   if (!user) {
     return <div>Loading user data...</div>;

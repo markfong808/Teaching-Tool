@@ -107,7 +107,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
 
             param.loadPageFunction(!loadPage);
         }
-    }, [timePickersList, times]);
+    }, [timePickersList, times, weekdaysList]);
 
     // Display meeting list
     return (

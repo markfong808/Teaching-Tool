@@ -130,14 +130,15 @@ def set_class_details():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-# Create a new course
+# Create a new course and adds the user who created it to CourseMembers
 @courses.route('/course/add-course', methods=['POST'])
 @jwt_required()
 def add_new_course():
     try:
         data = request.get_json()
+        class_name = data.get('class_name')
         user_id = data.get('user_id')
-        class_name = data.get('class_name')  
+        role = data.get('role')
 
         if data:
             new_details = ClassInformation(
@@ -148,7 +149,19 @@ def add_new_course():
             db.session.commit()
             
             new_course_id = new_details.id
-            return jsonify(new_course_id), 200
+
+            if new_course_id & user_id:
+                new_details = CourseMembers(
+                    class_id=new_course_id,
+                    user_id=user_id,
+                    role=role,
+                )
+                db.session.add(new_details)
+                db.session.commit()
+            
+                return jsonify({"message": "Added to course successfully"}), 200
+            else:
+                return jsonify({"error": "Insufficient details to add user to course"}), 404
         else:
             return jsonify({"error": "Teacher ID doesn't exist"}), 404
     except Exception as e:
