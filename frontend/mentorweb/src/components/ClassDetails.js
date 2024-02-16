@@ -316,50 +316,53 @@ export default function ClassDetails() {
         </div>
       </div>
 
-      <div className="flex flex-col p-5 m-auto border border-light-gray rounded-md shadow-md">
+      <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md">
         <div className="relative">
           <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6">Auto Generate Details</button>
         </div>
         <h2 className='pb-10 text-center font-bold text-2xl'>Class Details</h2>
 
         <div className="flex flex-col">
+          <div className='w-3/4 m-auto'>
+            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+              <div>
+                <label className='font-bold'>
+                  Additional Comments &nbsp;
+                </label>
 
-          <div>
-            <label className='font-bold'>
-              Additional Comments &nbsp;
-            </label>
+                <Tooltip text="Additional comments displayed on the class webpage for students">
+                  <span>
+                    ⓘ
+                  </span>
+                </Tooltip>
+              </div>
 
-            <Tooltip text="Additional comments displayed on the class webpage for students">
-              <span>
-                ⓘ
-              </span>
-            </Tooltip>
-          </div>
-
-          <textarea className='border border-light-gray mb-3'
-            name="class_comment"
-            value={classData.class_comment}
-            onChange={(event) => handleInputChange(event.target)}
-          />
+              <textarea className='border border-light-gray mt-3'
+                name="class_comment"
+                value={classData.class_comment}
+                onChange={(event) => handleInputChange(event.target)}
+              />
+            </div>
 
 
-          {/* Class Times */}
-          <div className="flex flex-col w-2/3 p-5 border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable }} times={classTimesData} loadPage={loadClassTimesTable} />
-          </div>
+            {/* Class Times */}
+            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+              <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable }} times={classTimesData} loadPage={loadClassTimesTable} />
+            </div>
 
-          {/* Office Hours Times */}
-          <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-            <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable} />
-          </div>
+            {/* Office Hours Times */}
+            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+              <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable} />
+            </div>
 
-          {/* Class Location and Recording Link */}
-          <div>
-            <MeetingLocation isClassLocation={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassLocRec }} data={{ class_location: classData.class_location, class_recordings_link: classData.class_recordings_link }} loadPage={loadClassLocRec} />
-          </div>
-          {/* Office Hours Location and Link */}
-          <div>
-            <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec }} data={{ office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec} />
+            {/* Class Location and Recording Link */}
+            <div>
+              <MeetingLocation isClassLocation={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassLocRec }} data={{ class_location: classData.class_location, class_recordings_link: classData.class_recordings_link }} loadPage={loadClassLocRec} />
+            </div>
+            {/* Office Hours Location and Link */}
+            <div>
+              <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec }} data={{ office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec} />
+            </div>
           </div>
 
           {changesMade && (

@@ -22,7 +22,7 @@ export default function MeetingLocation({isClassLocation, param, data, loadPage}
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         
-        param.functionpassed({
+        param.functionPassed({
             name: e.target.name,
             value: e.target.value
         });
@@ -58,8 +58,8 @@ export default function MeetingLocation({isClassLocation, param, data, loadPage}
     }, [data, formData, param, loadPage, isClassLocation]);
 
     return (
-        <div>
-            <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+        <div className="w-2/3 m-auto">
+            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                 <div className="flex items-center">
                     <label className="font-bold text-2xl">{isClassLocation ? "Set Class Location:" : "Set Office Location:"}</label>
                     <input type="checkbox" id="myCheckbox" class="form-checkbox h-5 w-5 text-blue-600 ml-5" checked={boxShown} onChange={showBox}></input>
@@ -73,7 +73,7 @@ export default function MeetingLocation({isClassLocation, param, data, loadPage}
                     )}
                 </div>
             </div>
-            <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                 <div className="flex items-center">
                     <label className="font-bold text-2xl">{isClassLocation ? "Class Recordings Link:" : "Virtual Meeting Link:"}</label>
                     <input className='border border-light-gray ml-2 text-sm font-normal'
