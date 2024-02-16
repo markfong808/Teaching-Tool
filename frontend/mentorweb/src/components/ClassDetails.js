@@ -21,6 +21,7 @@ export default function ClassDetails() {
   const [loadOfficeHoursTable, setOfficeHoursTable] = useState(false);
   const [loadClassLocRec, setClassLocRec] = useState(false);
   const [loadOfficeHoursLocRec, setOfficeHoursLocRec] = useState(false);
+  const [courseName, setCourseName] = useState('');
 
   // class variables
   const contextValue = useContext(ClassContext);
@@ -211,7 +212,6 @@ export default function ClassDetails() {
     } catch (error) {
       console.error('Error updating class profile:', error);
     }
-
   };
 
   // fetch all courses the student is associated with from database
@@ -261,9 +261,10 @@ export default function ClassDetails() {
       const fetchedCourseTimes = await response.json();
 
       // set instructor data with fetched data
-      setTimesData(fetchedCourseTimes);
+      if (fetchedCourseTimes !== null) {
+        setTimesData(fetchedCourseTimes);
 
-      const tempClassTimesData = fetchedCourseTimes
+        const tempClassTimesData = fetchedCourseTimes
         .filter(item => item.type === 'class_times')
         .reduce((acc, item) => {
           acc[item.day] = {
@@ -273,25 +274,72 @@ export default function ClassDetails() {
           return acc;
         }, {});
 
-      const tempOfficeHoursData = fetchedCourseTimes
-        .filter(item => item.type === 'office_hours')
-        .reduce((acc, item) => {
-          acc[item.day] = {
-            start_time: item.start_time,
-            end_time: item.end_time
-          };
-          return acc;
-        }, {});
+        const tempOfficeHoursData = fetchedCourseTimes
+          .filter(item => item.type === 'office_hours')
+          .reduce((acc, item) => {
+            acc[item.day] = {
+              start_time: item.start_time,
+              end_time: item.end_time
+            };
+            return acc;
+          }, {});
 
-      setClassTimesData(tempClassTimesData);
-      setOfficeHoursTimesData(tempOfficeHoursData);
+        setClassTimesData(tempClassTimesData);
+        setOfficeHoursTimesData(tempOfficeHoursData);
+      }
     } catch (error) {
       console.error("Error fetching course info:", error);
     }
   };
 
-  const handleCreateCourse = () => {
+  const handleCreateCourse = async () => {
+    try {
+      const response = await fetch(`/course/add-course`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ user_id: user.id, class_name: courseName }),
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Course creation failed');
+      }
+
+      const createdCourseId = await response.json();
+
+      handleAddInstructorToCourse(createdCourseId);
+
+      setIsPageLoaded(false);
+    } catch (error) {
+      console.error('Error creating course:', error);
+    }
+  };
+
+
+  const handleAddInstructorToCourse = async (courseId) => {
+    try {
+      const response = await fetch(`/course/add-user`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ user_id: user.id, class_id: courseId, role: user.account_type }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Course creation failed');
+      }
+
+    } catch (error) {
+      console.error('Error creating course:', error);
+    }
   };
 
   const handleCourseChange = (e) => {
@@ -351,6 +399,7 @@ export default function ClassDetails() {
             ))}
           </select>
           <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4" onClick={handleCreateCourse}>Create Course</button>
+          <input className='border border-light-gray ml-2 text-sm font-normal mt-2' value={courseName} onChange={(e) => setCourseName(e.target.value)}/>
           <button className='ms-auto font-bold w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
         </div>
       </div>

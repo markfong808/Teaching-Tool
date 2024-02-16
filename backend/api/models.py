@@ -104,12 +104,12 @@ class ClassInformation(db.Model):                                               
 class studentGroup(db.Model):                                                                              # ADDED
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                           # ADDED
-    class_id = db.Column(db.Integer, db.ForeignKey('classinformation.id'))                                 # ADDED
+    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                # ADDED
     group_name = db.Column(db.String(150))                                                                 # ADDED
     
 class CourseMembers(db.Model):                                                                             # ADDED
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
-    class_id = db.Column(db.Integer, db.ForeignKey('classinformation.id'))                                 # ADDED
+    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                # ADDED
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                              # ADDED
     role=db.Column(db.String(50)) # student, mentor, admin                                                 # ADDED
 

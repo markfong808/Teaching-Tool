@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, \
     set_access_cookies, get_jwt, create_access_token
 from sqlalchemy import extract, or_, func
-from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment, ClassInformation, ClassTimes
+from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment, ClassInformation, ClassTimes, CourseMembers
 from . import db
 from datetime import datetime, timedelta, timezone
 from .mail import send_email
@@ -44,7 +44,7 @@ def get_times(course_id):
                 course_times_list.append(course_time_info)
             return jsonify(course_times_list), 200
         else:
-            return jsonify({"error": "times not found"}), 404
+            return jsonify(None), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -127,5 +127,55 @@ def set_class_details():
             return jsonify({"message": "Class times updated successfully"}), 200
         else:
             return jsonify({"error": "Class doesn't exist"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# Create a new course
+@courses.route('/course/add-course', methods=['POST'])
+@jwt_required()
+def add_new_course():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        class_name = data.get('class_name')  
+
+        if data:
+            new_details = ClassInformation(
+                teacher_id=user_id,
+                class_name=class_name,
+            )
+            db.session.add(new_details)
+            db.session.commit()
+            
+            new_course_id = new_details.id
+            return jsonify(new_course_id), 200
+        else:
+            return jsonify({"error": "Teacher ID doesn't exist"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+# Add user to course
+@courses.route('/course/add-user', methods=['POST'])
+@jwt_required()
+def add_user_to_course():
+    try:
+        data = request.get_json()
+        course_id = data.get('class_id')  
+        user_id = data.get('user_id')
+        role = data.get('role')
+
+        if course_id & user_id:
+            new_details = CourseMembers(
+                class_id=course_id,
+                user_id=user_id,
+                role=role,
+            )
+            db.session.add(new_details)
+            db.session.commit()
+            
+            return jsonify({"message": "Added to course successfully"}), 200
+        else:
+            return jsonify({"error": "Insufficient details to add user to course"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
