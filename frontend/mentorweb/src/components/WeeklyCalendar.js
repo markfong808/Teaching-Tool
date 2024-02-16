@@ -4,15 +4,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { SingleInputTimeRangeField } from '@mui/x-date-pickers-pro/SingleInputTimeRangeField';
 
-export default function WeeklyCalendar({ isClassTimes, param, times, loadPage }) {
-
-    const [buttonVisible, setButtonVisible] = useState({
-        Monday: true,
-        Tuesday: true,
-        Wednesday: true,
-        Thursday: true,
-        Friday: true,
-    });
+export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, changes }) {
 
     const [timePickersList, setTimePickers] = useState({
         Monday: false,
@@ -44,18 +36,51 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
 
     // create button to push time block to parent function
     const handleCreateChange = (day, newTimeRange) => {
-        setWeekdaysList({ ...weekdaysList, day: newTimeRange });
+        if (isValidTimeBlock(newTimeRange)) {
+            setWeekdaysList({ ...weekdaysList, day: newTimeRange });
+            param.functionPassed({
+                type: `${isClassTimes ? 'class_times' : 'office_hours'}`,
+                name: day,
+                value: newTimeRange
+            });
+            
+            param.changesMade(true);
+        } else {
+            console.error('Invalid time block entered.');
+        }
+    };
+
+    const handleRemoveTimeBlock = (day) => {
+        setWeekdaysList(prevState => ({
+            ...prevState,
+            [day]: []
+        }));
+
         param.functionPassed({
             type: `${isClassTimes ? 'class_times' : 'office_hours'}`,
             name: day,
-            value: newTimeRange
+            value: []
         });
+        
+        param.changesMade(true);
+    };
 
-        setButtonVisible((prevButtonVisible) => ({
-            ...prevButtonVisible,
-            [day]: !prevButtonVisible[day],
+    const isValidTimeBlock = (timeRange) => {
+        return timeRange[0] < timeRange[1];
+    };
+
+    const handleWeekdayClick = (day) => {
+        console.log(timePickersList[day]);
+        if (timePickersList[day]) {
+            handleRemoveTimeBlock(day);
+        }
+
+        setTimePickers(prevState => ({
+          ...prevState,
+          [day]: !prevState[day]
         }));
     };
+      
 
     useEffect(() => {
         // if table should be loaded with values
@@ -79,11 +104,9 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
                 }
             }
             setWeekdaysList(updatedWeekdaysList);
-            console.log(updatedWeekdaysList);
 
             param.loadPageFunction(!loadPage);
         }
-        console.log(buttonVisible);
     }, [timePickersList, times]);
 
     // Display meeting list
@@ -101,35 +124,35 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage })
                             <th
                                 className={`border-r w-1/5 ${timePickersList.Monday ? 'bg-light-gray' : 'bg-white'}`}
                                 name="Monday"
-                                onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Monday: !prevTimePickers.Monday }))}>
+                                onClick={() => handleWeekdayClick("Monday")}>
                                 Monday
                             </th>
 
                             <th
                                 className={`border-r w-1/5 ${timePickersList.Tuesday ? 'bg-light-gray' : 'bg-white'}`}
                                 name="Tuesday"
-                                onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Tuesday: !prevTimePickers.Tuesday }))}>
+                                onClick={() => handleWeekdayClick("Tuesday")}>
                                 Tuesday
                             </th>
 
                             <th
                                 className={`border-r w-1/5 ${timePickersList.Wednesday ? 'bg-light-gray' : 'bg-white'}`}
                                 name="Wednesday"
-                                onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Wednesday: !prevTimePickers.Wednesday }))}>
+                                onClick={() => handleWeekdayClick("Wednesday")}>
                                 Wednesday
                             </th>
 
                             <th
                                 className={`border-r w-1/5 ${timePickersList.Thursday ? 'bg-light-gray' : 'bg-white'}`}
                                 name="Thursday"
-                                onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Thursday: !prevTimePickers.Thursday }))}>
+                                onClick={() => handleWeekdayClick("Thursday")}>
                                 Thursday
                             </th>
 
                             <th
                                 className={`border-r w-1/5 ${timePickersList.Friday ? 'bg-light-gray' : 'bg-white'}`}
                                 name="Friday"
-                                onClick={() => setTimePickers((prevTimePickers) => ({ ...prevTimePickers, Friday: !prevTimePickers.Friday }))}>
+                                onClick={() => handleWeekdayClick("Friday")}>
                                 Friday
                             </th>
                             </tr>

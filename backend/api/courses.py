@@ -44,7 +44,7 @@ def get_times(course_id):
                 course_times_list.append(course_time_info)
             return jsonify(course_times_list), 200
         else:
-            return jsonify({"error": "student not found"}), 404
+            return jsonify({"error": "times not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -59,6 +59,15 @@ def set_class_time():
         classTimesTuples = []
 
         if data:
+            courses = ClassTimes.query.filter_by(class_id=course_id).all()
+        
+            # if course already exists in the class times table, i.e. columns are populated
+            if courses:
+                for course in courses:
+                    db.session.delete(course)
+                db.session.commit()
+
+                
             for i in range(len(data) - 1):
                 time_data = data.get(str(i), {})
 
@@ -70,13 +79,6 @@ def set_class_time():
                     end_time=time_data.get('end_time'),
                 )
                 classTimesTuples.append(new_time)
-        
-            courses = ClassTimes.query.filter_by(class_id=course_id).all()
-        
-        # if course already exists in the class times table, i.e. columns are populated
-            if courses:
-                for course in courses:
-                    db.session.delete(course)
             
             for classTimesTuple in classTimesTuples:
                 db.session.add(classTimesTuple)

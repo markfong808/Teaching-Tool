@@ -82,16 +82,45 @@ export default function ClassDetails() {
     const tempDay = e.name;
     const tempValue = e.value;
 
-    setTimesData((prevTimesData) => [
-      ...(Array.isArray(prevTimesData) ? prevTimesData : []),
-      {
-        type: tempType,
-        day: tempDay,
-        start_time: tempValue[0],
-        end_time: tempValue[1],
-      },
-    ]);
+    // to remove a time block
+    if (tempValue.length === 0) {
+      setTimesData((prevTimesData) => {
+        // Remove entries with matching tempDay and tempType
+        const updatedTimesData = prevTimesData.filter(entry => !(entry.day === tempDay && entry.type === tempType));
+        console.log(updatedTimesData);
+        return updatedTimesData;
+      });
+    } 
+    // to add a time block
+    else {
+      setTimesData((prevTimesData) => {
+        // Check if an entry with the same day already exists
+        const existingEntryIndex = prevTimesData.findIndex((entry) => entry.day === tempDay);
 
+        if (existingEntryIndex !== -1) {
+            // If the entry already exists, replace it
+            const updatedTimesData = [...prevTimesData];
+            updatedTimesData[existingEntryIndex] = {
+                type: tempType,
+                day: tempDay,
+                start_time: tempValue[0],
+                end_time: tempValue[1],
+            };
+            return updatedTimesData;
+        } else {
+            // If the entry doesn't exist, add a new entry
+            return [
+                ...(Array.isArray(prevTimesData) ? prevTimesData : []),
+                {
+                    type: tempType,
+                    day: tempDay,
+                    start_time: tempValue[0],
+                    end_time: tempValue[1],
+                },
+            ];
+        }
+      });
+    }
   };
 
   // handle to cancel webpage changes when user is done editing details
@@ -136,6 +165,7 @@ export default function ClassDetails() {
       id: classData.id,
       ...timesData,
     };
+    console.log(payload);
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -223,6 +253,11 @@ export default function ClassDetails() {
         credentials: 'include',
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'FetchTimesData failed');
+      }
+
       const fetchedCourseTimes = await response.json();
 
       // set instructor data with fetched data
@@ -253,6 +288,10 @@ export default function ClassDetails() {
     } catch (error) {
       console.error("Error fetching course info:", error);
     }
+  };
+
+  const handleCreateCourse = () => {
+
   };
 
   const handleCourseChange = (e) => {
@@ -297,7 +336,7 @@ export default function ClassDetails() {
 
   return (
     <div className="flex flex-col m-auto">
-      <div className="w-2/3 p-5 m-auto">
+      <div className="w-3/4 p-5 m-auto">
         <div className='flex items-center'>
           <h1><strong>Select Course:</strong></h1>
           <select
@@ -311,8 +350,8 @@ export default function ClassDetails() {
               <option key={course.id} value={course.id}>{course.class_name}</option>
             ))}
           </select>
+          <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4" onClick={handleCreateCourse}>Create Course</button>
           <button className='ms-auto font-bold w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
-          <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 absolute right-0 mr-14">Create Course</button>
         </div>
       </div>
 
@@ -347,21 +386,25 @@ export default function ClassDetails() {
 
             {/* Class Times */}
             <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-              <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable }} times={classTimesData} loadPage={loadClassTimesTable} />
+              <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable, changesMade: setChangesMade }} times={classTimesData} loadPage={loadClassTimesTable} changes={changesMade}/>
             </div>
 
             {/* Office Hours Times */}
-            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-              <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable} />
+            <div className='flex flex-row items-center relative'>
+              <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+                <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable, changesMade: setChangesMade }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable} />
+              </div>
+              <button className="font-bold border border-light-gray rounded-md shadow-md text-xs px-2 py-2 absolute -right-36 mt-4">Emergency Office<br></br> Hour Changes</button>
             </div>
 
             {/* Class Location and Recording Link */}
             <div>
-              <MeetingLocation isClassLocation={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassLocRec }} data={{ class_location: classData.class_location, class_recordings_link: classData.class_recordings_link }} loadPage={loadClassLocRec} />
+              <MeetingLocation isClassLocation={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassLocRec, changesMade: setChangesMade }} data={{ class_location: classData.class_location, class_recordings_link: classData.class_recordings_link }} loadPage={loadClassLocRec} changes={changesMade}/>
             </div>
+            
             {/* Office Hours Location and Link */}
             <div>
-              <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec }} data={{ office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec} />
+              <MeetingLocation isClassLocation={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursLocRec, changesMade: setChangesMade }} data={{ office_hours_location: classData.office_hours_location, office_hours_link: classData.office_hours_link }} loadPage={loadOfficeHoursLocRec} changes={changesMade}/>
             </div>
           </div>
 
