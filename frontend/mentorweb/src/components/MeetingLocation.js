@@ -56,7 +56,7 @@ export default function MeetingLocation({isClassLocation, param, data, loadPage,
                 </div>
                     <div className="flex flex-row ">
                         <label className="whitespace-nowrap">Location:</label>
-                            <input className='border border-light-gray ml-2 text-sm font-normal w-40 mt-1'
+                            <input className='border border-light-gray ml-2 w-40'
                                 name = {isClassLocation ? "class_location" : "office_hours_location"}
                                 value= {isClassLocation ? formData.class_location : formData.office_hours_location}
                                 onChange={handleInputChange}
@@ -64,7 +64,7 @@ export default function MeetingLocation({isClassLocation, param, data, loadPage,
                     </div>
                     <div>
                         <label className="whitespace-nowrap">Virtual Meeting Link:</label>
-                            <input className='border border-light-gray ml-2 text-sm font-normal w-40 mt-2'
+                            <input className='border border-light-gray ml-2 w-40 mt-2'
                                 name={isClassLocation ? "class_link" : "office_hours_link"}
                                 value={isClassLocation ? formData.class_link : formData.office_hours_link}
                                 onChange={handleInputChange}
@@ -74,7 +74,7 @@ export default function MeetingLocation({isClassLocation, param, data, loadPage,
                     <div>
                         <label className="whitespace-nowrap">Class Recordings Link:</label>
                         <input
-                            className='border border-light-gray ml-2 text-sm font-normal w-40 mt-2'
+                            className='border border-light-gray ml-2  w-40 mt-2'
                             name="class_recordings_link"
                             value={formData.class_recordings_link}
                             onChange={handleInputChange}

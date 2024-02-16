@@ -378,7 +378,7 @@ export default function ClassDetails() {
             ))}
           </select>
           <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4" onClick={handleCreateCourse}>Create Course</button>
-          <input className='border border-light-gray ml-2 text-sm font-normal mt-2' value={courseName} onChange={(e) => setCourseName(e.target.value)}/>
+          <input className='border border-light-gray ml-2' value={courseName} onChange={(e) => setCourseName(e.target.value)}/>
           <button className='ms-auto font-bold w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
         </div>
       </div>
@@ -442,7 +442,7 @@ export default function ClassDetails() {
                 </div>
                   <div className="flex flex-row ">
                     <label className="whitespace-nowrap">Discord Link:</label>
-                    <input className='border border-light-gray ml-2 text-sm font-normal w-40 mt-1'
+                    <input className='border border-light-gray ml-2 w-40'
                       name= "discord_link"
                       value={classData.discord_link}
                       onChange={(event) => handleInputChange(event.target)}
