@@ -70,7 +70,6 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
     };
 
     const handleWeekdayClick = (day) => {
-        console.log(timePickersList[day]);
         if (timePickersList[day]) {
             handleRemoveTimeBlock(day);
         }
@@ -86,7 +85,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
         // if table should be loaded with values
         if (loadPage) {
             // load the headers: weekday titles
-            const updatedTimePickersList = { ...timePickersList };
+            const updatedTimePickersList = {};
             for (const day in times) {
                 if (times.hasOwnProperty(day)) {
                     updatedTimePickersList[day] = true;
@@ -95,7 +94,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
             setTimePickers(updatedTimePickersList);
 
             //load the times
-            const updatedWeekdaysList = { ...weekdaysList };
+            const updatedWeekdaysList = {};
             for (const day in times) {
                 if (times.hasOwnProperty(day)) {
                     const start = dayjs(`2022-04-17T${times[day].start_time}`);
@@ -107,6 +106,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
 
             param.loadPageFunction(!loadPage);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [timePickersList, times, weekdaysList]);
 
     // Display meeting list

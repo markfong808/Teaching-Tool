@@ -105,6 +105,7 @@ def set_class_details():
         office_hours_time = data.get('office_hours_time')
         office_hours_location = data.get('office_hours_location')
         office_hours_link = data.get('office_hours_link')
+        discord_link = data.get('discord_link')
 
         course = ClassInformation.query.filter_by(id=course_id).first()
 
@@ -120,6 +121,7 @@ def set_class_details():
                 office_hours_time=office_hours_time,
                 office_hours_location=office_hours_location,
                 office_hours_link=office_hours_link,
+                discord_link=discord_link
             )
             db.session.add(new_details)
             db.session.commit()
