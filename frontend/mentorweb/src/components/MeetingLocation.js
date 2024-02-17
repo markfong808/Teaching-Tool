@@ -16,7 +16,7 @@ export default function MeetingLocation({isClassLocation, param, data }) {
                 </div>
                     <div className="flex flex-row ">
                         <label className="whitespace-nowrap">Location:</label>
-                            <input className='border border-light-gray ml-2 text-sm font-normal w-40 mt-1'
+                            <input className='border border-light-gray ml-2 w-40'
                                 name = {isClassLocation ? "class_location" : "office_hours_location"}
                                 value= {isClassLocation ? data.class_location ?? '' : data.office_hours_location ?? ''}
                                 onChange={handleInputChange}
@@ -24,7 +24,7 @@ export default function MeetingLocation({isClassLocation, param, data }) {
                     </div>
                     <div>
                         <label className="whitespace-nowrap">Virtual Meeting Link:</label>
-                            <input className='border border-light-gray ml-2 text-sm font-normal w-40 mt-2'
+                            <input className='border border-light-gray ml-2 w-40 mt-2'
                                 name={isClassLocation ? "class_link" : "office_hours_link"}
                                 value={isClassLocation ? data.class_link ?? '' : data.office_hours_link ?? ''}
                                 onChange={handleInputChange}
