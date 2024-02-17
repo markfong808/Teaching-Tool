@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { ClassContext } from "../context/ClassContext.js";
 import { UserContext } from '../context/UserContext.js';
-import ScheduleSession from './ScheduleSession.js';
+import ScheduleNewMeeting from './ScheduleNewMeeting.js';
 
 const ScheduleMeetingPopup = ({ onClose, courses }) => {
     // General Variables
@@ -76,11 +76,11 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
     return (
         <div className="fixed top-1/2 left-1/2 w-5/6 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md p-6 relative">
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onClose}>Close</button>
-            <div className="p-5 m-auto">
+            <div className="flex flex-row p-5 m-auto">
                 <div className="flex items-center">
-                    <h1> <strong>Select Course:</strong> </h1>
+                    <h1 className="whitespace-nowrap"> <strong>Select Course:</strong> </h1>
                     <select
-                        className="border border-light-gray rounded ml-2"
+                        className="border border-light-gray rounded ml-2 mt-1"
                         id="course-dropdown"
                         value={selectedCourseId}
                         onChange={(e) => handleCourseChange(e)}
@@ -93,9 +93,9 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
                         ))}
                     </select>
                 </div>
-            </div>
-            <div>
-                <ScheduleSession />
+                <div className='-mx-20'>
+                        <ScheduleNewMeeting />
+                </div>
             </div>
         </div>
     );

@@ -4,6 +4,7 @@ import { getCookie } from '../utils/GetCookie.js';
 import { Tooltip } from './Tooltip.js';
 import WeeklyCalendar from './WeeklyCalendar.js';
 import { ClassContext } from "../context/ClassContext.js";
+import ChooseMeetingDatesPopup from './ChooseMeetingDatesPopup.js';
 
 
 export default function ClassAvailability() {
@@ -12,6 +13,7 @@ export default function ClassAvailability() {
   const { user } = useContext(UserContext);
   const [changesMade, setChangesMade] = useState(false);
   const [boxShown, setBoxShown] = useState(false);
+  const [isPopUpVisible, setPopUpVisible] = useState(false);
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
@@ -19,19 +21,14 @@ export default function ClassAvailability() {
   const [loadOfficeHoursTable, setOfficeHoursTable] = useState(false);
 
   // Class Data Variables
-  const contextValue = useContext(ClassContext);
-  const { classInstance } = contextValue || {};
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedClassData, setSelectedClassData] = useState({
-    id: classInstance?.id || '',
-    class_comment: classInstance?.class_comment || '',
-    class_location: classInstance?.class_location || '',
-    class_link: classInstance?.class_link || '',
-    class_recordings_link: classInstance?.class_recordings_link || '',
-    office_hours_location: classInstance?.office_hours_location || '',
-    office_hours_link: classInstance?.office_hours_link || '',
-    discord_link: classInstance?.discord_link || ''
+    class_id: '',
+    type: 'office_hours',
+    timeSplit: '',
+    start_date: '',
+    end_date: '',
   });
 
   // Times Data Variables
@@ -49,6 +46,7 @@ export default function ClassAvailability() {
   ////////////////////////////////////////////////////////
 
   // fetch from database: all courses the user is associated with
+  // can make a new backend function to only get courseIds
   const fetchCourseList = async () => {
     if (user.account_type !== "mentor") return;
   
@@ -195,8 +193,8 @@ export default function ClassAvailability() {
     const selectedCourse = allCourseData.find(course => course.id === courseId);
 
     if (selectedCourse) {
-      // Update selectedClassData with selectedCourse
-      setSelectedClassData(selectedCourse);
+      // Update selectedClassData with selectedCourse.id
+      setSelectedClassData({ ...selectedClassData, class_id: selectedCourse.id });
     } else {
       console.error("Selected course not found");
     }
@@ -392,17 +390,14 @@ export default function ClassAvailability() {
                 <input type="checkbox" id="myCheckbox" class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1" checked={boxShown} onChange={showBox}></input>
                 {boxShown && (
                         <input className='border border-light-gray ml-2 mt-1'
-                            //name = {} trent implements 
-                            //value= {} trent implements
-                            //onChange={handleInputChange} // trent implements 
+                            name='timeSplit'
+                            value={selectedClassData.timeSplit}
+                            onChange={handleInputChange}
                         />
                     )}
-                <button className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2">Choose Meeting Dates</button>
-                {/*Trent implements selection of which dates to build meetings between(pop up with calendar)*/}
+                <button className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2" onClick={() => setPopUpVisible(!isPopUpVisible)}>Choose Meeting Dates</button>
             </div>
           </div>
-
-          
 
           {changesMade && (
             <div className="flex flex-row justify-end my-5">
@@ -422,6 +417,10 @@ export default function ClassAvailability() {
           )}
         </div>
       </div>
+
+      {isPopUpVisible && (
+        <ChooseMeetingDatesPopup onClose={() => setPopUpVisible(false)}/>
+      )}
     </div>
   );
 }
