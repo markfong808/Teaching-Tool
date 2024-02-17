@@ -98,11 +98,9 @@ def set_class_details():
         data = request.get_json()
         course_id = data.get('id')  
         class_comment = data.get('class_comment')
-        class_time = data.get('class_time')
         class_location = data.get('class_location')
         class_link = data.get('class_link')
         class_recordings_link = data.get('class_recordings_link')
-        office_hours_time = data.get('office_hours_time')
         office_hours_location = data.get('office_hours_location')
         office_hours_link = data.get('office_hours_link')
         discord_link = data.get('discord_link')
@@ -114,11 +112,9 @@ def set_class_details():
             new_details = ClassInformation(
                 id=course_id,
                 class_comment=class_comment,
-                class_time=class_time,
                 class_location=class_location,
                 class_link=class_link,
                 class_recordings_link=class_recordings_link,
-                office_hours_time=office_hours_time,
                 office_hours_location=office_hours_location,
                 office_hours_link=office_hours_link,
                 discord_link=discord_link

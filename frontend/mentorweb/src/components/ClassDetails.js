@@ -2,7 +2,6 @@ import React, { useState, useContext, useEffect } from 'react';
 import { UserContext } from '../context/UserContext';
 import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
-import WeeklyCalendar from './WeeklyCalendar';
 import { ClassContext } from "../context/ClassContext.js";
 import MeetingLocation from './MeetingLocation.js';
 
@@ -15,8 +14,6 @@ export default function ClassDetails() {
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
-  const [loadClassTimesTable, setClassTimesTable] = useState(false);
-  const [loadOfficeHoursTable, setOfficeHoursTable] = useState(false);
   const [loadClassLocRec, setClassLocRec] = useState(false);
   const [loadOfficeHoursLocRec, setOfficeHoursLocRec] = useState(false);
 
@@ -29,20 +26,13 @@ export default function ClassDetails() {
   const [selectedClassData, setSelectedClassData] = useState({
     id: classInstance?.id || '',
     class_comment: classInstance?.class_comment || '',
-    class_time: classInstance?.class_time || '',
     class_location: classInstance?.class_location || '',
     class_link: classInstance?.class_link || '',
     class_recordings_link: classInstance?.class_recordings_link || '',
-    office_hours_time: classInstance?.office_hours_time || '',
     office_hours_location: classInstance?.office_hours_location || '',
     office_hours_link: classInstance?.office_hours_link || '',
     discord_link: classInstance?.discord_link || ''
   });
-
-  // Times Data Variables
-  const [allTimesData, setAllTimesData] = useState([]);
-  const [classTimesData, setClassTimesData] = useState([]);
-  const [officeHoursTimesData, setOfficeHoursTimesData] = useState([]);
 
 
 
@@ -63,62 +53,10 @@ export default function ClassDetails() {
       });
   
       const fetchedCourseList = await response.json();
-
-      console.log(fetchedCourseList);
   
       setAllCourseData(fetchedCourseList);
     } catch (error) {
       console.error("Error fetching course list:", error);
-    }
-  };
-
-  // fetch from database: all times the a courseId is associated with
-  const fetchTimesData = async (courseId) => {
-    if (!courseId) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/course/times/${encodeURIComponent(courseId)}`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'FetchTimesData failed');
-      }
-
-      const fetchedCourseTimes = await response.json();
-
-      // set instructor data with fetched data
-      if (fetchedCourseTimes !== null) {
-        setAllTimesData(fetchedCourseTimes);
-
-        const tempClassTimesData = fetchedCourseTimes
-        .filter(item => item.type === 'class_times')
-        .reduce((acc, item) => {
-          acc[item.day] = {
-            start_time: item.start_time,
-            end_time: item.end_time
-          };
-          return acc;
-        }, {});
-
-        const tempOfficeHoursData = fetchedCourseTimes
-          .filter(item => item.type === 'office_hours')
-          .reduce((acc, item) => {
-            acc[item.day] = {
-              start_time: item.start_time,
-              end_time: item.end_time
-            };
-            return acc;
-          }, {});
-
-          setClassTimesData(tempClassTimesData);
-          setOfficeHoursTimesData(tempOfficeHoursData);
-      }
-    } catch (error) {
-      console.error("Error fetching course info:", error);
     }
   };
 
@@ -131,35 +69,23 @@ export default function ClassDetails() {
   // called when user clicks save changes button
   // saves all class and times details to database
   const handleSaveChanges = async () => {
-    if (allTimesData) {
-      postClassDetailsToDatabase(true);  // class mode
-    }
     if (selectedClassData) {
-      postClassDetailsToDatabase(false);  // times mode
+      postClassDetailsToDatabase();  // class mode
     }
   };
 
   // handleSaveChanges helper: update ClassTimes or 
   // ClassInformation table in database for attached course
-  const postClassDetailsToDatabase = async (isClassTimes) => {
-    if (!isClassTimes) {
-      return;
-    }
-
+  const postClassDetailsToDatabase = async () => {
     try {
-      const payload = {
-        id: selectedClassData.id,
-        ...allTimesData,
-      };
-
-      await fetch(isClassTimes ? `/course/setTime` : `/course/setClassDetails`, {
+      await fetch(`/course/setClassDetails`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': csrfToken,
         },
-        body: JSON.stringify(isClassTimes ? payload : selectedClassData),
+        body: JSON.stringify(selectedClassData),
       });
 
       setChangesMade(false); // Hide Save/Cancel Buttons
@@ -218,9 +144,6 @@ export default function ClassDetails() {
     // update course info displayed on page to selectedCourseId
     updateCourseInfo(selectedCourse);
 
-    // update timesData to selectedCourseId
-    fetchTimesData(selectedCourse);
-
     // flag to child objects to reload their information
     // with times data or selectedClassData
     reloadChildInfo();
@@ -245,8 +168,6 @@ export default function ClassDetails() {
   // called when information on the webpage needs to be reloaded
   // will flag to child objects to reload their information
   const reloadChildInfo = () => {
-    setClassTimesTable(!loadClassTimesTable);
-    setOfficeHoursTable(!loadOfficeHoursTable);
     setClassLocRec(!loadClassLocRec);
     setOfficeHoursLocRec(!loadOfficeHoursLocRec);
   };
@@ -265,57 +186,6 @@ export default function ClassDetails() {
 
     setSelectedClassData({ ...selectedClassData, [e.name]: e.value });
     setChangesMade(true);
-  };
-
-  // update timesData based on user entries
-  const handleTimesChange = (e) => {
-    if (!e) {
-      return;
-    }
-
-    const tempType = e.type;
-    const tempDay = e.name;
-    const tempValue = e.value;
-
-    // to remove a time block
-    if (tempValue.length === 0) {
-      setAllTimesData((prevTimesData) => {
-        // Remove entries with matching tempDay and tempType
-        const updatedTimesData = prevTimesData.filter(entry => !(entry.day === tempDay && entry.type === tempType));
-        console.log(updatedTimesData);
-        return updatedTimesData;
-      });
-    } 
-    // to add a time block
-    else {
-      setAllTimesData((prevTimesData) => {
-        // Check if an entry with the same day already exists
-        const existingEntryIndex = prevTimesData.findIndex((entry) => entry.day === tempDay);
-
-        if (existingEntryIndex !== -1) {
-            // If the entry already exists, replace it
-            const updatedTimesData = [...prevTimesData];
-            updatedTimesData[existingEntryIndex] = {
-                type: tempType,
-                day: tempDay,
-                start_time: tempValue[0],
-                end_time: tempValue[1],
-            };
-            return updatedTimesData;
-        } else {
-            // If the entry doesn't exist, add a new entry
-            return [
-                ...(Array.isArray(prevTimesData) ? prevTimesData : []),
-                {
-                    type: tempType,
-                    day: tempDay,
-                    start_time: tempValue[0],
-                    end_time: tempValue[1],
-                },
-            ];
-        }
-      });
-    }
   };
 
   // handle to cancel webpage changes when user is done editing details
@@ -340,9 +210,8 @@ export default function ClassDetails() {
 
   useEffect(() => {
     // console.log(selectedClassData);
-    // console.log(allTimesData);
     // console.log(allCourseData);
-  }, [selectedClassData, allTimesData, allCourseData]);
+  }, [selectedClassData, allCourseData]);
 
   if (!user) {
     return <div>Loading user data...</div>;
@@ -367,7 +236,6 @@ export default function ClassDetails() {
           </select>
           <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4" onClick={handleCreateCourse}>Create Course</button>
           <input className='border border-light-gray ml-2' value={courseName} onChange={(e) => setCourseName(e.target.value)}/>
-          <button className='ms-auto font-bold w-1/3 border border-light-gray rounded-md shadow-md'>Configure with 3rd Party Calendars</button>
         </div>
       </div>
 
@@ -399,20 +267,6 @@ export default function ClassDetails() {
               />
             </div>
 
-
-            {/* Class Times */}
-            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-              <WeeklyCalendar isClassTimes={true} param={{ functionPassed: handleTimesChange, loadPageFunction: setClassTimesTable, changesMade: setChangesMade }} times={classTimesData} loadPage={loadClassTimesTable} changes={changesMade}/>
-            </div>
-
-            {/* Office Hours Times */}
-            <div className='flex flex-row items-center relative'>
-              <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-                <WeeklyCalendar isClassTimes={false} param={{ functionPassed: handleTimesChange, loadPageFunction: setOfficeHoursTable, changesMade: setChangesMade }} times={officeHoursTimesData} loadPage={loadOfficeHoursTable} />
-              </div>
-              <button className="font-bold border border-light-gray rounded-md shadow-md text-xs px-2 py-2 absolute -right-36 mt-4">Emergency Office<br></br> Hour Changes</button>
-            </div>
-
             {/* Class Location and Recording Link */}
             <div>
               <MeetingLocation isClassLocation={true} param={{ functionPassed: handleInputChange, loadPageFunction: setClassLocRec, changesMade: setChangesMade }} data={{ class_location: selectedClassData.class_location, class_recordings_link: selectedClassData.class_recordings_link, class_link: selectedClassData.class_link }} loadPage={loadClassLocRec} changes={changesMade}/>
@@ -439,8 +293,6 @@ export default function ClassDetails() {
                 </div>
               </div>
           </div>
-
-
 
           {changesMade && (
             <div className="flex flex-row justify-end my-5">

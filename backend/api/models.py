@@ -12,8 +12,6 @@ class User(db.Model):
     pronouns = db.Column(db.String(150))                                                                         #  ADDED(could change to array of string or something else)
     discord_id = db.Column(db.String(255))                                                                       #  ADDED
     calendar_link = db.Column(db.String(255))                                                                    #  ADDED
-    class_id = db.Column(db.Integer)                                                                             #  ADDED
-    student_group_id = db.Column(db.Integer)                                                                     #  ADDED
     status = db.Column(db.String(50)) # pending, active, inactive
     account_type=db.Column(db.String(50)) # student, mentor, admin
     about=db.Column(db.Text())
@@ -41,6 +39,7 @@ class ProgramType(db.Model):
 class Availability(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
     type = db.Column(db.String(50))
     date = db.Column(db.String(150))  # YYYY-MM-DD
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
@@ -90,12 +89,11 @@ class AppointmentComment(db.Model):
 class ClassInformation(db.Model):                                                                          # ADDED
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
     teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                           # ADDED
+    quarter = db.Column(db.String(50))                                                                     # ADDED
     class_name = db.Column(db.String(255))                                                                 # ADDED
-    class_time = db.Column(db.String(255))                                                                 # ADDED    DEPRECATED
     class_location = db.Column(db.String(255))                                                             # ADDED
     class_link = db.Column(db.String(255))                                                                 # ADDED
     class_recordings_link = db.Column(db.String(255))                                                      # ADDED
-    office_hours_time = db.Column(db.String(255))                                                          # ADDED    DEPRECATED
     office_hours_location = db.Column(db.String(255))                                                      # ADDED
     office_hours_link = db.Column(db.String(255))                                                          # ADDED
     discord_link = db.Column(db.String(255))                                                               # ADDED

@@ -1,5 +1,11 @@
 export default function MeetingLocation({isClassLocation, param, data }) {
 
+    /////////////////////////////////////////////
+    //        Handling Input Function          //
+    /////////////////////////////////////////////
+    
+    // passing entry of location and links for class and office hours
+    // back to ClassDetails object 
     const handleInputChange = (e) => {
         param.functionPassed({
             name: e.target.name,
@@ -8,6 +14,8 @@ export default function MeetingLocation({isClassLocation, param, data }) {
         param.changesMade(true);
     };
 
+    // HTML for webpage
+    // conditional rendering of boxes if isClassLocation is true or not
     return (
         <div className="w-2/3 m-auto">
             <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
