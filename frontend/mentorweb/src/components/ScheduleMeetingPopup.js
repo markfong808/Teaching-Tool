@@ -29,17 +29,17 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
     // fetch from database: all courses the user is associated with
     const fetchCourseList = async () => {
         if (user.account_type !== "student") return;
-        
+
         try {
-        const response = await fetch(`/student/courses`, {
-            credentials: 'include',
-        });
-    
-        const fetchedCourseList = await response.json();
-    
-        setAllCourseData(fetchedCourseList);
+            const response = await fetch(`/student/courses`, {
+                credentials: 'include',
+            });
+
+            const fetchedCourseList = await response.json();
+
+            setAllCourseData(fetchedCourseList);
         } catch (error) {
-        console.error("Error fetching course list:", error);
+            console.error("Error fetching course list:", error);
         }
     };
 
@@ -47,7 +47,7 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
     // called when user clicks to change selected course
     const handleCourseChange = (e) => {
         if (!e) {
-        return;
+            return;
         }
 
         // reload courseIds with all courses
@@ -74,11 +74,11 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
     });
 
     return (
-        <div className="fixed top-1/2 left-1/2 w-5/6 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md p-6 relative">
+        <div className="fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md p-6 relative">
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onClose}>Close</button>
-            <div className="flex flex-row p-5 m-auto">
+            <div className="flex flex-col p-5 m-auto">
                 <div className="flex items-center">
-                    <h1 className="whitespace-nowrap"> <strong>Select Course:</strong> </h1>
+                    <h1 className="whitespace-nowrap"><strong>Select Course:</strong> </h1>
                     <select
                         className="border border-light-gray rounded ml-2 mt-1"
                         id="course-dropdown"
@@ -87,15 +87,15 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
                     >
                         <option value="">Select...</option>
                         {allCourseData.map((course) => (
-                        <option key={course.id} value={course.id}>
-                            {course.class_name}
-                        </option>
+                            <option key={course.id} value={course.id}>
+                                {course.class_name}
+                            </option>
                         ))}
                     </select>
                 </div>
-                <div className='-mx-20'>
+                    <div>
                         <ScheduleNewMeeting />
-                </div>
+                    </div>
             </div>
         </div>
     );

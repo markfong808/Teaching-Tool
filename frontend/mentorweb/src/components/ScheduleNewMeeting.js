@@ -151,9 +151,9 @@ export default function ScheduleSession() {
     }
 
     return (
-        <div className='flex flex-col w-2/3 p-5 m-auto'>
+        <div className='flex flex-col w-2/3 mt-3'>
             <div id="dropdown" className='flex flex-row'>
-                <h1 className='whitespace-nowrap mb-1'><strong>Select Program Type:</strong></h1>
+                <h1 className='whitespace-nowrap'><strong>Select Program Type:</strong></h1>
                 <select className='border border-light-gray rounded ml-2'
                     id="mentorship-type"
                     value={mentorshipType}
@@ -176,7 +176,7 @@ export default function ScheduleSession() {
             </div>
             <div className='flex'>
                 {showCalendar && (
-                    <div className='w-2/3'>
+                    <div>
                         <ScheduleMeeting
                             borderRadius={10}
                             primaryColor="#4b2e83"
