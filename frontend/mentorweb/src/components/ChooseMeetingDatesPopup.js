@@ -6,7 +6,7 @@ import 'react-calendar/dist/Calendar.css';
 import '@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css';
 import { addDays } from 'date-fns';
 
-const ChooseMeetingDatesPopup = ({ onClose, data, id }) => {
+const ChooseMeetingDatesPopup = ({ onClose, data, id, timeSplit }) => {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [showTimePicker, setShowTimePicker] = useState(false);
@@ -43,6 +43,13 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id }) => {
                     });
                 }
             }
+
+            convertedAvailability = {
+                availabilities: convertedAvailability,
+                timeSplit: timeSplit
+            }
+
+            console.log(convertedAvailability);
 
             await fetch(`/mentor/add-all-availability/${encodeURIComponent(class_id)}`, {
                 method: 'POST',

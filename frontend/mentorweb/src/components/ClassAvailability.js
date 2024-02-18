@@ -25,10 +25,8 @@ export default function ClassAvailability() {
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedClassData, setSelectedClassData] = useState({
     class_id: '',
-    type: 'office_hours',
+    type: 'office_hours',  // not used yet?
     timeSplit: '',
-    start_date: '',
-    end_date: '',
   });
 
   // Times Data Variables
@@ -220,8 +218,9 @@ export default function ClassAvailability() {
       return;
     }
 
-    setSelectedClassData({ ...selectedClassData, [e.name]: e.value });
+    setSelectedClassData({ ...selectedClassData, [e.target.name]: e.target.value });
     setChangesMade(true);
+
   };
 
   // update timesData based on user entries
@@ -300,12 +299,18 @@ export default function ClassAvailability() {
     // console.log(allCourseData);
   }, [selectedClassData, allTimesData, allCourseData]);
 
+  useEffect(() => {
+    console.log(selectedClassData);
+  }, [selectedClassData]);
+
   if (!user) {
     return <div>Loading user data...</div>;
   }
 
   const showBox = () => {
     if (boxShown) {
+      setSelectedClassData({ ...selectedClassData, timeSplit: '' });
+      // need to make work with save/cancel changes button
       setBoxShown(false);
     } else {
       setBoxShown(true);
@@ -389,12 +394,16 @@ export default function ClassAvailability() {
                 <label className="whitespace-nowrap font-bold text-2xl">Split Time Blocks?</label>
                 <input type="checkbox" id="myCheckbox" class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1" checked={boxShown} onChange={showBox}></input>
                 {boxShown && (
-                        <input className='border border-light-gray ml-2 mt-1'
-                            name='timeSplit'
-                            value={selectedClassData.timeSplit}
-                            onChange={handleInputChange}
-                        />
-                    )}
+                  <input className='border border-light-gray ml-2 mt-1'
+                      name='timeSplit'
+                      value={selectedClassData.timeSplit}
+                      onChange={(event) => {
+                        const inputValue = event.target.value;
+                        const numericValue = inputValue.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+                        handleInputChange({ target: { name: 'timeSplit', value: numericValue } });
+                      }}
+                  />
+                )}
                 <button className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2" onClick={() => setPopUpVisible(!isPopUpVisible)}>Choose Meeting Dates</button>
             </div>
           </div>
@@ -419,7 +428,7 @@ export default function ClassAvailability() {
       </div>
 
       {isPopUpVisible && (
-        <ChooseMeetingDatesPopup onClose={() => setPopUpVisible(false)} data={officeHoursTimesData} id={selectedCourseId}/>
+        <ChooseMeetingDatesPopup onClose={() => setPopUpVisible(false)} data={officeHoursTimesData} id={selectedCourseId} timeSplit={selectedClassData.timeSplit}/>
       )}
     </div>
   );

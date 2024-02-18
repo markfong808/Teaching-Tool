@@ -378,23 +378,23 @@ def generate_appointment_events(mentor_id, availability_type, date, start_time, 
     
 
 # Generate appointment events at 30-minute intervals within the specified time range.
-def generate_appointment_tuples(mentor_id, class_id, availability_type, date, start_time, end_time, availability_id):
+def generate_appointment_tuples(mentor_id, class_id, availability_type, date, start_time, end_time, availability_id, timeSplit):
     try:
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
 
-        while start_datetime + timedelta(minutes=30) <= end_datetime:
+        while start_datetime + timedelta(minutes=timeSplit) <= end_datetime:
             new_appointment = Appointment(
                 type=availability_type,                   # add physical location
                 mentor_id=mentor_id,
                 class_id=class_id,
                 appointment_date=date,
                 start_time=start_datetime.strftime("%H:%M"),
-                end_time=(start_datetime + timedelta(minutes=30)).strftime("%H:%M"),
+                end_time=(start_datetime + timedelta(minutes=timeSplit)).strftime("%H:%M"),
                 status="posted",
                 availability_id=availability_id
             )
-            start_datetime += timedelta(minutes=30)   # time split
+            start_datetime += timedelta(minutes=timeSplit)   # time split
             db.session.add(new_appointment)
         
         db.session.commit()
@@ -410,17 +410,19 @@ def generate_appointment_tuples(mentor_id, class_id, availability_type, date, st
 def add_all_mentor_availability(class_id):
     try:
         data = request.get_json()
+        allAvailabilties = data.get('availabilities')
+        timeSplit = int(data.get('timeSplit'))
         mentor_id = get_jwt_identity()
 
-        for availabilityEntry in data:
-            add_mentor_single_availability(class_id, mentor_id, availabilityEntry)
+        for availabilityEntry in allAvailabilties:
+            add_mentor_single_availability(class_id, mentor_id, availabilityEntry, timeSplit)
 
         return jsonify({"message": "all availability added successfully"}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-def add_mentor_single_availability(class_id, mentor_id, data):
+def add_mentor_single_availability(class_id, mentor_id, data, timeSplit):
     try:
         availability_type = data.get('type')
         date = data.get('date')
@@ -454,7 +456,7 @@ def add_mentor_single_availability(class_id, mentor_id, data):
             db.session.commit()
             
             # Generate appointment events
-            generate_appointment_tuples(mentor_id, class_id, availability_type, date, start_time, end_time, new_availability.id)
+            generate_appointment_tuples(mentor_id, class_id, availability_type, date, start_time, end_time, new_availability.id, timeSplit)
             return jsonify({"message": "availability added successfully"}), 201
         else:
             return jsonify({"error": "appointment datetime must be in the future"}), 400
