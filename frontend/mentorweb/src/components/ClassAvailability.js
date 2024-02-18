@@ -107,6 +107,12 @@ export default function ClassAvailability() {
 
           setClassTimesData(tempClassTimesData);
           setOfficeHoursTimesData(tempOfficeHoursData);
+      } else {
+        const tempClassTimesData = []
+        const tempOfficeHoursData = []
+
+        setClassTimesData(tempClassTimesData);
+        setOfficeHoursTimesData(tempOfficeHoursData);
       }
     } catch (error) {
       console.error("Error fetching course info:", error);
@@ -131,19 +137,14 @@ export default function ClassAvailability() {
   // ClassInformation table in database for attached course
   const postClassDetailsToDatabase = async () => {
     try {
-      const payload = {
-        id: selectedClassData.id,
-        ...allTimesData,
-      };
-
-      await fetch(`/course/setTime`, {
+      await fetch(`/course/setTime/${encodeURIComponent(selectedClassData.class_id)}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': csrfToken,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(allTimesData),
       });
 
       setChangesMade(false); // Hide Save/Cancel Buttons
@@ -238,7 +239,6 @@ export default function ClassAvailability() {
       setAllTimesData((prevTimesData) => {
         // Remove entries with matching tempDay and tempType
         const updatedTimesData = prevTimesData.filter(entry => !(entry.day === tempDay && entry.type === tempType));
-        console.log(updatedTimesData);
         return updatedTimesData;
       });
     } 
@@ -419,7 +419,7 @@ export default function ClassAvailability() {
       </div>
 
       {isPopUpVisible && (
-        <ChooseMeetingDatesPopup onClose={() => setPopUpVisible(false)}/>
+        <ChooseMeetingDatesPopup onClose={() => setPopUpVisible(false)} data={officeHoursTimesData} id={selectedCourseId}/>
       )}
     </div>
   );

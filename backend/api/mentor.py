@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .models import User, Availability, Appointment, MentorMeetingSettings, AppointmentComment
+from .models import User, Availability, Appointment, MentorMeetingSettings, AppointmentComment, ClassInformation
 from flask_jwt_extended import jwt_required, get_jwt_identity, set_access_cookies, get_jwt, create_access_token
 from sqlalchemy import extract, func, or_, and_
 from . import db
@@ -15,7 +15,8 @@ allowed_availability_types = [
     "Mock Behavorial Interview", 
     "Code Review", 
     "Personal Growth", 
-    "Skill Development"
+    "Skill Development",
+    "office_hours"
 ]
 
 @mentor.after_request
@@ -89,8 +90,49 @@ def validate_availability_data(mentor_id, availability_type, date, start_time, e
     return None  # Data is valid
 
 
+def validate_availability_data_and_class(mentor_id, class_id, availability_type, date, start_time, end_time):
+    required_fields = [mentor_id, class_id, availability_type, date, start_time, end_time]
+
+    # Check if any required field is missing
+    if not all(required_fields):
+        return jsonify({"error": "provide all the required fields"}), 400
+
+    # Validate mentor
+    mentor = User.query.filter_by(id=mentor_id, account_type='mentor').first()
+    if not mentor:
+        return jsonify({"error": "mentor not found!"}), 404
+    
+    classTuple = ClassInformation.query.filter_by(id=class_id, teacher_id=mentor.id).first()
+    if not classTuple:
+        return jsonify({"error": "class not found!"}), 404
+
+    # Validate availability_type
+    if availability_type not in allowed_availability_types:
+        return jsonify({"error": f"availability type '{availability_type}' not allowed"}), 400
+
+    # Validate date
+    is_date_valid = is_valid_date(date)
+    if not is_date_valid:
+        return jsonify({"error": "provide a valid 'YYYY-MM-DD' date format that is not in the past"}), 400
+
+    # Validate start_time and end_time
+    if not is_valid_time(start_time) or not is_valid_time(end_time) or not is_start_time_before_end_time(start_time, end_time):
+        return jsonify({"error": "provide valid 'HH:MM' time formats, ensure that start_time is before end_time, and that they are at least 30 mins apart"}), 400
+
+    return None  # Data is valid
+
+
 def is_existing_availability(mentor_id, availability_type, date, start_time, end_time):
     existing_availabilities = Availability.query.filter_by(user_id=mentor_id, date=date).all()
+    
+    for existing_availability in existing_availabilities:
+        if (start_time < existing_availability.end_time and end_time > existing_availability.start_time):
+            return True  # There is a time overlap
+
+    return False  # No time overlap found
+
+def is_existing_availability_in_class(mentor_id, class_id, availability_type, date, start_time, end_time):
+    existing_availabilities = Availability.query.filter_by(user_id=mentor_id, class_id=class_id, date=date).all()
     
     for existing_availability in existing_availabilities:
         if (start_time < existing_availability.end_time and end_time > existing_availability.start_time):
@@ -333,7 +375,93 @@ def generate_appointment_events(mentor_id, availability_type, date, start_time, 
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
 
+# Generate appointment events at 30-minute intervals within the specified time range.
+def generate_appointment_tuples(mentor_id, class_id, availability_type, date, start_time, end_time, availability_id):
+    try:
+        start_datetime = datetime.strptime(start_time, "%H:%M")
+        end_datetime = datetime.strptime(end_time, "%H:%M")
+
+        while start_datetime + timedelta(minutes=30) <= end_datetime:
+            new_appointment = Appointment(
+                type=availability_type,                   # add physical location
+                mentor_id=mentor_id,
+                class_id=class_id,
+                appointment_date=date,
+                start_time=start_datetime.strftime("%H:%M"),
+                end_time=(start_datetime + timedelta(minutes=30)).strftime("%H:%M"),
+                status="posted",
+                availability_id=availability_id
+            )
+            start_datetime += timedelta(minutes=30)   # time split
+            db.session.add(new_appointment)
+        
+        db.session.commit()
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+
+# Add all mentor availability
+@mentor.route('/mentor/add-all-availability/<class_id>', methods=['POST'])
+@jwt_required()
+def add_all_mentor_availability(class_id):
+    try:
+        data = request.get_json()
+        mentor_id = get_jwt_identity()
+
+        for availabilityEntry in data:
+            add_mentor_single_availability(class_id, mentor_id, availabilityEntry)
+
+        return jsonify({"message": "all availability added successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+def add_mentor_single_availability(class_id, mentor_id, data):
+    try:
+        availability_type = data.get('type')
+        date = data.get('date')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        # Validate the data
+        validation_result = validate_availability_data_and_class(mentor_id, class_id, availability_type, date, start_time, end_time)
+        if validation_result:
+            return validation_result
+        
+        # Check if the same availability already exists for the mentor
+        if is_existing_availability_in_class(mentor_id, class_id, availability_type, date, start_time, end_time):
+            return jsonify({"error": "availability time conflict or it already exists for this mentor"}), 400
+        
+        current_time = datetime.now() - timedelta(hours=8)
+        availability_datetime = datetime.strptime(date + ' ' + start_time, '%Y-%m-%d %H:%M')
+        
+        if availability_datetime > current_time:
+             # Add the new availability
+            new_availability = Availability(
+                user_id=mentor_id,
+                class_id=class_id,
+                type=availability_type,
+                date=date,
+                start_time=start_time,
+                end_time=end_time, 
+                status='active'
+            )
+            db.session.add(new_availability) 
+            db.session.commit()
+            
+            # Generate appointment events
+            generate_appointment_tuples(mentor_id, class_id, availability_type, date, start_time, end_time, new_availability.id)
+            return jsonify({"message": "availability added successfully"}), 201
+        else:
+            return jsonify({"error": "appointment datetime must be in the future"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
 
 # Add mentor availability
 @mentor.route('/mentor/add-availability', methods=['POST'])

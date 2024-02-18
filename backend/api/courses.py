@@ -50,15 +50,16 @@ def get_times(course_id):
     
 
 # Set the classtime of a course
-@courses.route('/course/setTime', methods=['POST'])
+@courses.route('/course/setTime/<class_id>', methods=['POST'])
 @jwt_required()
-def set_class_time():
+def set_class_time(class_id):
     try:
         data = request.get_json()
-        course_id = data.get('id')
+        course_id = class_id
         classTimesTuples = []
 
-        if data:
+        if data is not None:
+            # set times for course
             courses = ClassTimes.query.filter_by(class_id=course_id).all()
         
             # if course already exists in the class times table, i.e. columns are populated
@@ -67,25 +68,28 @@ def set_class_time():
                     db.session.delete(course)
                 db.session.commit()
 
-                
-            for i in range(len(data) - 1):
-                time_data = data.get(str(i), {})
+            if len(data) > 0:
+                for i in range(len(data)):
+                    time_data = data[i]
 
-                new_time = ClassTimes(
-                    class_id=course_id,
-                    type=time_data.get('type'),
-                    day=time_data.get('day'),
-                    start_time=time_data.get('start_time'),
-                    end_time=time_data.get('end_time'),
-                )
-                classTimesTuples.append(new_time)
-            
-            for classTimesTuple in classTimesTuples:
-                db.session.add(classTimesTuple)
-            db.session.commit()
-            return jsonify({"message": "Times updated successfully"}), 200
+                    new_time = ClassTimes(
+                        class_id=course_id,
+                        type=time_data.get('type'),
+                        day=time_data.get('day'),
+                        start_time=time_data.get('start_time'),
+                        end_time=time_data.get('end_time'),
+                    )
+                    classTimesTuples.append(new_time)
+                
+                for classTimesTuple in classTimesTuples:
+                    db.session.add(classTimesTuple)
+                db.session.commit()
+                return jsonify({"message": "Times updated successfully"}), 200
+            # set no times for course
+            else:
+                return jsonify({"message": "Times updated successfully: No times for class"}), 200
         else:
-            return jsonify({"error": "No times inputted"}), 404
+            return jsonify({"error": "Times update failed"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     

@@ -54,6 +54,7 @@ class Availability(db.Model):
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
     physical_location = db.Column(db.String(255))                                                                # ADDED
     type = db.Column(db.String(50))
     appointment_date = db.Column(db.String(150))  # YYYY-MM-DD
