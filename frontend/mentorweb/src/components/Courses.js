@@ -3,9 +3,9 @@ import { UserContext } from '../context/UserContext';
 import { capitalizeFirstLetter } from '../utils/FormatDatetime';
 import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
-import Meetings from './Meetings';
 import { ClassContext } from "../context/ClassContext.js";
 import ScheduleMeetingPopup from './ScheduleMeetingPopup.js';
+import MeetingInformation from './MeetingInformation.js';
 
 export default function Courses() {
   // General Variables
@@ -182,7 +182,7 @@ export default function Courses() {
 
       {/* Second Box */}
       <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
-        <Meetings />
+        <MeetingInformation />
       </div>
 
       <div className="p-2.5">

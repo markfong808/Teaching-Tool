@@ -4,7 +4,7 @@ import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
 import { ClassContext } from "../context/ClassContext.js";
 import MeetingLocation from './MeetingLocation.js';
-
+import MeetingInformation from './MeetingInformation.js'
 
 export default function ClassDetails() {
   // General Variables

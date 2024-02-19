@@ -5,7 +5,7 @@ import { getCookie } from '../utils/GetCookie';
 import { UserContext } from '../context/UserContext';
 import Appointment from './Appointment';
 
-export default function ScheduleSession() {
+export default function ScheduleNewMeeting() {
     const { user } = useContext(UserContext);
     const [mentorshipType, setMentorshipType] = useState('');
     const [showCalendar, setShowCalendar] = useState(false);
