@@ -50,6 +50,7 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, timeSplit }) => {
             }
 
             console.log(convertedAvailability);
+            console.log(class_id);
 
             await fetch(`/mentor/add-all-availability/${encodeURIComponent(class_id)}`, {
                 method: 'POST',

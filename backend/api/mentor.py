@@ -383,19 +383,32 @@ def generate_appointment_tuples(mentor_id, class_id, availability_type, date, st
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
 
-        while start_datetime + timedelta(minutes=timeSplit) <= end_datetime:
+        if timeSplit == 0:
             new_appointment = Appointment(
                 type=availability_type,                   # add physical location
                 mentor_id=mentor_id,
                 class_id=class_id,
                 appointment_date=date,
                 start_time=start_datetime.strftime("%H:%M"),
-                end_time=(start_datetime + timedelta(minutes=timeSplit)).strftime("%H:%M"),
+                end_time=end_datetime.strftime("%H:%M"),
                 status="posted",
                 availability_id=availability_id
             )
-            start_datetime += timedelta(minutes=timeSplit)   # time split
             db.session.add(new_appointment)
+        else:
+            while start_datetime + timedelta(minutes=timeSplit) <= end_datetime:
+                new_appointment = Appointment(
+                    type=availability_type,                   # add physical location
+                    mentor_id=mentor_id,
+                    class_id=class_id,
+                    appointment_date=date,
+                    start_time=start_datetime.strftime("%H:%M"),
+                    end_time=(start_datetime + timedelta(minutes=timeSplit)).strftime("%H:%M"),
+                    status="posted",
+                    availability_id=availability_id
+                )
+                start_datetime += timedelta(minutes=timeSplit)
+                db.session.add(new_appointment)
         
         db.session.commit()
     
@@ -411,7 +424,11 @@ def add_all_mentor_availability(class_id):
     try:
         data = request.get_json()
         allAvailabilties = data.get('availabilities')
-        timeSplit = int(data.get('timeSplit'))
+        timeSplit = data.get('timeSplit')
+        if timeSplit:
+            timeSplit = int(timeSplit)
+        else: 
+            timeSplit = 0
         mentor_id = get_jwt_identity()
 
         for availabilityEntry in allAvailabilties:

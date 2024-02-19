@@ -218,9 +218,30 @@ export default function ClassAvailability() {
       return;
     }
 
+    if (e.target.name === 'timeSplit') {
+      let maxRecommendedTimeSplit = 1440;
+
+      console.log(officeHoursTimesData);
+      for (const data of Object.entries(officeHoursTimesData)) {
+        const startDate = new Date(`1970-01-01T${data[1].start_time}`);
+        const endDate = new Date(`1970-01-01T${data[1].end_time}`);
+    
+        const timeDifference = endDate - startDate;
+        const minutes = Math.floor(timeDifference / (1000 * 60));
+        if (minutes < maxRecommendedTimeSplit) {
+          maxRecommendedTimeSplit = minutes;
+        }
+      }
+
+      if (e.target.value > maxRecommendedTimeSplit) {
+        setTimeout(() => {
+          window.alert("Time Split value is too large. Lower your time split");
+        }, 10);
+      }
+    }
+
     setSelectedClassData({ ...selectedClassData, [e.target.name]: e.target.value });
     setChangesMade(true);
-
   };
 
   // update timesData based on user entries
@@ -300,7 +321,7 @@ export default function ClassAvailability() {
   }, [selectedClassData, allTimesData, allCourseData]);
 
   useEffect(() => {
-    console.log(selectedClassData);
+    // console.log(selectedClassData);
   }, [selectedClassData]);
 
   if (!user) {

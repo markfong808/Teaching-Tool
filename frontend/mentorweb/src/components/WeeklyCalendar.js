@@ -29,12 +29,16 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
   ////////////////////////////////////////////////////////
 
   // edit timeRange onChange for TimeRangePicker
-  const handleTimeChange = (event) => {
+  const handleTimeChange = (event, day) => {
     const tempTimeRange = [
       event[0] && event[0].format('HH:mm'),
       event[1] && event[1].format('HH:mm')
     ];
     setTimeRange(tempTimeRange);
+
+    const newValue = { start_time: event[0], end_time: event[1] };
+
+    setWeekdaysList({ ...weekdaysList, [day]: newValue });
   };
 
   // create button to push time block to parent function
@@ -117,6 +121,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
           updatedWeekdaysList[day] = { start_time: start, end_time: end };
         }
       }
+
       setWeekdaysList(updatedWeekdaysList);
 
       param.loadPageFunction(!loadPage);
@@ -182,11 +187,11 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <SingleInputTimeRangeField
                             label="Set Time"
-                            defaultValue={[
+                            value={[
                                 weekdaysList["Monday"].start_time,
                                 weekdaysList["Monday"].end_time,
                             ]}
-                            onChange={handleTimeChange}
+                            onChange={(e) => handleTimeChange(e, "Monday")}
                             onBlur={() => handleCreateChange("Monday", timeRange)}
                         />
                   </LocalizationProvider>
@@ -200,11 +205,11 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <SingleInputTimeRangeField
                             label="Set Time"
-                            defaultValue={[
+                            value={[
                                 weekdaysList["Tuesday"].start_time,
                                 weekdaysList["Tuesday"].end_time,
                             ]}
-                            onChange={handleTimeChange}
+                            onChange={(e) => handleTimeChange(e, "Tuesday")}
                             onBlur={() => handleCreateChange("Tuesday", timeRange)}
                         />
                   </LocalizationProvider>
@@ -218,11 +223,11 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <SingleInputTimeRangeField
                       label="Set Time"
-                      defaultValue={[
+                      value={[
                         weekdaysList["Wednesday"].start_time,
                         weekdaysList["Wednesday"].end_time,
                       ]}
-                      onChange={handleTimeChange}
+                      onChange={(e) => handleTimeChange(e, "Wednesday")}
                       onBlur={() => handleCreateChange("Wednesday", timeRange)}
                     />
                   </LocalizationProvider>
@@ -236,11 +241,11 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <SingleInputTimeRangeField
                       label="Set Time"
-                      defaultValue={[
+                      value={[
                         weekdaysList["Thursday"].start_time,
                         weekdaysList["Thursday"].end_time,
                       ]}
-                      onChange={handleTimeChange}
+                      onChange={(e) => handleTimeChange(e, "Thursday")}
                       onBlur={() => handleCreateChange("Thursday", timeRange)}
                     />
                   </LocalizationProvider>
@@ -254,11 +259,11 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <SingleInputTimeRangeField
                       label="Set Time"
-                      defaultValue={[
+                      value={[
                         weekdaysList["Friday"].start_time,
                         weekdaysList["Friday"].end_time,
                       ]}
-                      onChange={handleTimeChange}
+                      onChange={(e) => handleTimeChange(e, "Friday")}
                       onBlur={() => handleCreateChange("Friday", timeRange)}
                     />
                   </LocalizationProvider>
