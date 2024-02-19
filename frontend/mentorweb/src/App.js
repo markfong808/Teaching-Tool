@@ -23,6 +23,7 @@ import ScheduleSession from "./components/ScheduleSession";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Unauthorized from "./context/Unauthorized";
 import { UserContext } from './context/UserContext';
+import ManageTimes from "./components/ManageTimes";
 function App() {
   const { user } = useContext(UserContext);
 
@@ -124,6 +125,13 @@ function App() {
             element={
               <ProtectedRoute allowedAccountTypes={['mentor']}>
                 <ManageAvailability />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/mentor/manage-times"
+            element={
+              <ProtectedRoute allowedAccountTypes={['mentor']}>
+                <ManageTimes />
               </ProtectedRoute>
             }
           />
