@@ -100,12 +100,12 @@ export default function ManageAvailability() {
     }
 
     return (
-        <div className="w-2/3 m-auto">
+        <div className="w-full m-auto">
             <div className='text-center font-bold text-2xl pb-5'>
                 <h1>Manage Availability</h1>
             </div>
 
-            <div className="border w-2/3 m-auto">
+            <div className="border w-3/8 m-auto">
                 <table className='w-full'>
                     <thead className='border-b border-light-gray bg-purple text-white'>
                         <td className='border-r border-light-gray'>Type</td>

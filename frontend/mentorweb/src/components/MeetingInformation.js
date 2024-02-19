@@ -522,16 +522,16 @@ export default function MeetingInformation() {
 
     // Display meeting list
     return (
-        <div id="content-container" className="flex flex-col w-2/3 m-auto items-center">
+        <div id="content-container" className="flex flex-col w-full m-auto items-center">
             <div className="font-bold text-center text-2xl">
                 <h1>Your {capitalizeFirstLetter(activeTab)} Meetings</h1>
             </div>
-            <div id="tabs" className=" p-2 m-2 rounded-md">
+            <div id="tabs" className="p-2 m-2 rounded-md">
                 <button className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold" onClick={() => handleTabClick('upcoming')}>Upcoming</button>
                 <button className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold" onClick={() => handleTabClick('pending')}>Pending</button>
                 <button className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold" onClick={() => handleTabClick('past')}>Past</button>
             </div>
-            <div id="table" className="w-2/3 ">
+            <div id="table" className="w-full">
                 {selectedMeeting ? renderMeetingDetails() : (
                     <table className="w-full border">
                         {data.length > 0 ? (

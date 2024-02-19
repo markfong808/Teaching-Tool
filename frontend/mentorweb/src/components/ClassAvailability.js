@@ -393,7 +393,7 @@ export default function ClassAvailability() {
             </div>
 
             {/* Office Hours Times */}
-            <div className="flex flex-row items-center relative">
+           
               <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                 <WeeklyCalendar
                   isClassTimes={false}
@@ -406,10 +406,7 @@ export default function ClassAvailability() {
                   loadPage={loadOfficeHoursTable}
                 />
               </div>
-              <button className="font-bold border border-light-gray rounded-md shadow-md text-xs px-2 py-2 absolute -right-36 mt-4">
-                Emergency Office<br></br> Hour Changes
-              </button>
-            </div>
+              
               
               <div className="flex flex-row items-center mt-4">
                 <label className="whitespace-nowrap font-bold text-2xl">Split Time Blocks?</label>
