@@ -5,7 +5,7 @@ import { getCookie } from '../utils/GetCookie';
 import { UserContext } from '../context/UserContext';
 import Appointment from './Appointment';
 
-export default function ScheduleNewMeeting() {
+export default function ScheduleNewMeeting({ id }) {
     const { user } = useContext(UserContext);
     const [mentorshipType, setMentorshipType] = useState('');
     const [showCalendar, setShowCalendar] = useState(false);
@@ -16,10 +16,12 @@ export default function ScheduleNewMeeting() {
     const [appointmentNotes, setAppointmentNotes] = useState('');
     const [appointmentStatus, setAppointmentStatus] = useState('');
     const [typeDescriptions, setTypeDescriptions] = useState({});
+    const [courseId, setCourseId] = useState('');
+    const [selectedTimeDuration, setSelectedTimeDuration] = useState(0);
 
     useEffect(() => {
-        if (mentorshipType) {
-            fetch(`/student/appointments/available/${encodeURIComponent(mentorshipType)}`)
+        if (mentorshipType && courseId !== '') {
+            fetch(`/student/appointments-available/${encodeURIComponent(mentorshipType)}/${encodeURIComponent(courseId)}`)
                 .then(response => response.json())
                 .then(data => {
                     const timeslots = data.available_appointments
@@ -30,10 +32,18 @@ export default function ScheduleNewMeeting() {
                             id: appointment.appointment_id
                         }));
                     setAvailableTimeslots(timeslots);
+
+                    if (timeslots) {
+                        const startDate = new Date(timeslots[0].startTime);
+                        const endDate = new Date(timeslots[0].endTime);
+                        const timeDifference = endDate - startDate;
+                        const minutes = Math.floor(timeDifference / (1000 * 60));
+                        setSelectedTimeDuration(minutes);
+                    }
                 })
                 .catch(error => console.error('Error:', error));
         }
-    }, [mentorshipType]);
+    }, [mentorshipType, courseId]);
 
     const handleMentorshipTypeChange = (event) => {
         setMentorshipType(event.target.value);
@@ -70,8 +80,9 @@ export default function ScheduleNewMeeting() {
 
     useEffect(() => {
         fetchProgramTypeDetails();
+        setCourseId(id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [id]);
 
     const bookAppointment = () => {
         if (selectedTimeslot) {
@@ -161,12 +172,7 @@ export default function ScheduleNewMeeting() {
                     required
                 >
                     <option value="">Select...</option>
-                    <option value="Mentoring Session">Mentoring Session</option>
-                    <option value="Skill Development">Skill Development</option>
-                    <option value="Personal Growth">Personal Growth</option>
-                    <option value="Code Review">Code Review</option>
-                    <option value="Mock Technical Interview">Mock Technical Interview</option>
-                    <option value="Mock Behavorial Interview">Mock Behavorial Interview</option>
+                    <option value="office_hours">Office Hours</option>
                 </select>
             </div>
             <div className='text-2xl'>
@@ -180,7 +186,7 @@ export default function ScheduleNewMeeting() {
                         <ScheduleMeeting
                             borderRadius={10}
                             primaryColor="#4b2e83"
-                            eventDurationInMinutes={30}
+                            eventDurationInMinutes={selectedTimeDuration}
                             availableTimeslots={availableTimeslots}
                             onStartTimeSelect={handleStartTimeSelect}
                         />
@@ -193,7 +199,7 @@ export default function ScheduleNewMeeting() {
                             <p className='pb-2'><b>Type</b>: {mentorshipType}</p>
                             <p className='pb-2'><b>Date</b>: {format(selectedTimeslot.startTime, "PPPP")}</p>
                             <p className='pb-2'><b>Time</b>: {format(selectedTimeslot.startTime, 'p')} - {format(selectedTimeslot.availableTimeslot.endTime, 'p')} (PST)</p>
-                            <p className='pb-2'><b>Duration:</b> {format(selectedTimeslot.availableTimeslot.endTime - selectedTimeslot.startTime, 'm')} minutes</p>
+                            <p className='pb-2'><b>Duration:</b> {selectedTimeDuration} minutes</p>
                             <label htmlFor='appointmentNotes'><b>Notes</b> (optional):</label>
                             <textarea className='w-full border border-light-gray'
                                 id='appointmentNotes'

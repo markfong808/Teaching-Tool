@@ -13,6 +13,9 @@ export default function Courses() {
   const { user, setUser } = useContext(UserContext);
   const [isPopUpVisible, setPopUpVisible] = useState(false);
 
+  // Load Variables
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
+
   // Local Variables
   const [courseIds, setCourseIds] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
@@ -132,8 +135,12 @@ export default function Courses() {
   ////////////////////////////////////////////////////////
 
   useEffect(() => {
-    fetchCourseList();
-  });
+    if (!isPageLoaded) {
+      fetchCourseList();
+      setIsPageLoaded(!isPageLoaded);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPageLoaded, user]);
 
   // HTML for webpage
   // will change soon***

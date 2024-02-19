@@ -9,6 +9,7 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
 
     // Load Variables
     const [isPageLoaded, setIsPageLoaded] = useState(false);
+    const [isCourseVisible, setIsCourseVisible] = useState(false);
 
     // Class Data Variables
     const contextValue = useContext(ClassContext);
@@ -46,7 +47,9 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
     // main webpage load function
     // called when user clicks to change selected course
     const handleCourseChange = (e) => {
-        if (!e) {
+        if (!e.target.value) {
+            setIsCourseVisible(false);
+            setSelectedCourseId(e.target.key);
             return;
         }
 
@@ -67,11 +70,17 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
         // flag to child objects to reload their information
         // with times data or selectedClassData
         //reloadChildInfo();
+
+        setIsCourseVisible(true);
     };
 
     useEffect(() => {
-        fetchCourseList();
-    });
+        if (!isPageLoaded) {
+          fetchCourseList();
+          setIsPageLoaded(!isPageLoaded);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [isPageLoaded, user]);
 
     return (
         <div className="fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md p-6 relative">
@@ -85,7 +94,7 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
                         value={selectedCourseId}
                         onChange={(e) => handleCourseChange(e)}
                     >
-                        <option value="">Select...</option>
+                        <option key={-1} value="">Select...</option>
                         {allCourseData.map((course) => (
                             <option key={course.id} value={course.id}>
                                 {course.class_name}
@@ -93,9 +102,9 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
                         ))}
                     </select>
                 </div>
-                    <div>
-                        <ScheduleNewMeeting />
-                    </div>
+                    {isCourseVisible && (
+                        <ScheduleNewMeeting id={selectedCourseId}/>
+                    )}
             </div>
         </div>
     );

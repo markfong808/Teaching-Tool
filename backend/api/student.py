@@ -15,7 +15,8 @@ program_types = [
     "Mock Behavorial Interview", 
     "Code Review", 
     "Personal Growth", 
-    "Skill Development"
+    "Skill Development",
+    "office_hours"
 ]
 
 @student.after_request
@@ -137,6 +138,38 @@ def get_student_appointments():
             "mentor": mentor_info
         })
     return jsonify(student_appointments=student_appointments), 200
+
+
+# Retrieve available appointments to reserve
+@student.route('/student/appointments-available/<program_type>/<course_id>', methods=['GET'])
+def get_available_appointments(program_type, course_id):
+    if program_type not in program_types:
+        return jsonify({"error": f"program type '{program_type}' not allowed"}), 400
+    
+    now = datetime.now()
+    
+    future_appointments = Appointment.query.filter(
+        (Appointment.status == 'posted') &
+        (Appointment.type == program_type) &
+        (Appointment.class_id == course_id) &
+        (Appointment.appointment_date > now.date())
+    ).all()
+
+    available_appointments = []
+    for appt in future_appointments:
+        appointment_data = {
+            "appointment_id": appt.id,
+            "physical_location": appt.physical_location,
+            "date": appt.appointment_date,
+            "type": appt.type,
+            "start_time": appt.start_time,
+            "end_time": appt.end_time,
+            "status": appt.status,
+            "meeting_url": appt.meeting_url
+        }
+        available_appointments.append(appointment_data)
+            
+    return jsonify({"available_appointments": available_appointments})
 
 
 # Retrieve available appointments to reserve
