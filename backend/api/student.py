@@ -43,9 +43,9 @@ def get_courses():
         student = User.query.get(user_id)
         
         if student:
-            courses = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).all()
+            student_courses_info = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).filter_by(user_id=user_id).all()
             courses_list = []
-            for course in courses:
+            for course in student_courses_info:
                 course_info = {
                     'id': course.id,
                     'class_name': course.class_name,

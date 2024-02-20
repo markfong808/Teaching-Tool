@@ -55,8 +55,10 @@ export default function Courses() {
 
   // fetch all courses the student is associated with from database
   const fetchCourseList = async () => {
+    
     if (user.account_type !== "student") return;
 
+    
     try {
       const response = await fetch(`/student/courses`, {
         credentials: "include",
@@ -66,6 +68,7 @@ export default function Courses() {
 
       // set courses a student is enrolled in with fetched data
       setCourseIds(fetchedCourseList);
+
     } catch (error) {
       console.error("Error fetching course list:", error);
     }
@@ -122,12 +125,16 @@ export default function Courses() {
   ////////////////////////////////////////////////////////
 
   // called when student chooses a course from drop down menu
-  const handleCourseChange = (e) => {
-    const selectedCourse = parseInt(e.target.value);
-    setSelectedCourseId(selectedCourse);
-    updateCourseInfo(selectedCourse);
-  };
+ // const handleCourseChange = (e) => {
+  //  const selectedCourse = parseInt(e.target.value);
+  //  setSelectedCourseId(selectedCourse);
+  //  updateCourseInfo(selectedCourse);
+  // };
 
+  const handleButtonClick = (courseId) => {
+    setSelectedCourseId(courseId);
+    updateCourseInfo(courseId);
+  };
 
   
   ////////////////////////////////////////////////////////
@@ -142,27 +149,21 @@ export default function Courses() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
 
+ 
   // HTML for webpage
   // will change soon***
   return (
     <div className="flex flex-col w-7/8 m-auto">
-      <div className="flex flex-col w-2/3 p-5 m-auto">
-        <div id="dropdown">
-          <h1 className="inline-block"> <strong>Select Course:</strong> </h1>
-          <select
-            className="border border-light-gray rounded ml-2"
-            id="course-dropdown"
-            value={selectedCourseId}
-            onChange={(e) => handleCourseChange(e)}
+      <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
+        {courseIds.map((course) => (
+          <button
+            key={course.id} 
+            className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
+            onClick={() => handleButtonClick(course.id)}
           >
-            <option value="">Select...</option>
-            {courseIds.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.class_name}
-              </option>
-            ))}
-          </select>
-        </div>
+            {course.class_name}: Class Details
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
