@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .models import User, Availability, Appointment, MentorMeetingSettings, AppointmentComment, ClassInformation
+from .models import User, Availability, Appointment, MentorMeetingSettings, AppointmentComment, ClassInformation, CourseMembers, ProgramType
 from flask_jwt_extended import jwt_required, get_jwt_identity, set_access_cookies, get_jwt, create_access_token
 from sqlalchemy import extract, func, or_, and_
 from . import db
@@ -783,5 +783,52 @@ def delete_comment(appointment_id, comment_id):
                 return jsonify({"error": "unauthorized"}), 403
         else:
             return jsonify({"error": "appointment or comment not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# Get all programs for each course a user is registered in
+@mentor.route('/mentor/courses', methods=['GET'])
+@jwt_required()
+def get_courses():
+    try:
+        user_id = get_jwt_identity()
+        mentor = User.query.get(user_id)
+        
+        if mentor:
+            all_mentor_courses = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).filter_by(user_id=user_id).all()
+            class_info = [{'class_id': course.id, 'class_name': course.class_name} for course in all_mentor_courses]
+
+            if all_mentor_courses:
+
+                courses_with_programs = []
+
+                for entry in class_info:
+                    class_id = entry['class_id']
+
+                    all_programs_in_course = ProgramType.query.filter_by(class_id=class_id).all()
+                    course_with_programs = []
+
+                    for program in all_programs_in_course:
+                        program_info = {
+                            'name': program.name,
+                            'description': program.description,
+                            'duration': program.duration,
+                            'physical_location': program.physical_location,
+                            'virtual_link': program.virtual_link,
+                        }
+                        course_with_programs.append(program_info)
+
+                    formatTuple = {
+                        'id': class_id,
+                        'class_name': entry['class_name'],
+                        'programs': course_with_programs
+                    }
+
+                    courses_with_programs.append(formatTuple)
+                return jsonify(courses_with_programs), 200
+            else: 
+                return jsonify({"error": "no courses found for mentor"}), 404
+        else:
+            return jsonify({"error": "mentor not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500

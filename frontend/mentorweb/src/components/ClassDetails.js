@@ -34,6 +34,17 @@ export default function ClassDetails() {
     discord_link: classInstance?.discord_link || ''
   });
 
+  const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
+    id: true,
+    class_comment: true,
+    class_location: true,
+    class_link: true,
+    class_recordings_link: true,
+    office_hours_location: true,
+    office_hours_link: true,
+    discord_link: true
+  })
+
 
 
 
@@ -180,14 +191,19 @@ export default function ClassDetails() {
   ////////////////////////////////////////////////////////
 
   // update classData with user input
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     if (!e) {
-      return;
+        return;
     }
 
-    setSelectedClassData({ ...selectedClassData, [e.name]: e.value });
-    setChangesMade(true);
-  };
+    const { name, value } = e;
+    setSelectedClassData({ ...selectedClassData, [name]: value });
+
+    const selectedCourse = allCourseData.find(course => course.id === selectedClassData.id);
+
+    // Update showButtons state
+    setShowSaveCancelButtons(prevButtons => ({ ...prevButtons, [name]: (value === selectedCourse[name]) }));
+};
 
   // handle to cancel webpage changes when user is done editing details
   // needs to be implemented
@@ -210,6 +226,11 @@ export default function ClassDetails() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
+
+  // check if all values are same as original
+  useEffect(() => {
+    setChangesMade(!(Object.values(showSaveCancelButtons).every((value) => value === true)));
+  }, [showSaveCancelButtons]);
 
   useEffect(() => {
     // console.log(selectedClassData);

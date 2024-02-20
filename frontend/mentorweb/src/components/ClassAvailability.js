@@ -19,23 +19,30 @@ export default function ClassAvailability() {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [loadClassTimesTable, setClassTimesTable] = useState(false);
   const [loadOfficeHoursTable, setOfficeHoursTable] = useState(false);
+  const [resetClassTimesTable, setResetClassTimesTable] = useState(false);
+  const [resetOfficeHoursTable, setResetOfficeHoursTable] = useState(false);
 
   // Class Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedClassData, setSelectedClassData] = useState({
     class_id: '',
+    class_name: '',
+    programs: [],
+  });
+  /*const [selectedClassData, setSelectedClassData] = useState({
+    class_id: '',
     type: 'office_hours',
     description: '',
     timeSplit: '',
     physical_location: '',
     virtual_link: ''
-  });
+  });*/
 
   // Times Data Variables
-  const [allTimesData, setAllTimesData] = useState([]);
-  const [classTimesData, setClassTimesData] = useState([]);
-  const [officeHoursTimesData, setOfficeHoursTimesData] = useState([]);
+  const [allTimesData, setAllTimesData] = useState({});
+  const [classTimesData, setClassTimesData] = useState('');
+  const [officeHoursTimesData, setOfficeHoursTimesData] = useState('');
 
 
 
@@ -48,11 +55,11 @@ export default function ClassAvailability() {
 
   // fetch from database: all courses the user is associated with
   // can make a new backend function to only get courseIds
-  const fetchCourseList = async () => {                                               // CHANGE TO FETCH ALL PROGRAM TYPES FOR COURSE
+  const fetchCourseList = async () => {
     if (user.account_type !== "mentor") return;
   
     try {
-      const response = await fetch(`/student/courses`, {
+      const response = await fetch(`/mentor/courses`, {
         credentials: 'include',
       });
   
@@ -190,6 +197,7 @@ export default function ClassAvailability() {
   // update the selectedClassData based on a courseId
   const updateCourseInfo = (courseId) => {
     if (!courseId) {
+      setSelectedClassData({});
       return;
     }
 
@@ -197,8 +205,34 @@ export default function ClassAvailability() {
 
     if (selectedCourse) {
       // Update selectedClassData with selectedCourse.id
-      setSelectedClassData({ ...selectedClassData, class_id: selectedCourse.id });
+      setSelectedClassData(selectedCourse);
     }
+  };
+
+  // update the selectedClassData based on a courseId
+  const updateTimesData = (classTimes, officeTimes) => {
+    if (!classTimes && !officeTimes) {
+      setSelectedClassData({});
+      return;
+    }
+    // Add type attribute to each object inside classTimes
+    const classTimesWithType = Object.keys(classTimes).reduce((acc, key) => {
+      acc[key] = { ...classTimes[key], type: 'class_times' };
+      return acc;
+    }, {});
+
+    // Add type attribute to each object inside officeTimes
+    const officeTimesWithType = Object.keys(officeTimes).reduce((acc, key) => {
+      acc[key] = { ...officeTimes[key], type: 'office_hours' };
+      return acc;
+    }, {});
+
+    const mergedTimes = {
+      ...classTimesWithType,
+      ...officeTimesWithType
+    };
+
+    setAllTimesData(mergedTimes);
   };
 
   // called when information on the webpage needs to be reloaded
@@ -299,20 +333,13 @@ export default function ClassAvailability() {
   // needs to be implemented
   const handleCancelChanges = () => {
     // Reset form data to initial meeting data
-    /*setFormData({
-      notes: selectedMeeting.notes || '',
-      meeting_url: selectedMeeting.meeting_url || '',
-      status: selectedMeeting.status || '',
-  });*/
-    setSelectedClassData({ ...selectedClassData, timeSplit: '' });
+    // updateCourseInfo(selectedClassData.id);
+    setResetClassTimesTable(true);
+    setResetOfficeHoursTable(true);
+    reloadChildInfo();
+    updateTimesData(classTimesData, officeHoursTimesData);
     setChangesMade(false); // Reset changes made
   };
-
-  /*const handleCancelChanges = () => {
-    // Reset form data to initial meeting data
-    updateCourseInfo(selectedClassData.id);
-    setChangesMade(false); // Reset changes made
-  };*/
 
 
 
@@ -332,7 +359,8 @@ export default function ClassAvailability() {
     // console.log(selectedClassData);
     // console.log(allTimesData);
     // console.log(allCourseData);
-  }, [selectedClassData, allTimesData, allCourseData]);
+    // console.log(officeHoursTimesData);
+  }, [selectedClassData, allTimesData, allCourseData, officeHoursTimesData]);
 
   useEffect(() => {
     // console.log(selectedClassData);
@@ -399,10 +427,12 @@ export default function ClassAvailability() {
                   functionPassed: handleTimesChange,
                   loadPageFunction: setClassTimesTable,
                   changesMade: setChangesMade,
+                  resetFunction: setResetClassTimesTable,
                 }}
                 times={classTimesData}
                 loadPage={loadClassTimesTable}
                 changes={changesMade}
+                reset={resetClassTimesTable}
               />
             </div>
 
@@ -415,9 +445,11 @@ export default function ClassAvailability() {
                     functionPassed: handleTimesChange,
                     loadPageFunction: setOfficeHoursTable,
                     changesMade: setChangesMade,
+                    resetFunction: setResetOfficeHoursTable,
                   }}
                   times={officeHoursTimesData}
                   loadPage={loadOfficeHoursTable}
+                  reset={resetOfficeHoursTable}
                 />
               </div>
               

@@ -4,7 +4,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { SingleInputTimeRangeField } from '@mui/x-date-pickers-pro/SingleInputTimeRangeField';
 
-export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, changes }) {
+export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, reset }) {
   // Local Variables
   const [timePickersList, setTimePickers] = useState({
     Monday: false,
@@ -90,6 +90,8 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
     }));
   };
 
+
+
   ////////////////////////////////////////////////////////
   //               UseEffect Function                   //
   ////////////////////////////////////////////////////////
@@ -128,6 +130,43 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, c
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timePickersList, times, weekdaysList]);
+
+  useEffect(() => {
+    // if table should be loaded with values
+    if (reset) {
+      // load the headers: weekday titles
+      const updatedTimePickersList = {};
+      for (const day in times) {
+        if (times.hasOwnProperty(day)) {
+          updatedTimePickersList[day] = true;
+        }
+      }
+      setTimePickers(updatedTimePickersList);
+
+      //load the times
+      const updatedWeekdaysList = {
+        Monday: [],
+        Tuesday: [],
+        Wednesday: [],
+        Thursday: [],
+        Friday: [],
+      };
+      
+      for (const day in times) {
+        if (times.hasOwnProperty(day)) {
+          const start = dayjs(`2022-04-17T${times[day].start_time}`);
+          const end = dayjs(`2022-04-17T${times[day].end_time}`);
+          updatedWeekdaysList[day] = { start_time: start, end_time: end };
+        }
+      }
+
+      setWeekdaysList(updatedWeekdaysList);
+
+      param.resetFunction(!reset);
+      param.loadPageFunction(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reset]);
 
   // HTML for webpage 
   return (
