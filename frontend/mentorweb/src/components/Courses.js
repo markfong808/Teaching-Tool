@@ -153,49 +153,51 @@ export default function Courses() {
   // HTML for webpage
   // will change soon***
   return (
-   
-    <div className="flex flex-col m-auto relative justify-center items-center">
-      <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
-        {courseIds.map((course) => (
-          <button
-            key={course.id} 
-            className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
-            onClick={() => handleButtonClick(course)}
-          >
-            {course.class_name}: Class Details
-          </button>
-        ))}
-      </div>
-
-      {isClassInformationPopupVisible && (
-        <div className='absolute mt-40'>
-          <CourseInformationPopup onClose={() => setClassInformationPopupVisible(false)} courseData={classData} instructorData={instructorData} />
+    <div>
+      <div className="flex flex-col m-auto relative justify-center items-center">
+        <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
+          {courseIds.map((course) => (
+            <button
+              key={course.id} 
+              className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
+              onClick={() => handleButtonClick(course)}
+            >
+              {course.class_name}: Class Details
+            </button>
+          ))}
         </div>
-      )}
 
-    
+        {isClassInformationPopupVisible && (
+          <div className='absolute mt-40'>
+            <CourseInformationPopup onClose={() => setClassInformationPopupVisible(false)} courseData={classData} instructorData={instructorData} />
+          </div>
+        )}
 
-      {/*REDO CSS CODE HERE*/}
-      <div className="p-2.5">
+      
+
+        {/*REDO CSS CODE HERE*/}
+        <div className="p-2.5">
+        </div>
+
+        {/* Second Box */}
+        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
+          <MeetingInformation />
+        </div>
+
+        <div className="p-2.5">
+        </div>
+
+        {/* Third Box */}
+        <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md">
+          <button className="bg-purple p-2 rounded-md text-white hover:text-gold" onClick={() => setPopUpVisible(!isPopUpVisible)}> Schedule New Meeting</button>
+        </div>
+
+        
       </div>
-
-      {/* Second Box */}
-      <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
-        <MeetingInformation />
-      </div>
-
-      <div className="p-2.5">
-      </div>
-
-      {/* Third Box */}
-      <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md">
-        <button className="bg-purple p-2 rounded-md text-white hover:text-gold" onClick={() => setPopUpVisible(!isPopUpVisible)}> Schedule New Meeting</button>
-      </div>
-
+          
       {isPopUpVisible && (
-        <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)}/>
-      )}
+          <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)}/>
+        )}
     </div>
-   
   );
 }
