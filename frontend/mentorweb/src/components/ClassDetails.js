@@ -152,6 +152,7 @@ export default function ClassDetails() {
   // update the selectedClassData based on a courseId
   const updateCourseInfo = (courseId) => {
     if (!courseId) {
+      setSelectedClassData({});
       return;
     }
 
@@ -191,7 +192,9 @@ export default function ClassDetails() {
   // handle to cancel webpage changes when user is done editing details
   // needs to be implemented
   const handleCancelChanges = () => {
-    
+    // Reset form data to initial meeting data
+    updateCourseInfo(selectedClassData.id);
+    setChangesMade(false); // Reset changes made
   };
 
 
@@ -229,7 +232,7 @@ export default function ClassDetails() {
             value={selectedCourseId}
             onChange={(e) => handleCourseChange(e)}
           >
-            <option value="">Select...</option>
+            <option key={-1} value="">Select...</option>
             {allCourseData.map((course) => (
               <option key={course.id} value={course.id}>{course.class_name}</option>
             ))}

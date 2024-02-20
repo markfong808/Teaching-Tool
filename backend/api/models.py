@@ -1,5 +1,6 @@
 from . import db
 from datetime import datetime
+from sqlalchemy import UniqueConstraint
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -31,9 +32,14 @@ class MentorMeetingSettings(db.Model):
 
 class ProgramType(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(150), unique=True)
+    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
+    physical_location = db.Column(db.String(255))                                                                # ADDED
+    virtual_link = db.Column(db.String(255))                                                                     # ADDED
+    name = db.Column(db.String(150))
     description = db.Column(db.Text)
     duration = db.Column(db.Integer)  # Duration in minutes
+
+    __table_args__ = (UniqueConstraint('name', 'class_id'), )
 
 
 class Availability(db.Model):

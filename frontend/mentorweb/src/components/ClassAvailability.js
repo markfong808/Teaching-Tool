@@ -25,8 +25,11 @@ export default function ClassAvailability() {
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedClassData, setSelectedClassData] = useState({
     class_id: '',
-    type: 'office_hours',  // not used yet?
+    type: 'office_hours',
+    description: '',
     timeSplit: '',
+    physical_location: '',
+    virtual_link: ''
   });
 
   // Times Data Variables
@@ -45,7 +48,7 @@ export default function ClassAvailability() {
 
   // fetch from database: all courses the user is associated with
   // can make a new backend function to only get courseIds
-  const fetchCourseList = async () => {
+  const fetchCourseList = async () => {                                               // CHANGE TO FETCH ALL PROGRAM TYPES FOR COURSE
     if (user.account_type !== "mentor") return;
   
     try {
@@ -181,6 +184,7 @@ export default function ClassAvailability() {
     // flag to child objects to reload their information
     // with times data or selectedClassData
     reloadChildInfo();
+    setChangesMade(false);
   };
 
   // update the selectedClassData based on a courseId
@@ -194,8 +198,6 @@ export default function ClassAvailability() {
     if (selectedCourse) {
       // Update selectedClassData with selectedCourse.id
       setSelectedClassData({ ...selectedClassData, class_id: selectedCourse.id });
-    } else {
-      console.error("Selected course not found");
     }
   };
 
@@ -214,14 +216,13 @@ export default function ClassAvailability() {
 
   // update classData with user input
   const handleInputChange = (e) => {
-    if (!e) {
+    if (!e || e.target.value === 'a') {
       return;
     }
 
     if (e.target.name === 'timeSplit') {
       let maxRecommendedTimeSplit = 1440;
 
-      console.log(officeHoursTimesData);
       for (const data of Object.entries(officeHoursTimesData)) {
         const startDate = new Date(`1970-01-01T${data[1].start_time}`);
         const endDate = new Date(`1970-01-01T${data[1].end_time}`);
@@ -297,8 +298,21 @@ export default function ClassAvailability() {
   // handle to cancel webpage changes when user is done editing details
   // needs to be implemented
   const handleCancelChanges = () => {
-    
+    // Reset form data to initial meeting data
+    /*setFormData({
+      notes: selectedMeeting.notes || '',
+      meeting_url: selectedMeeting.meeting_url || '',
+      status: selectedMeeting.status || '',
+  });*/
+    setSelectedClassData({ ...selectedClassData, timeSplit: '' });
+    setChangesMade(false); // Reset changes made
   };
+
+  /*const handleCancelChanges = () => {
+    // Reset form data to initial meeting data
+    updateCourseInfo(selectedClassData.id);
+    setChangesMade(false); // Reset changes made
+  };*/
 
 
 
@@ -352,7 +366,7 @@ export default function ClassAvailability() {
             value={selectedCourseId}
             onChange={(e) => handleCourseChange(e)}
           >
-            <option value="">Select...</option>
+            <option key={-1} value="-1">Select...</option>
             {allCourseData.map((course) => (
               <option key={course.id} value={course.id}>
                 {course.class_name}
@@ -417,7 +431,7 @@ export default function ClassAvailability() {
                       value={selectedClassData.timeSplit}
                       onChange={(event) => {
                         const inputValue = event.target.value;
-                        const numericValue = inputValue.replace(/[^0-9]/g, ''); // Remove non-numeric characters
+                        const numericValue = inputValue.replace(/[^0-9]/g, 'a'); // Remove non-numeric characters
                         handleInputChange({ target: { name: 'timeSplit', value: numericValue } });
                       }}
                   />
