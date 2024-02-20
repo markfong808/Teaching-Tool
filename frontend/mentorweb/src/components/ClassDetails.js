@@ -296,11 +296,6 @@ export default function ClassDetails() {
               <MeetingLocation isClassLocation={true} param={{ functionPassed: handleInputChange, loadPageFunction: setClassLocRec, changesMade: setChangesMade }} data={{ class_location: selectedClassData.class_location, class_recordings_link: selectedClassData.class_recordings_link, class_link: selectedClassData.class_link }} loadPage={loadClassLocRec} changes={changesMade}/>
             </div>
             
-            {/* Office Hours Location and Link */}
-            <div>
-              <MeetingLocation isClassLocation={false} param={{ functionPassed: handleInputChange, loadPageFunction: setOfficeHoursLocRec, changesMade: setChangesMade }} data={{ office_hours_location: selectedClassData.office_hours_location, office_hours_link: selectedClassData.office_hours_link }} loadPage={loadOfficeHoursLocRec} changes={changesMade}/>
-            </div>
-
             <div className="w-2/3 m-auto">
               <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                 <div className="flex">

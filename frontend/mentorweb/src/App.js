@@ -24,6 +24,7 @@ import ProtectedRoute from "./context/ProtectedRoute";
 import Unauthorized from "./context/Unauthorized";
 import { UserContext } from './context/UserContext';
 import ManageTimes from "./components/ManageTimes";
+import Program from "./components/Program"
 function App() {
   const { user } = useContext(UserContext);
 
@@ -138,7 +139,7 @@ function App() {
           <Route path="/mentor/edit-class-availability"
             element={
               <ProtectedRoute allowedAccountTypes={['mentor']}>
-                <ClassAvailability />
+                <Program/>
               </ProtectedRoute>
             }
           />
