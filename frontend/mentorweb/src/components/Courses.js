@@ -6,12 +6,14 @@ import { Tooltip } from './Tooltip';
 import { ClassContext } from "../context/ClassContext.js";
 import ScheduleMeetingPopup from './ScheduleMeetingPopup.js';
 import MeetingInformation from './MeetingInformation.js';
+import CourseInformationPopup from './CourseInformationPopup.js';
 
 export default function Courses() {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
   const { user, setUser } = useContext(UserContext);
   const [isPopUpVisible, setPopUpVisible] = useState(false);
+  const [isClassInformationPopupVisible, setClassInformationPopupVisible] = useState(false);
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
@@ -43,9 +45,6 @@ export default function Courses() {
     discord_link: classInstance?.discord_link || "",
     teacher_id: classInstance?.teacher_id || "",
   });
-
-
-
 
 
 
@@ -131,9 +130,10 @@ export default function Courses() {
   //  updateCourseInfo(selectedCourse);
   // };
 
-  const handleButtonClick = (courseId) => {
-    setSelectedCourseId(courseId);
-    updateCourseInfo(courseId);
+  const handleButtonClick = (course) => {
+    setSelectedCourseId(course.id);
+    updateCourseInfo(course.id);
+    setClassInformationPopupVisible(true);
   };
 
   
@@ -153,36 +153,27 @@ export default function Courses() {
   // HTML for webpage
   // will change soon***
   return (
-    <div className="flex flex-col w-7/8 m-auto">
+   
+    <div className="flex flex-col m-auto relative justify-center items-center">
       <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
         {courseIds.map((course) => (
           <button
             key={course.id} 
             className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
-            onClick={() => handleButtonClick(course.id)}
+            onClick={() => handleButtonClick(course)}
           >
             {course.class_name}: Class Details
           </button>
         ))}
       </div>
 
-      <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
-        <h2 className="pb-10 text-center font-bold text-4xl">{classData.class_name}</h2>
-        <div className="grid grid-cols-2 gap-4 font-bold">
-          <div className="flex flex-col">
-            <label> Class Times: <span className="font-normal">{classData.class_time}</span></label>
-            <label> Class Location: <span className="font-normal">{classData.class_location}</span></label>
-            <label> Class Recordings Link: <span className="font-normal"> {classData.class_recordings_link}</span></label>
-            <label>Comments: &nbsp; <p className="font-normal">{classData.class_comment}</p></label>
-          </div>
-          <div className="flex flex-col justify-self-end">
-            <label> Office Hours: <span className="font-normal">{classData.office_hours_time}</span></label>
-            <label> Office Hours Location: <span className="font-normal"> {classData.office_hours_location}</span></label>
-            <label> Instructor: <span className="font-normal"> {instructorData.title} {instructorData.last_name}</span></label>
-            <label> Discord: <span className="font-normal">{classData.discord_link}</span></label>
-          </div>
+      {isClassInformationPopupVisible && (
+        <div className='absolute mt-40'>
+          <CourseInformationPopup onClose={() => setClassInformationPopupVisible(false)} courseData={classData} instructorData={instructorData} />
         </div>
-      </div>
+      )}
+
+    
 
       {/*REDO CSS CODE HERE*/}
       <div className="p-2.5">
@@ -205,5 +196,6 @@ export default function Courses() {
         <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)}/>
       )}
     </div>
+   
   );
 }
