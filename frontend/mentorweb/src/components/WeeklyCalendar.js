@@ -129,7 +129,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, r
       param.loadPageFunction(!loadPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timePickersList, times, weekdaysList]);
+  }, [timePickersList, times, weekdaysList, loadPage]);
 
   useEffect(() => {
     // if table should be loaded with values

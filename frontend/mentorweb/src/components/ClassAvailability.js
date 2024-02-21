@@ -333,7 +333,7 @@ export default function ClassAvailability() {
   // needs to be implemented
   const handleCancelChanges = () => {
     // Reset form data to initial meeting data
-    // updateCourseInfo(selectedClassData.id);
+    // updateCourseInfo(selectedClassData.id);                                       // why is this here?
     setResetClassTimesTable(true);
     setResetOfficeHoursTable(true);
     reloadChildInfo();
@@ -437,7 +437,6 @@ export default function ClassAvailability() {
             </div>
 
             {/* Office Hours Times */}
-           
               <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                 <WeeklyCalendar
                   isClassTimes={false}
@@ -492,7 +491,7 @@ export default function ClassAvailability() {
       </div>
 
       {isPopUpVisible && (
-        <ChooseMeetingDatesPopup onClose={() => setPopUpVisible(false)} data={officeHoursTimesData} id={selectedCourseId} timeSplit={selectedClassData.timeSplit}/>
+        <ChooseMeetingDatesPopup onClose={() => setPopUpVisible(false)} data={officeHoursTimesData} id={selectedCourseId} timeSplit={selectedClassData.timeSplit} physical_location={"Temp Location"}/>
       )}
     </div>
   );

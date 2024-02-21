@@ -6,7 +6,7 @@ import 'react-calendar/dist/Calendar.css';
 import '@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css';
 import { addDays } from 'date-fns';
 
-const ChooseMeetingDatesPopup = ({ onClose, data, id, timeSplit }) => {
+const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_location }) => {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [showTimePicker, setShowTimePicker] = useState(false);
@@ -46,7 +46,8 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, timeSplit }) => {
 
             convertedAvailability = {
                 availabilities: convertedAvailability,
-                timeSplit: timeSplit
+                duration: duration,
+                physical_location: physical_location
             }
 
             console.log(convertedAvailability);

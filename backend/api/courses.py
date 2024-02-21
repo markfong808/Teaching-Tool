@@ -47,6 +47,30 @@ def get_times(course_id):
             return jsonify(None), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# Get all program times for a program
+@courses.route('/program/times/<program_id>', methods=['GET'])
+@jwt_required()
+def get_program_times(program_id):
+    try:
+        programTimes = ClassTimes.query.filter_by(program_id=program_id).all()
+        
+        if programTimes:
+            program_times_list = []
+            for programTime in programTimes:
+                program_time_info = {
+                    'type': programTime.type,
+                    'day': programTime.day,
+                    'start_time': programTime.start_time,
+                    'end_time': programTime.end_time,
+                }
+                program_times_list.append(program_time_info)
+            return jsonify(program_times_list), 200
+        else:
+            return jsonify(None), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 
 # Set the classtime of a course
@@ -192,5 +216,29 @@ def add_user_to_course():
             return jsonify({"message": "Added to course successfully"}), 200
         else:
             return jsonify({"error": "Insufficient details to add user to course"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Create a new course and adds the user who created it to CourseMembers
+@courses.route('/course/add-program', methods=['POST'])
+@jwt_required()
+def add_new_program():
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        class_id = data.get('class_id')
+
+        if data:
+            new_details = ProgramType(
+                name=name,
+                class_id=class_id,
+            )
+            db.session.add(new_details)
+            db.session.commit()
+            
+            return jsonify({"message": "Added to program successfully"}), 200
+        else:
+            return jsonify({"error": "Insufficient details to add program to course"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500

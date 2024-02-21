@@ -5,7 +5,7 @@ import { getCookie } from "../utils/GetCookie.js"
 import { Tooltip } from "../components/Tooltip.js";
 import Comment from "../components/Comment.js";
 
-export default function MeetingInformation() {
+export default function MeetingInformation({ courseId }) {
     const [data, setData] = useState([]);
     const [activeTab, setActiveTab] = useState('upcoming');
     const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -42,7 +42,8 @@ export default function MeetingInformation() {
             : `/student/appointments`;
 
         try {
-            const response = await fetch(`${apiEndpoint}?type=${activeTab}`, {
+            console.log(courseId);
+            const response = await fetch(`${apiEndpoint}/${encodeURIComponent(courseId)}?type=${activeTab}`, {
                 credentials: 'include',
             });
             const apiData = await response.json();
@@ -66,6 +67,13 @@ export default function MeetingInformation() {
         fetchMeetings();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, activeTab]);
+
+    useEffect(() => {
+        if (courseId !== null || courseId !== '') {
+            fetchMeetings();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [courseId]);
 
     const fetchProgramTypeDetails = async () => {
         if (!user) return;
@@ -539,9 +547,12 @@ export default function MeetingInformation() {
                                 <thead className="bg-purple text-white">
                                     <tr>
                                         <th className="border-r text-start">Type</th>
+                                        <th className="border-r text-start">Class Name</th>
                                         <th className="border-r text-start">Day</th>
                                         <th className="border-r text-start">Date</th>
                                         <th className="border-r text-start">Time (PST)</th>
+                                        <th className="border-r text-start">Physical Location</th>
+                                        <th className="border-r text-start">Meeting URL</th>
                                         <th className="text-start">Status</th>
                                     </tr>
                                 </thead>
@@ -549,9 +560,12 @@ export default function MeetingInformation() {
                                     {data.map((meeting) => (
                                         <tr key={meeting.appointment_id} onClick={() => handleMeetingClick(meeting)} className="hover:bg-gray border-b">
                                             <td className="cursor-pointer text-blue underline border-r">{meeting.type}</td>
+                                            <td className='border-r'>{meeting.class_name}</td>
                                             <td className='border-r'>{getDayFromDate(meeting.date)}</td>
                                             <td className='border-r'>{formatDate(meeting.date)}</td>
                                             <td className='border-r'>{formatTime(meeting.start_time)} - {formatTime(meeting.end_time)}</td>
+                                            <td className='border-r'>{meeting.physical_location}</td>
+                                            <td className='border-r'>{meeting.meeting_url}</td>
                                             <td>{capitalizeFirstLetter(meeting.status)}</td>
                                         </tr>
                                     ))}

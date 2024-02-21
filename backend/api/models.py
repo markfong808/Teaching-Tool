@@ -38,6 +38,10 @@ class ProgramType(db.Model):
     name = db.Column(db.String(150))
     description = db.Column(db.Text)
     duration = db.Column(db.Integer)  # Duration in minutes
+    auto_approve_appointments = db.Column(db.Boolean, default=True)
+    max_daily_meetings = db.Column(db.Integer)
+    max_weekly_meetings = db.Column(db.Integer)
+    max_monthly_meetings = db.Column(db.Integer)
 
     __table_args__ = (UniqueConstraint('name', 'class_id'), )
 
@@ -46,6 +50,7 @@ class Availability(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
+    class_name = db.Column(db.String(255))                                                                       # ADDED
     type = db.Column(db.String(50))
     date = db.Column(db.String(150))  # YYYY-MM-DD
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
@@ -61,6 +66,7 @@ class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
+    class_name = db.Column(db.String(255))                                                                       # ADDED
     physical_location = db.Column(db.String(255))                                                                # ADDED
     type = db.Column(db.String(50))
     appointment_date = db.Column(db.String(150))  # YYYY-MM-DD
@@ -125,3 +131,4 @@ class ClassTimes(db.Model):                                                     
     day = db.Column(db.String(50))                                                                         # ADDED
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                          # ADDED
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                            # ADDED
+    program_id = db.Column(db.Integer, db.ForeignKey('program_type.id'))                                   # ADDED

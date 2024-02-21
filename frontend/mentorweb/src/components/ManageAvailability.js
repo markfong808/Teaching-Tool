@@ -3,7 +3,7 @@ import { UserContext } from '../context/UserContext';
 import { formatTime, formatDate, getDayFromDate, capitalizeFirstLetter } from '../utils/FormatDatetime';
 import { getCookie } from '../utils/GetCookie';
 
-export default function ManageAvailability() {
+export default function ManageAvailability({ courseId }) {
     const { user } = useContext(UserContext);
     const [data, setData] = useState([]);
 
@@ -11,20 +11,18 @@ export default function ManageAvailability() {
         if (!user) return;
 
         try {
-            const response = await fetch('/mentor/availability', {
+            const response = await fetch(`/mentor/availability/${encodeURIComponent(courseId)}`, {
                 credentials: 'include',
 
             });
 
             const apiData = await response.json();
-            console.log("API DATA: " + apiData);
 
             const sortedData = (apiData['mentor_availability'] || []).sort((a, b) => {
                 const dateTimeA = new Date(`${a.date}T${a.start_time}`);
                 const dateTimeB = new Date(`${b.date}T${b.start_time}`);
                 return dateTimeA - dateTimeB;
             });
-            console.log(sortedData);
             setData(sortedData);
 
 
@@ -37,6 +35,13 @@ export default function ManageAvailability() {
         fetchAvailability();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (courseId !== null || courseId !== '') {
+            fetchAvailability();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [courseId]);
 
     const handleAvailabilityStatusChange = async (availabilityID, newStatus) => {
         const csrfToken = getCookie('csrf_access_token');
@@ -109,6 +114,7 @@ export default function ManageAvailability() {
                 <table className='w-full'>
                     <thead className='border-b border-light-gray bg-purple text-white'>
                         <td className='border-r border-light-gray'>Type</td>
+                        <td className='border-r border-light-gray'>Class Name</td>
                         <td className='border-r border-light-gray'>Day</td>
                         <td className='border-r border-light-gray'>Date</td>
                         <td className='border-r border-light-gray'>Time (PST)</td>
@@ -119,6 +125,7 @@ export default function ManageAvailability() {
                         {data.map((availability) => (
                             <tr className='border'>
                                 <td className='border-r'>{availability.type}</td>
+                                <td className='border-r'>{availability.class_name}</td>
                                 <td className='border-r'>{getDayFromDate(availability.date)}</td>
                                 <td className='border-r'>{formatDate(availability.date)}</td>
                                 <td className='border-r'>{formatTime(availability.start_time)} - {formatTime(availability.end_time)} </td>
