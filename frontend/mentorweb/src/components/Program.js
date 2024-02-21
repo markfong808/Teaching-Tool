@@ -60,7 +60,7 @@ export default function Program() {
   const [allTimesData, setAllTimesData] = useState({});
   const [selectedProgramTimesData, setSelectedProgramTimesData] = useState({});
 
-  
+
 
 
   ////////////////////////////////////////////////////////
@@ -71,14 +71,14 @@ export default function Program() {
   // can make a new backend function to only get courseIds
   const fetchCourseList = async () => {
     if (user.account_type !== "mentor") return;
-  
+
     try {
       const response = await fetch(`/mentor/courses`, {
         credentials: 'include',
       });
-  
+
       const fetchedCourseList = await response.json();
-  
+
       setAllCourseData(fetchedCourseList);
     } catch (error) {
       console.error("Error fetching course list:", error);
@@ -114,7 +114,7 @@ export default function Program() {
             return acc;
           }, {});
 
-          setAllTimesData(tempData);
+        setAllTimesData(tempData);
       } else {
         setAllTimesData({});
       }
@@ -141,7 +141,7 @@ export default function Program() {
       }
 
       const fetchedProgramTimes = await response.json();
-      
+
       if (fetchedProgramTimes !== null) {
         setAllTimesData(fetchedProgramTimes);
 
@@ -154,7 +154,7 @@ export default function Program() {
             return acc;
           }, {});
 
-          setSelectedProgramTimesData(tempData);
+        setSelectedProgramTimesData(tempData);
       } else {
         setSelectedProgramTimesData([]);
       }
@@ -328,7 +328,7 @@ export default function Program() {
       for (const data of Object.entries(selectedProgramTimesData)) {
         const startDate = new Date(`1970-01-01T${data[1].start_time}`);
         const endDate = new Date(`1970-01-01T${data[1].end_time}`);
-    
+
         const timeDifference = endDate - startDate;
         const minutes = Math.floor(timeDifference / (1000 * 60));
         if (minutes < maxRecommendedTimeSplit) {
@@ -397,7 +397,7 @@ export default function Program() {
           const updatedTimesData = prevTimesData.filter(entry => !(entry.day === tempDay && entry.type === tempType));
           return updatedTimesData;
         });
-      } 
+      }
       // to add a time block
       else {
         setAllTimesData((prevTimesData) => {
@@ -405,26 +405,26 @@ export default function Program() {
           const existingEntryIndex = prevTimesData.findIndex((entry) => entry.day === tempDay);
 
           if (existingEntryIndex !== -1) {
-              // If the entry already exists, replace it
-              const updatedTimesData = [...prevTimesData];
-              updatedTimesData[existingEntryIndex] = {
-                  type: tempType,
-                  day: tempDay,
-                  start_time: tempValue[0],
-                  end_time: tempValue[1],
-              };
-              return updatedTimesData;
+            // If the entry already exists, replace it
+            const updatedTimesData = [...prevTimesData];
+            updatedTimesData[existingEntryIndex] = {
+              type: tempType,
+              day: tempDay,
+              start_time: tempValue[0],
+              end_time: tempValue[1],
+            };
+            return updatedTimesData;
           } else {
-              // If the entry doesn't exist, add a new entry
-              return [
-                  ...(Array.isArray(prevTimesData) ? prevTimesData : []),
-                  {
-                      type: tempType,
-                      day: tempDay,
-                      start_time: tempValue[0],
-                      end_time: tempValue[1],
-                  },
-              ];
+            // If the entry doesn't exist, add a new entry
+            return [
+              ...(Array.isArray(prevTimesData) ? prevTimesData : []),
+              {
+                type: tempType,
+                day: tempDay,
+                start_time: tempValue[0],
+                end_time: tempValue[1],
+              },
+            ];
           }
         });
       }
@@ -467,8 +467,8 @@ export default function Program() {
     }
 
     setSelectedProgramData({
-      ...selectedProgramData, 
-      "max_daily_meetings": newLimitData.max_daily_meetings, 
+      ...selectedProgramData,
+      "max_daily_meetings": newLimitData.max_daily_meetings,
       "max_weekly_meetings": newLimitData.max_weekly_meetings,
       "max_monthly_meetings": newLimitData.max_monthly_meetings,
     });
@@ -511,7 +511,7 @@ export default function Program() {
     );
   }, [showSaveCancelButtons]);
 
-  useEffect(()=> {
+  useEffect(() => {
     if (Number(selectedProgramData.duration) > 0) {
       setBoxShown(true);
     } else {
@@ -597,7 +597,7 @@ export default function Program() {
           </div>
         </div>
 
-        
+
         <div className="flex flex-col w-3/4 px-5 m-auto">
           <div className='py-5 border border-light-gray rounded-md shadow-md'>
             <div className="relative">
@@ -609,7 +609,7 @@ export default function Program() {
               Class Availability
             </h2>
 
-            
+
             <div className="flex flex-col">
               <div className="w-3/4 m-auto">
                 {/* Office Hours Times */}
@@ -698,8 +698,8 @@ export default function Program() {
                     type="radio"
                     name="auto_approve_appointments"
                     value="true"
-                    //checked={formData.auto_approve_appointments === true}
-                    //onChange={handleInputChange}
+                  //checked={formData.auto_approve_appointments === true}
+                  //onChange={handleInputChange}
                   />
                 </label>
                 &nbsp;&nbsp;
@@ -710,8 +710,8 @@ export default function Program() {
                     type="radio"
                     name="auto_approve_appointments"
                     value="false"
-                    //checked={formData.auto_approve_appointments === false}
-                    //onChange={handleInputChange}
+                  //checked={formData.auto_approve_appointments === false}
+                  //onChange={handleInputChange}
                   />
                 </label>
               </div>
@@ -759,39 +759,35 @@ export default function Program() {
           </div>
         </div>
 
-       
-        
-        
-        <div className='w-3/4 m-auto'>
-        
-        </div>
+
         {changesMade && (
-              <div className="flex flex-row justify-end my-5">
-                <button
-                  className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-                  onClick={handleSaveChanges}
-                >
-                  Save Class Changes
-                </button>
-                <button
-                  className="bg-purple text-white rounded-md p-2 hover:text-gold"
-                  onClick={handleCancelChanges}
-                >
-                  Discard Class Changes
-                </button>
-              </div>
-            )}
+          <div className="flex flex-row justify-end my-5">
+            <button
+              className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
+              onClick={handleSaveChanges}
+            >
+              Save Class Changes
+            </button>
+            <button
+              className="bg-purple text-white rounded-md p-2 hover:text-gold"
+              onClick={handleCancelChanges}
+            >
+              Discard Class Changes
+            </button>
+          </div>
+        )}
       </div>
 
       {isPopUpVisible && (
-        <ChooseMeetingDatesPopup
-          onClose={() => setPopUpVisible(false)}
-          data={selectedProgramTimesData}
-          id={selectedCourseId}
-          duration={selectedProgramData.duration}
-          physical_location={selectedProgramData.physical_location}
-        />
-   
+        <div className='absolute inset-0'>
+          <ChooseMeetingDatesPopup
+            onClose={() => setPopUpVisible(false)}
+            data={selectedProgramTimesData}
+            id={selectedCourseId}
+            duration={selectedProgramData.duration}
+            physical_location={selectedProgramData.physical_location}
+          />
+        </div>
       )}
     </div>
   );
