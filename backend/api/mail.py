@@ -27,7 +27,7 @@ def send_email(to_email, subject, html_content, ics_data):
     message.attachment = attachment
 
     try:
-        sendgrid_client = SendGridAPIClient('')
+        sendgrid_client = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         sendgrid_client.send(message)
     except Exception as e:
-        print(e.message)
+        print(str(e))

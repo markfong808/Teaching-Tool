@@ -310,7 +310,7 @@ def send_confirmation_email(appointment):
         ics_data = cal.serialize()
         
         # Attach the .ics file to the email
-        send_email(student.email, student_email_subject, student_email_content, ics_data)
+        send_email(mentor.email, student_email_subject, student_email_content, ics_data)
         return True
     return False
 
@@ -379,98 +379,100 @@ def update_appointments_status(mentor_id, appointment_date, scope):
 @student.route('/student/appointments/reserve/<appointment_id>', methods=['POST'])
 @jwt_required()
 def reserve_appointment(appointment_id):
-    data = request.get_json()
-    student_id = get_jwt_identity()
-    print(student_id)
-    print(appointment_id)
-    appointment = Appointment.query.get(appointment_id)
-    mentor = User.query.get(appointment.mentor_id)
-    
-    if not appointment or appointment.status != 'posted':
-        return jsonify({"error": "Appointment is not available for reservation"}), 400
+    try:
+        data = request.get_json()
+        student_id = get_jwt_identity()
+        appointment = Appointment.query.get(appointment_id)
+        mentor = User.query.get(appointment.mentor_id)
+        
+        if not appointment or appointment.status != 'posted':
+            return jsonify({"error": "Appointment is not available for reservation"}), 400
 
-    student = User.query.get(student_id)
-    if not student or student.account_type != 'student':
-        return jsonify({"error": "Only students are allowed to book sessions!"}), 400
+        student = User.query.get(student_id)
+        if not student or student.account_type != 'student':
+            return jsonify({"error": "Only students are allowed to book sessions!"}), 400
 
-    current_time = datetime.now() - timedelta(hours=8)
-    appointment_datetime = datetime.strptime(appointment.appointment_date + ' ' + appointment.start_time, '%Y-%m-%d %H:%M')
-    if appointment_datetime <= current_time:
-        return jsonify({"error": "Cannot reserve past appointments"}), 400
+        current_time = datetime.now() - timedelta(hours=8)
+        appointment_datetime = datetime.strptime(appointment.appointment_date + ' ' + appointment.start_time, '%Y-%m-%d %H:%M')
+        if appointment_datetime <= current_time:
+            return jsonify({"error": "Cannot reserve past appointments"}), 400
 
-    mentor_limits = ProgramType.query.filter_by(id=appointment.type).first()
+        mentor_limits = ProgramType.query.filter_by(id=appointment.type).first()
 
-    # Calculate week range for the appointment
-    start_of_week, end_of_week = get_week_range(appointment.appointment_date)
+        # Calculate week range for the appointment
+        start_of_week, end_of_week = get_week_range(appointment.appointment_date)
 
-    # Count current reserved and pending appointments for the day
-    daily_count = Appointment.query.filter(
-        Appointment.mentor_id == appointment.mentor_id,
-        func.date(Appointment.appointment_date) == appointment.appointment_date,
-        Appointment.status.in_(['reserved', 'pending'])
-    ).count()
+        # Count current reserved and pending appointments for the day
+        daily_count = Appointment.query.filter(
+            Appointment.mentor_id == appointment.mentor_id,
+            func.date(Appointment.appointment_date) == appointment.appointment_date,
+            Appointment.status.in_(['reserved', 'pending'])
+        ).count()
 
-    # Count current reserved and pending appointments for the week
-    weekly_count = Appointment.query.filter(
-        Appointment.mentor_id == appointment.mentor_id,
-        func.date(Appointment.appointment_date).between(start_of_week, end_of_week),
-        Appointment.status.in_(['reserved', 'pending'])
-    ).count()
-    
-    parsed_appointment_date = datetime.strptime(appointment.appointment_date, '%Y-%m-%d')
+        # Count current reserved and pending appointments for the week
+        weekly_count = Appointment.query.filter(
+            Appointment.mentor_id == appointment.mentor_id,
+            func.date(Appointment.appointment_date).between(start_of_week, end_of_week),
+            Appointment.status.in_(['reserved', 'pending'])
+        ).count()
+        
+        parsed_appointment_date = datetime.strptime(appointment.appointment_date, '%Y-%m-%d')
 
-    # Count current reserved and pending appointments for the month
-    monthly_count = Appointment.query.filter(
-        Appointment.mentor_id == appointment.mentor_id,
-        extract('month', func.date(Appointment.appointment_date)) == parsed_appointment_date.month,
-        extract('year', func.date(Appointment.appointment_date)) == parsed_appointment_date.year,
-        Appointment.status.in_(['reserved', 'pending'])
-    ).count()
-    
-    # Check against daily and weekly limits
-    if (not mentor_limits) or (daily_count < mentor_limits.max_daily_meetings and \
-        weekly_count < mentor_limits.max_weekly_meetings and monthly_count < mentor_limits.max_monthly_meetings):
-        try:
-            appointment.student_id = student_id
-            appointment.meeting_url = student.meeting_url
-            appointment.notes = data.get('notes', None)
-            if mentor.auto_approve_appointments:
-                appointment.status = 'reserved'
-            else:
-                appointment.status = 'pending'
-                
-            # Check if this appointment hits the daily or weekly limit
-            hits_daily_limit = daily_count + 1 == mentor_limits.max_daily_meetings
-            hits_weekly_limit = weekly_count + 1 == mentor_limits.max_weekly_meetings
-            hits_monthly_limit = monthly_count + 1 == mentor_limits.max_monthly_meetings
-            db.session.commit()
-            
-            if hits_daily_limit:
-                update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'daily')
-            elif hits_weekly_limit:
-                update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'weekly')
-            elif hits_monthly_limit:
-                update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'monthly')
-
-            
-            if appointment.status == 'reserved':
-                send_email_success = send_confirmation_email(appointment)
-                if send_email_success:
-                    return jsonify({"message": "Appointment reserved and confirmation email sent", "status": appointment.status}), 201
+        # Count current reserved and pending appointments for the month
+        monthly_count = Appointment.query.filter(
+            Appointment.mentor_id == appointment.mentor_id,
+            extract('month', func.date(Appointment.appointment_date)) == parsed_appointment_date.month,
+            extract('year', func.date(Appointment.appointment_date)) == parsed_appointment_date.year,
+            Appointment.status.in_(['reserved', 'pending'])
+        ).count()
+        
+        # Check against daily and weekly limits
+        if (not mentor_limits) or (daily_count < mentor_limits.max_daily_meetings and \
+            weekly_count < mentor_limits.max_weekly_meetings and monthly_count < mentor_limits.max_monthly_meetings):
+            try:
+                appointment.student_id = student_id
+                appointment.meeting_url = student.meeting_url
+                appointment.notes = data.get('notes', None)
+                if mentor.auto_approve_appointments:
+                    appointment.status = 'reserved'
                 else:
-                    return jsonify({"message": "Appointment reserved but email not sent", "status": appointment.status}), 202
-            else:
-                return jsonify({"message": "Appointment pending approval", "status": appointment.status}), 201
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"error": str(e)}), 500
-    else:
-        # Update remaining slots if limits are reached
-        if daily_count >= mentor_limits.max_daily_meetings:
-            update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'daily')
-        elif weekly_count >= mentor_limits.max_weekly_meetings:
-            update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'weekly')
-        return jsonify({"message": "Meeting limit reached"}), 409
+                    appointment.status = 'pending'
+                    
+                # Check if this appointment hits the daily or weekly limit
+                hits_daily_limit = daily_count + 1 == mentor_limits.max_daily_meetings
+                hits_weekly_limit = weekly_count + 1 == mentor_limits.max_weekly_meetings
+                hits_monthly_limit = monthly_count + 1 == mentor_limits.max_monthly_meetings
+                db.session.commit()
+                
+                if hits_daily_limit:
+                    update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'daily')
+                elif hits_weekly_limit:
+                    update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'weekly')
+                elif hits_monthly_limit:
+                    update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'monthly')
+
+                
+                if appointment.status == 'reserved':
+                    send_email_success = send_confirmation_email(appointment)
+                    if send_email_success:
+                        return jsonify({"message": "Appointment reserved and confirmation email sent", "status": appointment.status}), 201
+                    else:
+                        return jsonify({"message": "Appointment reserved but email not sent", "status": appointment.status}), 202
+                else:
+                    return jsonify({"message": "Appointment pending approval", "status": appointment.status}), 201
+            except Exception as e:
+                db.session.rollback()
+                print(f"Exception: {str(e)}")
+                return jsonify({"error": f"Exception: {str(e)}"}), 500
+        else:
+            # Update remaining slots if limits are reached
+            if daily_count >= mentor_limits.max_daily_meetings:
+                update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'daily')
+            elif weekly_count >= mentor_limits.max_weekly_meetings:
+                update_appointments_status(appointment.mentor_id, appointment.appointment_date, 'weekly')
+            return jsonify({"message": "Meeting limit reached"}), 409
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Update a meeting's notes, meeting_url
