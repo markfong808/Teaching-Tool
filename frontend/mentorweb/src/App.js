@@ -25,6 +25,7 @@ import Unauthorized from "./context/Unauthorized";
 import { UserContext } from './context/UserContext';
 import ManageTimes from "./components/ManageTimes";
 import Program from "./components/Program"
+import ProfileSettings from "./components/ProfileSettings";
 function App() {
   const { user } = useContext(UserContext);
 
@@ -153,7 +154,7 @@ function App() {
           <Route path="/profile"
             element={
               <ProtectedRoute allowedAccountTypes={['student', 'mentor', 'admin']}>
-                <Profile />
+                <ProfileSettings />
               </ProtectedRoute>
             }
           />
