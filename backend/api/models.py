@@ -35,7 +35,7 @@ class ProgramType(db.Model):
     class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
     physical_location = db.Column(db.String(255))                                                                # ADDED
     virtual_link = db.Column(db.String(255))                                                                     # ADDED
-    name = db.Column(db.String(150))
+    type = db.Column(db.String(150))
     description = db.Column(db.Text)
     duration = db.Column(db.Integer)  # Duration in minutes
     auto_approve_appointments = db.Column(db.Boolean, default=True)
@@ -43,7 +43,7 @@ class ProgramType(db.Model):
     max_weekly_meetings = db.Column(db.Integer)
     max_monthly_meetings = db.Column(db.Integer)
 
-    __table_args__ = (UniqueConstraint('name', 'class_id'), )
+    __table_args__ = (UniqueConstraint('type', 'class_id'), )
 
 
 class Availability(db.Model):

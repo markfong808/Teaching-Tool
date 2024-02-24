@@ -4,7 +4,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { SingleInputTimeRangeField } from '@mui/x-date-pickers-pro/SingleInputTimeRangeField';
 
-export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, reset }) {
+export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, reset, program_id, program_type }) {
   // Local Variables
   const [timePickersList, setTimePickers] = useState({
     Monday: false,
@@ -46,7 +46,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, r
     if (isValidTimeBlock(newTimeRange)) {
       setWeekdaysList({ ...weekdaysList, day: newTimeRange });
       param.functionPassed({
-        type: `${isClassTimes ? 'class_times' : 'office_hours'}`,
+        type: `${isClassTimes ? 'class_times' : program_id }`,
         name: day,
         value: newTimeRange
       });
@@ -65,7 +65,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, r
     }));
 
     param.functionPassed({
-      type: `${isClassTimes ? 'class_times' : 'office_hours'}`,
+      type: `${isClassTimes ? 'class_times' : program_id }`,
       name: day,
       value: []
     });
@@ -173,7 +173,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, r
     <div>
       <div>
         <div className="font-bold text-2xl mb-4">
-          <label style={{ whiteSpace: 'nowrap' }}>{isClassTimes ? "Set Class Time:" : "Set Office Hours:"}</label>
+          <label style={{ whiteSpace: 'nowrap' }}>{isClassTimes ? "Set Class Time:" : `Set ${program_type} Times:`}</label>
         </div>
       </div>
       <div>

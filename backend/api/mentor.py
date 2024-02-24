@@ -90,8 +90,8 @@ def validate_availability_data(mentor_id, availability_type, date, start_time, e
     return None  # Data is valid
 
 
-def validate_availability_data_and_class(mentor_id, class_id, availability_type, date, start_time, end_time):
-    required_fields = [mentor_id, class_id, availability_type, date, start_time, end_time]
+def validate_availability_data_and_class(mentor_id, class_id, availability_id, date, start_time, end_time):
+    required_fields = [mentor_id, class_id, availability_id, date, start_time, end_time]
 
     # Check if any required field is missing
     if not all(required_fields):
@@ -107,8 +107,9 @@ def validate_availability_data_and_class(mentor_id, class_id, availability_type,
         return jsonify({"error": "class not found!"}), 404
 
     # Validate availability_type
-    if availability_type not in allowed_availability_types:
-        return jsonify({"error": f"availability type '{availability_type}' not allowed"}), 400
+    programTuple = ProgramType.query.filter_by(id=availability_id).first()
+    if not programTuple:
+        return jsonify({"error": f"availability id '{availability_id}' not found"}), 400
 
     # Validate date
     is_date_valid = is_valid_date(date)
@@ -131,8 +132,8 @@ def is_existing_availability(mentor_id, availability_type, date, start_time, end
 
     return False  # No time overlap found
 
-def is_existing_availability_in_class(mentor_id, class_id, availability_type, date, start_time, end_time):
-    existing_availabilities = Availability.query.filter_by(user_id=mentor_id, class_id=class_id, date=date).all()
+def is_existing_availability_in_class(mentor_id, program_id, date, start_time, end_time):
+    existing_availabilities = Availability.query.filter_by(user_id=mentor_id, type=program_id, date=date).all()
     
     for existing_availability in existing_availabilities:
         if (start_time < existing_availability.end_time and end_time > existing_availability.start_time):
@@ -378,17 +379,17 @@ def generate_appointment_events(mentor_id, availability_type, date, start_time, 
     
 
 # Generate appointment events at 30-minute intervals within the specified time range.
-def generate_appointment_tuples(mentor_id, class_id, class_name, availability_type, date, start_time, end_time, physical_location, availability_id, timeSplit):
+def generate_appointment_tuples(mentor_id, course_id, program_id, date, start_time, end_time, physical_location, availability_id, timeSplit):
     try:
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
 
         if timeSplit == 0:
             new_appointment = Appointment(
-                type=availability_type,
+                type=program_id,
                 mentor_id=mentor_id,
-                class_id=class_id,
-                class_name=class_name,
+                class_id=course_id,
+                class_name="TEMP",
                 appointment_date=date,
                 start_time=start_datetime.strftime("%H:%M"),
                 end_time=end_datetime.strftime("%H:%M"),
@@ -400,13 +401,15 @@ def generate_appointment_tuples(mentor_id, class_id, class_name, availability_ty
         else:
             while start_datetime + timedelta(minutes=timeSplit) <= end_datetime:
                 new_appointment = Appointment(
-                    type=availability_type,                   # add physical location
+                    type=program_id,
                     mentor_id=mentor_id,
-                    class_id=class_id,
+                    class_id=course_id,
+                    class_name="TEMP",
                     appointment_date=date,
                     start_time=start_datetime.strftime("%H:%M"),
                     end_time=(start_datetime + timedelta(minutes=timeSplit)).strftime("%H:%M"),
                     status="posted",
+                    physical_location=physical_location,
                     availability_id=availability_id
                 )
                 start_datetime += timedelta(minutes=timeSplit)
@@ -425,15 +428,15 @@ def generate_appointment_tuples(mentor_id, class_id, class_name, availability_ty
 def add_all_mentor_availability(class_id):
     try:
         data = request.get_json()
+        mentor_id = get_jwt_identity()
         allAvailabilties = data.get('availabilities')
-        timeSplit = data.get('timeSplit')
+        timeSplit = data.get('duration')
         physical_location = data.get('physical_location')
         
         if timeSplit:
             timeSplit = int(timeSplit)
         else: 
             timeSplit = 0
-        mentor_id = get_jwt_identity()
 
         for availabilityEntry in allAvailabilties:
             add_mentor_single_availability(class_id, mentor_id, availabilityEntry, physical_location, timeSplit)
@@ -445,45 +448,51 @@ def add_all_mentor_availability(class_id):
 
 def add_mentor_single_availability(class_id, mentor_id, data, physical_location, timeSplit):
     try:
-        availability_type = data.get('type')
+        program_id = data.get('id')
         date = data.get('date')
         start_time = data.get('start_time')
         end_time = data.get('end_time')
 
-        class_name = ClassInformation.query.filter_by(class_id=class_id).first()
+        course = ClassInformation.query.filter_by(id=class_id).first()
+
+        if course:
         
-        # Validate the data
-        validation_result = validate_availability_data_and_class(mentor_id, class_id, availability_type, date, start_time, end_time)
-        if validation_result:
-            return validation_result
-        
-        # Check if the same availability already exists for the mentor
-        if is_existing_availability_in_class(mentor_id, class_id, availability_type, date, start_time, end_time):
-            return jsonify({"error": "availability time conflict or it already exists for this mentor"}), 400
-        
-        current_time = datetime.now() - timedelta(hours=8)
-        availability_datetime = datetime.strptime(date + ' ' + start_time, '%Y-%m-%d %H:%M')
-        
-        if availability_datetime > current_time:
-             # Add the new availability
-            new_availability = Availability(
-                user_id=mentor_id,
-                class_id=class_id,
-                class_name=class_name,
-                type=availability_type,
-                date=date,
-                start_time=start_time,
-                end_time=end_time, 
-                status='active'
-            )
-            db.session.add(new_availability) 
-            db.session.commit()
+            # Validate the data
+            validation_result = validate_availability_data_and_class(mentor_id, class_id, program_id, date, start_time, end_time)
+            if validation_result:
+                return validation_result
             
-            # Generate appointment events
-            generate_appointment_tuples(mentor_id, class_id, class_name, availability_type, date, start_time, end_time, physical_location, new_availability.id, timeSplit)
-            return jsonify({"message": "availability added successfully"}), 201
-        else:
-            return jsonify({"error": "appointment datetime must be in the future"}), 400
+            # Check if the same availability already exists for the mentor
+            if is_existing_availability_in_class(mentor_id, program_id, date, start_time, end_time):
+                return jsonify({"error": "availability time conflict or it already exists for this mentor"}), 400
+            
+            current_time = datetime.now() - timedelta(hours=8)
+            availability_datetime = datetime.strptime(date + ' ' + start_time, '%Y-%m-%d %H:%M')
+            
+            if availability_datetime > current_time:
+                # Add the new availability
+                new_availability = Availability(
+                    user_id=mentor_id,
+                    class_id=class_id,
+                    class_name="TEMP",
+                    type=program_id,
+                    date=date,
+                    start_time=start_time,
+                    end_time=end_time, 
+                    status='active'
+                )
+                db.session.add(new_availability) 
+                db.session.commit()
+                
+                # Generate appointment events
+                print(timeSplit)
+                if (timeSplit != 0):
+                    generate_appointment_tuples(mentor_id, class_id, program_id, date, start_time, end_time, physical_location, new_availability.id, timeSplit)
+                return jsonify({"message": "availability added successfully"}), 201
+            else:
+                return jsonify({"error": "appointment datetime must be in the future"}), 400
+        else: 
+            return jsonify({"error": "course not found"}), 404
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -818,7 +827,7 @@ def get_courses():
                     for program in all_programs_in_course:
                         program_info = {
                             'id': program.id,
-                            'name': program.name,
+                            'type': program.type,
                             'description': program.description,
                             'duration': program.duration,
                             'physical_location': program.physical_location,
@@ -864,12 +873,13 @@ def get_mentor_availabilities(class_id):
             if (class_id == '-1'):
                 availability_data = Availability.query.filter(
                     and_(Availability.user_id == mentor_id, Availability.date > str(current_date))
-                ).all()
+                ).join(ClassInformation, Availability.class_id == ClassInformation.id).all()
                 availability_list = []
                 for availability in availability_data:
                     availability_info = {
                         'id': availability.id,
                         'type': availability.type,
+                        'class_name': availability.class_name,
                         'date': availability.date,
                         'start_time': availability.start_time,
                         'end_time': availability.end_time,
@@ -954,7 +964,8 @@ def get_mentor_appointments_for_class(class_id):
 
                 mentor_appointments.append({
                     "appointment_id": appt.id,
-                    "class_id": appt.class_name,
+                    "class_id": appt.class_id,
+                    "class_name": appt.class_name,
                     "type": appt.type,
                     "date": appt.appointment_date,
                     "start_time": appt.start_time,
@@ -1022,7 +1033,8 @@ def get_mentor_appointments_for_class(class_id):
 
                 mentor_appointments.append({
                     "appointment_id": appt.id,
-                    "class_id": appt.class_name,
+                    "class_id": appt.class_id,
+                    "class_name": appt.class_name,
                     "type": appt.type,
                     "date": appt.appointment_date,
                     "start_time": appt.start_time,

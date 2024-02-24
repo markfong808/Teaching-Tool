@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, \
     set_access_cookies, get_jwt, create_access_token
-from sqlalchemy import extract, or_, func
+from sqlalchemy import extract, or_, and_, func
 from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment, ClassInformation, CourseMembers
 from . import db
 from datetime import datetime, timedelta, timezone
@@ -79,73 +79,149 @@ def get_program_description():
         return jsonify(error='Program type does not exist'), 404
 
 
-# Returns the student appointments
-@student.route('/student/appointments', methods=['GET'])
+# Returns a list of appointments that have been reserved by the students with a specific mentor
+@student.route('/student/appointments/<class_id>', methods=['GET'])
 @jwt_required()
-def get_student_appointments():
+def get_student_appointments_for_class(class_id):
     student_id = get_jwt_identity()
     meeting_type = request.args.get('type', 'all')
     current_time_pst = datetime.utcnow() - timedelta(hours=8)  # Adjust for PST
     current_date_str = current_time_pst.strftime('%Y-%m-%d')
     current_time_str = current_time_pst.strftime('%H:%M')
 
-    appointments = Appointment.query.filter_by(student_id=student_id)
+    if class_id:
+        # all classes
+        if class_id == '-1':
+            appointments = Appointment.query.filter_by(student_id=student_id)
+            
+            if meeting_type in ['upcoming', 'past', 'pending']:
+                if meeting_type == 'upcoming':
+                    appointments = appointments.filter(
+                        or_(
+                            Appointment.appointment_date > current_date_str,
+                            (Appointment.appointment_date == current_date_str) & (Appointment.start_time >= current_time_str)
+                        ),
+                        Appointment.status == 'reserved'
+                    )
+                elif meeting_type == 'past':
+                    appointments = appointments.filter(
+                        or_(
+                            Appointment.appointment_date < current_date_str,
+                            (Appointment.appointment_date == current_date_str) & (Appointment.start_time < current_time_str)
+                        ),
+                        Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
+                    )
+                elif meeting_type == 'pending':
+                    appointments = appointments.filter(
+                        or_(
+                            Appointment.appointment_date > current_date_str,
+                            (Appointment.appointment_date == current_date_str) & (Appointment.start_time >= current_time_str)
+                        ),
+                        Appointment.status == 'pending'
+                    )
+        
+            student_appointments = []
+            appointments = appointments.join(ClassInformation, ClassInformation.id == Appointment.class_id).all()
+            for appt in appointments:
+                mentor = User.query.get(appt.student_id) if appt.student_id else None
+                mentor_info = {
+                    "first_name": mentor.first_name,
+                    "email": mentor.email,
+                    "about": mentor.about,
+                    "social_url": mentor.linkedin_url
+                } if mentor else {}
+            
+                student_appointments.append({
+                    "appointment_id": appt.id,
+                    "type": appt.type,
+                    "class_name": appt.class_name,
+                    "date": appt.appointment_date,
+                    "start_time": appt.start_time,
+                    "end_time": appt.end_time,
+                    "status": appt.status,
+                    "notes": appt.notes,
+                    "physical_location": appt.physical_location,
+                    "meeting_url": appt.meeting_url,
+                    "mentor": mentor_info
+                })
+            return jsonify(student_appointments=student_appointments), 200
 
-    if meeting_type in ['upcoming', 'past', 'pending']:
-        if meeting_type == 'upcoming':
-            appointments = appointments.filter(
-                or_(
-                    Appointment.appointment_date > current_date_str,
-                    (Appointment.appointment_date == current_date_str) & (Appointment.start_time >= current_time_str)
-                ),
-                Appointment.status == 'reserved'
+        # single class
+        else:
+            appointments = Appointment.query.filter(
+                and_(
+                    Appointment.student_id == student_id,
+                    Appointment.class_id == class_id
+                )
             )
-        elif meeting_type == 'past':
-            appointments = appointments.filter(
-                or_(
-                    Appointment.appointment_date < current_date_str,
-                    (Appointment.appointment_date == current_date_str) & (Appointment.start_time < current_time_str)
-                ),
-                Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
-            )
-        elif meeting_type == 'pending':
-            appointments = appointments.filter(
-                or_(
-                    Appointment.appointment_date > current_date_str,
-                    (Appointment.appointment_date == current_date_str) & (Appointment.start_time >= current_time_str)
-                ),
-                Appointment.status == 'pending'
-            )
-    student_appointments = []
-    for appt in appointments.all():
-        mentor = User.query.get(appt.mentor_id) if appt.mentor_id else None
-        mentor_info = {
-            "first_name": mentor.first_name,
-            "email": mentor.email,
-            "about": mentor.about,
-            "social_url": mentor.linkedin_url
-        } if mentor else {}
-    
-        student_appointments.append({
-            "appointment_id": appt.id,
-            "type": appt.type,
-            "date": appt.appointment_date,
-            "start_time": appt.start_time,
-            "end_time": appt.end_time,
-            "status": appt.status,
-            "notes": appt.notes,
-            "meeting_url": appt.meeting_url,
-            "mentor": mentor_info
-        })
-    return jsonify(student_appointments=student_appointments), 200
+
+            if meeting_type in ['upcoming', 'past', 'pending']:
+                if meeting_type == 'upcoming':
+                    appointments = appointments.filter(
+                        or_(
+                            Appointment.appointment_date > current_date_str,
+                            and_(
+                                Appointment.appointment_date == current_date_str,
+                                Appointment.start_time >= current_time_str
+                            )
+                        ),
+                        Appointment.status == 'reserved'
+                    )
+                elif meeting_type == 'past':
+                    appointments = appointments.filter(
+                        or_(
+                            Appointment.appointment_date < current_date_str,
+                            and_(
+                                Appointment.appointment_date == current_date_str,
+                                Appointment.start_time < current_time_str
+                            )
+                        ),
+                        Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
+                    )
+                elif meeting_type == 'pending':
+                    appointments = appointments.filter(
+                        or_(
+                            Appointment.appointment_date > current_date_str,
+                            and_(
+                                Appointment.appointment_date == current_date_str,
+                                Appointment.start_time >= current_time_str
+                            )
+                        ),
+                        Appointment.status == 'pending'
+                    )
+
+            student_appointments = []
+            appointments = appointments.join(ClassInformation, ClassInformation.id == Appointment.class_id).all()
+            for appt in appointments:
+                mentor = User.query.get(appt.student_id) if appt.student_id else None
+                mentor_info = {
+                    "first_name": mentor.first_name,
+                    "email": mentor.email,
+                    "about": mentor.about,
+                    "social_url": mentor.linkedin_url
+                } if mentor else {}
+            
+                student_appointments.append({
+                    "appointment_id": appt.id,
+                    "type": appt.type,
+                    "class_name": appt.class_name,
+                    "date": appt.appointment_date,
+                    "start_time": appt.start_time,
+                    "end_time": appt.end_time,
+                    "status": appt.status,
+                    "notes": appt.notes,
+                    "physical_location": appt.physical_location,
+                    "meeting_url": appt.meeting_url,
+                    "mentor": mentor_info
+                })
+            return jsonify(student_appointments=student_appointments), 200
+    else:
+        return jsonify({"error": "class_id undefined for appointments"}), 404
 
 
 # Retrieve available appointments to reserve
 @student.route('/student/appointments-available/<program_type>/<course_id>', methods=['GET'])
 def get_available_appointments(program_type, course_id):
-    if program_type not in program_types:
-        return jsonify({"error": f"program type '{program_type}' not allowed"}), 400
-    
     now = datetime.now()
     
     future_appointments = Appointment.query.filter(
@@ -175,9 +251,6 @@ def get_available_appointments(program_type, course_id):
 # Retrieve available appointments to reserve
 @student.route('/student/appointments/available/<program_type>', methods=['GET'])
 def get_available_appointment_slots(program_type):
-    if program_type not in program_types:
-        return jsonify({"error": f"program type '{program_type}' not allowed"}), 400
-    
     now = datetime.now()
     
     future_appointments = Appointment.query.filter(
@@ -308,6 +381,8 @@ def update_appointments_status(mentor_id, appointment_date, scope):
 def reserve_appointment(appointment_id):
     data = request.get_json()
     student_id = get_jwt_identity()
+    print(student_id)
+    print(appointment_id)
     appointment = Appointment.query.get(appointment_id)
     mentor = User.query.get(appointment.mentor_id)
     
@@ -323,7 +398,7 @@ def reserve_appointment(appointment_id):
     if appointment_datetime <= current_time:
         return jsonify({"error": "Cannot reserve past appointments"}), 400
 
-    mentor_limits = MentorMeetingSettings.query.filter_by(mentor_id=appointment.mentor_id).first()
+    mentor_limits = ProgramType.query.filter_by(id=appointment.type).first()
 
     # Calculate week range for the appointment
     start_of_week, end_of_week = get_week_range(appointment.appointment_date)

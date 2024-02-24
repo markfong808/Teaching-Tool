@@ -19,8 +19,8 @@ export default function Courses() {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
 
   // Local Variables
-  const [courseIds, setCourseIds] = useState([]);
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState('-1');
+  const [allCourseData, setAllCourseData] = useState([]);
   const [instructorData, setInstructorData] = useState({
     id: "",
     email: "",
@@ -66,7 +66,7 @@ export default function Courses() {
       const fetchedCourseList = await response.json();
 
       // set courses a student is enrolled in with fetched data
-      setCourseIds(fetchedCourseList);
+      setAllCourseData(fetchedCourseList);
 
     } catch (error) {
       console.error("Error fetching course list:", error);
@@ -104,7 +104,7 @@ export default function Courses() {
       return;
     }
 
-    const selectedCourse = courseIds.find((course) => course.id === courseId);
+    const selectedCourse = allCourseData.find((course) => course.id === courseId);
 
     if (selectedCourse) {
       // update classData with selectedCourse
@@ -130,10 +130,30 @@ export default function Courses() {
   //  updateCourseInfo(selectedCourse);
   // };
 
+  // called when a student clicks on one of the courses they're registered in
   const handleButtonClick = (course) => {
     setSelectedCourseId(course.id);
     updateCourseInfo(course.id);
     setClassInformationPopupVisible(true);
+  };
+
+  // main webpage load function
+  // called when user clicks to change selected course
+  const handleCourseChange = (e) => {
+    if (!e) {
+      return;
+    }
+
+    // reload courseIds with all courses
+    fetchCourseList();
+
+    const selectedCourse = parseInt(e.target.value);
+
+    // change selectedCourseId
+    setSelectedCourseId(selectedCourse);
+
+    // update course info displayed on page to selectedCourseId
+    updateCourseInfo(selectedCourse);
   };
 
   
@@ -156,7 +176,7 @@ export default function Courses() {
     <div>
       <div className="flex flex-col m-auto relative justify-center items-center">
         <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
-          {courseIds.map((course) => (
+          {allCourseData.map((course) => (
             <button
               key={course.id} 
               className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
@@ -173,22 +193,32 @@ export default function Courses() {
           </div>
         )}
 
-      
+        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+          <div className='w-2/3'>
+            <h1>
+              <strong>Select Course:</strong>
+            </h1>
+            <select
+              className="border border-light-gray rounded ml-2"
+              id="course-dropdown"
+              value={selectedCourseId}
+              onChange={(e) => handleCourseChange(e)}
+            >
+              <option key={-1} value="-1">
+                Select...
+              </option>
+              {allCourseData.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.class_name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/*REDO CSS CODE HERE*/}
-        <div className="p-2.5">
+          <MeetingInformation courseId={selectedCourseId}/>
         </div>
 
-        {/* Second Box */}
-        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
-          <MeetingInformation />
-        </div>
-
-        <div className="p-2.5">
-        </div>
-
-        {/* Third Box */}
-        <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md">
+        <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <button className="bg-purple p-2 rounded-md text-white hover:text-gold" onClick={() => setPopUpVisible(!isPopUpVisible)}> Schedule New Meeting</button>
         </div>
 

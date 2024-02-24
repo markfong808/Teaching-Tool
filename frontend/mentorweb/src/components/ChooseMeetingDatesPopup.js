@@ -6,7 +6,7 @@ import 'react-calendar/dist/Calendar.css';
 import '@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css';
 import { addDays } from 'date-fns';
 
-const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_location }) => {
+const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_location, program_id , program_type }) => {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [showTimePicker, setShowTimePicker] = useState(false);
@@ -36,7 +36,8 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_locatio
                     const formattedDate = format(date, 'yyyy-MM-dd');
     
                     convertedAvailability.push({
-                        type: "office_hours",
+                        id: program_id,
+                        type: program_type,
                         date: formattedDate,
                         start_time: start_time,
                         end_time: end_time,

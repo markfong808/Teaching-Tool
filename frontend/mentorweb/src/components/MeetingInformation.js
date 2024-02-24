@@ -59,7 +59,7 @@ export default function MeetingInformation({ courseId }) {
 
             setData(sortedData);
         } catch (error) {
-            console.error("Error fetching data:", error);
+            console.error("Error fetching data2:", error);
         }
     };
 
@@ -83,7 +83,7 @@ export default function MeetingInformation({ courseId }) {
             });
             const apiData = await response.json();
             const programDetails = apiData.map(program => ({
-                name: program.name,
+                type: program.type,
                 description: program.description
             }));
             setTypeDescriptions(programDetails);

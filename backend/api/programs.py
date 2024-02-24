@@ -17,7 +17,7 @@ def get_programs():
     programs = ProgramType.query.all()
     return jsonify([{
         "id": program.id,
-        "name": program.name,
+        "type": program.type,
         "description": program.description,
         "duration": program.duration
     } for program in programs]), 200
@@ -34,13 +34,13 @@ def create_program():
     data = request.get_json()
     
     # Check if program with the same name already exists
-    existing_program = ProgramType.query.filter_by(name=data.get('name')).first()
+    existing_program = ProgramType.query.filter_by(type=data.get('type')).first()
     if existing_program is not None:
         return jsonify({"msg": "Program with this name already exists"}), 409
 
     try:
         new_program = ProgramType(
-            name=data.get('name'),
+            type=data.get('type'),
             description=data.get('description'),
             duration=data.get('duration')
         )
@@ -57,7 +57,7 @@ def create_program():
 def get_program(program_id):
     program = ProgramType.query.get_or_404(program_id)
     return jsonify({
-        "name": program.name,
+        "type": program.type,
         "description": program.description,
         "duration": program.duration
     }), 200
@@ -72,7 +72,7 @@ def update_program(program_id):
 
     program = ProgramType.query.get_or_404(program_id)
     data = request.get_json()
-    program.name = data.get('name', program.name)
+    program.type = data.get('type', program.type)
     program.description = data.get('description', program.description)
     program.duration = data.get('duration', program.duration)
     db.session.commit()
@@ -90,3 +90,46 @@ def delete_program(program_id):
     db.session.delete(program)
     db.session.commit()
     return jsonify({"msg": "Program deleted"}), 200
+
+
+# Set the class information of a course
+@programs.route('/program/setDetails', methods=['POST'])
+@jwt_required()
+def set_program_details():
+    try:
+        obj = request.get_json()
+        print(obj)
+        data = obj.get('data')
+        program_id = data.get('id')  
+        class_id = obj.get('course_id')
+        type = data.get('type')
+        description = data.get('description')
+        duration = data.get('duration')
+        physical_location = data.get('physical_location')
+        virtual_link = data.get('virtual_link')
+        auto_approve_appointments = data.get('auto_approve_appointments')
+        max_daily_meetings = data.get('max_daily_meetings')
+        max_weekly_meetings = data.get('max_weekly_meetings')
+        max_monthly_meetings = data.get('max_monthly_meetings')
+
+        program = ProgramType.query.filter_by(id=program_id).first()
+
+        if program:
+            program.class_id = class_id
+            program.type = type
+            program.description = description
+            program.duration = duration
+            program.physical_location = physical_location
+            program.virtual_link = virtual_link
+            program.auto_approve_appointments = auto_approve_appointments
+            program.max_daily_meetings = max_daily_meetings
+            program.max_weekly_meetings = max_weekly_meetings
+            program.max_monthly_meetings = max_monthly_meetings
+
+            db.session.commit()
+            
+            return jsonify({"message": "Program type updated successfully"}), 200
+        else:
+            return jsonify({"error": "Program type doesn't exist"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

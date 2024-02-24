@@ -18,6 +18,18 @@ export default function ScheduleNewMeeting({ id }) {
     const [typeDescriptions, setTypeDescriptions] = useState({});
     const [courseId, setCourseId] = useState('');
     const [selectedTimeDuration, setSelectedTimeDuration] = useState(0);
+    const [selectedProgramId, setSelectedProgramId] = useState('');
+
+    // Load Variables
+    const [isPageLoaded, setIsPageLoaded] = useState(false);
+
+    const [selectedCourseId, setSelectedCourseId] = useState('');
+    const [allCourseData, setAllCourseData] = useState([]);
+    const [selectedClassData, setSelectedClassData] = useState({
+        id: '',
+        class_name: '',
+        programs: [],
+      });
 
     useEffect(() => {
         if (mentorshipType && courseId !== '') {
@@ -149,6 +161,80 @@ export default function ScheduleNewMeeting({ id }) {
         setAppointmentNotes('');
     };
 
+    const fetchCourseList = async () => {
+        if (user.account_type !== "student") return;
+      
+        try {
+          const response = await fetch(`/mentor/courses`, {
+            credentials: 'include',
+          });
+      
+          const fetchedCourseList = await response.json();
+      
+          setAllCourseData(fetchedCourseList);
+        } catch (error) {
+          console.error("Error fetching course list:", error);
+        }
+    };
+
+    const handleProgramChange = (e) => {
+        if (!e) {
+        return;
+        }
+
+        let selectedProgram = parseInt(e.target.value);
+
+        if (!selectedProgram) {
+        selectedProgram = -1;
+        }
+
+        // change selectedCourseId
+        setSelectedProgramId(selectedProgram);
+        /*
+        setMentorshipType(event.target.value);
+        if (event.target.value === "") {
+            setShowCalendar(false);
+        } else {
+            setShowCalendar(true);
+        }
+        setSelectedTimeslot(null); // Reset the selected timeslot when changing type
+        setShowAppointmentPanel(false);
+        */
+    };
+
+    // update the selectedClassData based on a courseId
+    const updateCourseInfo = (courseId) => {
+        if (!courseId) {
+            setSelectedClassData({});
+            return;
+        }
+
+        const selectedCourse = allCourseData.find(course => course.id === courseId);
+
+        if (selectedCourse) {
+            // Update selectedClassData with selectedCourse.id
+            setSelectedClassData(selectedCourse);
+        }
+    };
+
+    useEffect(() => {
+        console.log("Changed!", id);
+        updateCourseInfo(id);
+    }, [id]);
+
+    useEffect(() => {
+        if (!isPageLoaded) {
+          fetchCourseList();
+          setIsPageLoaded(!isPageLoaded);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [isPageLoaded, user]);
+
+    useEffect(() => {
+        console.log(selectedClassData);
+        console.log(allCourseData);
+    }, [selectedClassData, allCourseData]);
+
     // If booking is confirmed, render the Appointment component, otherwise render the booking UI
     if (bookingConfirmed) {
         return <Appointment
@@ -174,6 +260,19 @@ export default function ScheduleNewMeeting({ id }) {
                     <option value="">Select...</option>
                     <option value="office_hours">Office Hours</option>
                 </select>
+                <select
+                    className="border border-light-gray rounded ml-2"
+                    id="course-dropdown"
+                    value={selectedProgramId}
+                    onChange={(e) => handleProgramChange(e)}
+                >
+                    <option key={-1} value="">
+                    Select...
+                    </option>
+                    {selectedClassData.programs.map((program) => (
+                    <option key={program.id} value={program.id}>{program.type}</option>
+                    ))}
+              </select>
             </div>
             <div className='text-2xl'>
                 {typeDescriptions.length > 0 && (

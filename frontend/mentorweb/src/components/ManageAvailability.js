@@ -17,6 +17,7 @@ export default function ManageAvailability({ courseId }) {
             });
 
             const apiData = await response.json();
+            console.log(apiData);
 
             const sortedData = (apiData['mentor_availability'] || []).sort((a, b) => {
                 const dateTimeA = new Date(`${a.date}T${a.start_time}`);

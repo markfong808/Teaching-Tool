@@ -40,6 +40,7 @@ def get_times(course_id):
                     'day': courseTime.day,
                     'start_time': courseTime.start_time,
                     'end_time': courseTime.end_time,
+                    'program_id': courseTime.program_id,
                 }
                 course_times_list.append(course_time_info)
             return jsonify(course_times_list), 200
@@ -93,15 +94,22 @@ def set_class_time(class_id):
                 db.session.commit()
 
             if len(data) > 0:
-                for i in range(len(data)):
-                    time_data = data[i]
+                converted_list = []
 
+                for program_id, schedule in data.items():
+                    for day, timings in schedule.items():
+                        start_time = timings['start_time']
+                        end_time = timings['end_time']
+                        converted_list.append((day, start_time, end_time, program_id))
+
+                for entry in converted_list:
                     new_time = ClassTimes(
                         class_id=course_id,
-                        type=time_data.get('type'),
-                        day=time_data.get('day'),
-                        start_time=time_data.get('start_time'),
-                        end_time=time_data.get('end_time'),
+                        type="TEMP",                                                     #remove types from classTimes
+                        day=entry[0],
+                        start_time=entry[1],
+                        end_time=entry[2],
+                        program_id=entry[3],
                     )
                     classTimesTuples.append(new_time)
                 
@@ -227,12 +235,12 @@ def add_new_program():
     try:
         data = request.get_json()
         name = data.get('name')
-        class_id = data.get('class_id')
+        course_id = data.get('course_id')
 
         if data:
             new_details = ProgramType(
-                name=name,
-                class_id=class_id,
+                type=name,
+                class_id=course_id,
             )
             db.session.add(new_details)
             db.session.commit()
