@@ -60,7 +60,7 @@ export default function Program() {
   const [allTimesData, setAllTimesData] = useState({});
   const [selectedProgramTimesData, setSelectedProgramTimesData] = useState({});
 
-
+  
 
 
   ////////////////////////////////////////////////////////
@@ -71,14 +71,14 @@ export default function Program() {
   // can make a new backend function to only get courseIds
   const fetchCourseList = async () => {
     if (user.account_type !== "mentor") return;
-
+  
     try {
       const response = await fetch(`/mentor/courses`, {
         credentials: 'include',
       });
-
+  
       const fetchedCourseList = await response.json();
-
+  
       setAllCourseData(fetchedCourseList);
     } catch (error) {
       console.error("Error fetching course list:", error);
@@ -148,7 +148,7 @@ export default function Program() {
       }
 
       const fetchedProgramTimes = await response.json();
-
+      
       if (fetchedProgramTimes !== null) {
         //setAllTimesData(fetchedProgramTimes);
 
@@ -161,7 +161,7 @@ export default function Program() {
             return acc;
           }, {});
 
-        setSelectedProgramTimesData(tempData);
+          setSelectedProgramTimesData(tempData);
       } else {
         setSelectedProgramTimesData({});
       }
@@ -350,16 +350,16 @@ export default function Program() {
       if (Number(e.target.value) > 0) {
         let maxRecommendedTimeSplit = 1440;
 
-      for (const data of Object.entries(selectedProgramTimesData)) {
-        const startDate = new Date(`1970-01-01T${data[1].start_time}`);
-        const endDate = new Date(`1970-01-01T${data[1].end_time}`);
-    
-        const timeDifference = endDate - startDate;
-        const minutes = Math.floor(timeDifference / (1000 * 60));
-        if (minutes < maxRecommendedTimeSplit) {
-          maxRecommendedTimeSplit = minutes;
+        for (const data of Object.entries(selectedProgramTimesData)) {
+          const startDate = new Date(`1970-01-01T${data[1].start_time}`);
+          const endDate = new Date(`1970-01-01T${data[1].end_time}`);
+      
+          const timeDifference = endDate - startDate;
+          const minutes = Math.floor(timeDifference / (1000 * 60));
+          if (minutes < maxRecommendedTimeSplit) {
+            maxRecommendedTimeSplit = minutes;
+          }
         }
-      }
 
         if (e.target.value > maxRecommendedTimeSplit) {
           setTimeout(() => {
@@ -421,46 +421,25 @@ export default function Program() {
     const tempType = e.type;
     const tempDay = e.name;
     const tempValue = e.value;
-
-    // to remove a time block
-    if (allTimesData.length > 0) {
-      if (tempValue.length === 0) {
-        setAllTimesData((prevTimesData) => {
-          // Remove entries with matching tempDay and tempType
-          const updatedTimesData = prevTimesData.filter(entry => !(entry.day === tempDay && entry.type === tempType));
-          return updatedTimesData;
-        });
-      } 
-      // to add a time block
-      else {
-        setAllTimesData((prevTimesData) => {
-          // Check if an entry with the same day already exists
-          const existingEntryIndex = prevTimesData.findIndex((entry) => entry.day === tempDay);
-
-          if (existingEntryIndex !== -1) {
-              // If the entry already exists, replace it
-              const updatedTimesData = [...prevTimesData];
-              updatedTimesData[existingEntryIndex] = {
-                  type: tempType,
-                  day: tempDay,
-                  start_time: tempValue[0],
-                  end_time: tempValue[1],
-              };
-              return updatedTimesData;
-          } else {
-              // If the entry doesn't exist, add a new entry
-              return [
-                  ...(Array.isArray(prevTimesData) ? prevTimesData : []),
-                  {
-                      type: tempType,
-                      day: tempDay,
-                      start_time: tempValue[0],
-                      end_time: tempValue[1],
-                  },
-              ];
-          }
-        });
+  
+    // Create a new object to store the modified data
+    let updatedTimesData = { ...selectedProgramTimesData };
+  
+    // Check if the day already exists in selectedProgramTimesData
+    if (tempValue.length === 0) {
+      // If e.value.length == 0, delete the day from selectedProgramTimesData
+      if (updatedTimesData[tempDay]) {
+        delete updatedTimesData[tempDay];
       }
+    } else {
+      // If the day exists, override its values; otherwise, create a new entry
+      updatedTimesData = {
+        ...updatedTimesData,
+        [tempDay]: {
+          start_time: tempValue[0],
+          end_time: tempValue[1],
+        },
+      };
     }
   
     // Set the selectedProgramTimesData variable
@@ -505,8 +484,8 @@ export default function Program() {
     }
 
     setSelectedProgramData({
-      ...selectedProgramData,
-      "max_daily_meetings": newLimitData.max_daily_meetings,
+      ...selectedProgramData, 
+      "max_daily_meetings": newLimitData.max_daily_meetings, 
       "max_weekly_meetings": newLimitData.max_weekly_meetings,
       "max_monthly_meetings": newLimitData.max_monthly_meetings,
     });
@@ -563,7 +542,7 @@ export default function Program() {
     );
   }, [showSaveCancelButtons]);
 
-  useEffect(() => {
+  useEffect(()=> {
     if (Number(selectedProgramData.duration) > 0) {
       setBoxShown(true);
     }
@@ -647,7 +626,7 @@ export default function Program() {
           </div>
         </div>
 
-
+        
         <div className="flex flex-col w-3/4 px-5 m-auto">
           <div className='py-5 border border-light-gray rounded-md shadow-md'>
             <div className="relative">
@@ -659,10 +638,26 @@ export default function Program() {
               Class Availability
             </h2>
 
-
+            
             <div className="flex flex-col">
               <div className="w-3/4 m-auto">
+              <div className='flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5'>
+                  <div>
+                      <label className='font-bold'>Program Description &nbsp;</label>
+                    <Tooltip text="Description of the program type related to meetings for a class.">
+                      <span>ⓘ</span>
+                    </Tooltip>
+
+                  </div>
+                  <textarea
+                    className="border border-light-gray mt-3"
+                    name="description"
+                    value={selectedProgramData.description ?? ""}
+                    //onChange={(event) => handleInputChange(event)}
+                  />
+                </div>
                 {/* Office Hours Times */}
+
                 <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                   <WeeklyCalendar
                     isClassTimes={false}
@@ -693,8 +688,8 @@ export default function Program() {
                   ></input>
                   {boxShown && (
                     <>
-                      <label className="whitespace-nowrap ml-1">
-                        Meeting Duration
+                      <label className="whitespace-nowrap ml-2">
+                        Meeting Duration:
                       </label>
                       <input
                         className="border border-light-gray ml-1 mt-1"
@@ -712,7 +707,8 @@ export default function Program() {
                   )}
                   <button
                     className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2"
-                    onClick={() => setPopUpVisible(!isPopUpVisible)}>
+                    onClick={() => setPopUpVisible(!isPopUpVisible)}
+                  >
                     Choose Meeting Dates
                   </button>
                 </div>
@@ -735,8 +731,8 @@ export default function Program() {
           />
           <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
             {user?.account_type === "mentor" && (
-              <div className="">
-                <label className="font-bold text-2xl">
+              <div className="w-1/2">
+                <label className="font-bold text-lg">
                   Auto-Accept Meeting Requests?
                 </label>
                 <br />
@@ -747,8 +743,8 @@ export default function Program() {
                     type="radio"
                     name="auto_approve_appointments"
                     value="true"
-                    //checked={formData.auto_approve_appointments === true}
-                    //onChange={handleInputChange}
+                    checked={selectedProgramData.auto_approve_appointments === true}
+                    onChange={handleInputChange}
                   />
                 </label>
                 &nbsp;&nbsp;
@@ -759,8 +755,8 @@ export default function Program() {
                     type="radio"
                     name="auto_approve_appointments"
                     value="false"
-                    //checked={formData.auto_approve_appointments === false}
-                    //onChange={handleInputChange}
+                    checked={selectedProgramData.auto_approve_appointments === false}
+                    onChange={handleInputChange}
                   />
                 </label>
               </div>
@@ -772,7 +768,7 @@ export default function Program() {
                   <div className="flex flex-col mr-5">
                     <label>Daily Max</label>
                     <input
-                      className="border border-light-gray"
+                      className="border border-light-gray w-28"
                       type="number"
                       name="max_daily_meetings"
                       min="1"
@@ -783,7 +779,7 @@ export default function Program() {
                   <div className="flex flex-col mr-5">
                     <label>Weekly Max</label>
                     <input
-                      className="border border-light-gray"
+                      className="border border-light-gray w-28"
                       type="number"
                       name="max_weekly_meetings"
                       min="1"
@@ -794,7 +790,7 @@ export default function Program() {
                   <div className="flex flex-col">
                     <label>Total Max</label>
                     <input
-                      className="border border-light-gray"
+                      className="border border-light-gray w-28"
                       type="number"
                       name="max_monthly_meetings"
                       min="1"
@@ -808,27 +804,42 @@ export default function Program() {
           </div>
         </div>
 
-
+       
+        
+        
+        <div className='w-3/4 m-auto'>
+        
+        </div>
         {changesMade && (
-          <div className="flex flex-row justify-end my-5">
-            <button className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold" onClick={handleSaveChanges}>
-                Save Class Changes
-            </button>
-            <button className="bg-purple text-white rounded-md p-2 hover:text-gold" onClick={handleCancelChanges}>
-                Discard Class Changes
-            </button>
-          </div>
-        )}
+              <div className="flex flex-row justify-end my-5">
+                <button
+                  className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
+                  onClick={handleSaveChanges}
+                >
+                  Save Class Changes
+                </button>
+                <button
+                  className="bg-purple text-white rounded-md p-2 hover:text-gold"
+                  onClick={handleCancelChanges}
+                >
+                  Discard Class Changes
+                </button>
+              </div>
+            )}
       </div>
 
       {isPopUpVisible && (
-        <ChooseMeetingDatesPopup
-          onClose={() => setPopUpVisible(false)}
-          data={selectedProgramTimesData}
-          id={selectedCourseId}
-          duration={selectedProgramData.duration}
-          physical_location={selectedProgramData.physical_location}
-        />
+        <div className='absolute inset-0 z-10'>
+          <ChooseMeetingDatesPopup
+            onClose={() => setPopUpVisible(false)}
+            data={selectedProgramTimesData}
+            id={selectedCourseId}
+            duration={selectedProgramData.duration}
+            physical_location={selectedProgramData.physical_location}
+            program_id={selectedProgramId}
+            program_name={selectedProgramData.type}
+          />
+        </div>
    
       )}
     </div>

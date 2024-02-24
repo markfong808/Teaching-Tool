@@ -123,7 +123,6 @@ export default function Courses() {
   //               Local Data Function                  //
   ////////////////////////////////////////////////////////
 
-  
   // called when student chooses a course from drop down menu
  // const handleCourseChange = (e) => {
   //  const selectedCourse = parseInt(e.target.value);
@@ -194,21 +193,36 @@ export default function Courses() {
           </div>
         )}
 
-      
+        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+          <div className='w-2/3'>
+            <h1>
+              <strong>Select Course:</strong>
+            </h1>
+            <select
+              className="border border-light-gray rounded ml-2"
+              id="course-dropdown"
+              value={selectedCourseId}
+              onChange={(e) => handleCourseChange(e)}
+            >
+              <option key={-1} value="-1">
+                Select...
+              </option>
+              {allCourseData.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.class_name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/*REDO CSS CODE HERE*/}
-        <div className="p-2.5">
-        </div>
-
-        {/* Second Box */}
-        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
-          <MeetingInformation />
+          <MeetingInformation courseId={selectedCourseId}/>
         </div>
 
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <button className="bg-purple p-2 rounded-md text-white hover:text-gold" onClick={() => setPopUpVisible(!isPopUpVisible)}> Schedule New Meeting</button>
         </div>
 
+        
       </div>
           
       {isPopUpVisible && (
