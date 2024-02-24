@@ -612,8 +612,22 @@ export default function Program() {
 
             <div className="flex flex-col">
               <div className="w-3/4 m-auto">
-                {/* Office Hours Times */}
+                <div className='flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5'>
+                  <div>
+                      <label className='font-bold'>Program Description &nbsp;</label>
+                    <Tooltip text="Description of the program type related to meetings for a class.">
+                      <span>ⓘ</span>
+                    </Tooltip>
 
+                  </div>
+                  <textarea
+                    className="border border-light-gray mt-3"
+                    name="description"
+                    value={selectedProgramData.description ?? ""}
+                    //onChange={(event) => handleInputChange(event)}
+                  />
+                </div>
+                {/* Office Hours Times */}
                 <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                   <WeeklyCalendar
                     isClassTimes={false}
@@ -643,7 +657,7 @@ export default function Program() {
                   {boxShown && (
                     <>
                       <label className="whitespace-nowrap ml-1">
-                        Meeting Duration
+                        Meeting Duration:
                       </label>
                       <input
                         className="border border-light-gray ml-2 mt-1"
@@ -661,8 +675,7 @@ export default function Program() {
                   )}
                   <button
                     className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2"
-                    onClick={() => setPopUpVisible(!isPopUpVisible)}
-                  >
+                    onClick={() => setPopUpVisible(!isPopUpVisible)}>
                     Choose Meeting Dates
                   </button>
                 </div>
@@ -671,7 +684,6 @@ export default function Program() {
           </div>
           <MeetingLocation
             isClassLocation={false}
-            isClassTimes={false}
             param={{
               functionPassed: handleInputChange,
               loadPageFunction: setLocRec,
@@ -686,11 +698,8 @@ export default function Program() {
           />
           <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
             {user?.account_type === "mentor" && (
-              <div className="">
-                <label className="font-bold text-2xl">
-                  Auto-Accept Meeting Requests?
-                </label>
-                <br />
+              <div className="w-1/2">
+                <label className="font-bold text-lg"> Auto-Accept Meeting Requests</label><br />
                 <label className="ml-2">
                   Yes
                   <input
@@ -717,13 +726,13 @@ export default function Program() {
               </div>
             )}
             {user?.account_type === "mentor" && (
-              <div className="flex flex-col ms-auto">
-                <h2 className="font-bold text-2xl">Set Meeting Limits</h2>
+              <div className="flex flex-col">
+                <h2 className="font-bold text-lg">Set Meeting Limits</h2>
                 <div className="flex flex-row justify-between">
                   <div className="flex flex-col mr-5">
                     <label>Daily Max</label>
                     <input
-                      className="border border-light-gray"
+                      className="border border-light-gray w-20"
                       type="number"
                       name="max_daily_meetings"
                       min="1"
@@ -734,7 +743,7 @@ export default function Program() {
                   <div className="flex flex-col mr-5">
                     <label>Weekly Max</label>
                     <input
-                      className="border border-light-gray"
+                      className="border border-light-gray w-20"
                       type="number"
                       name="max_weekly_meetings"
                       min="1"
@@ -745,7 +754,7 @@ export default function Program() {
                   <div className="flex flex-col">
                     <label>Total Max</label>
                     <input
-                      className="border border-light-gray"
+                      className="border border-light-gray w-20"
                       type="number"
                       name="max_monthly_meetings"
                       min="1"
@@ -762,24 +771,18 @@ export default function Program() {
 
         {changesMade && (
           <div className="flex flex-row justify-end my-5">
-            <button
-              className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-              onClick={handleSaveChanges}
-            >
-              Save Class Changes
+            <button className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold" onClick={handleSaveChanges}>
+                Save Class Changes
             </button>
-            <button
-              className="bg-purple text-white rounded-md p-2 hover:text-gold"
-              onClick={handleCancelChanges}
-            >
-              Discard Class Changes
+            <button className="bg-purple text-white rounded-md p-2 hover:text-gold" onClick={handleCancelChanges}>
+                Discard Class Changes
             </button>
           </div>
         )}
       </div>
 
       {isPopUpVisible && (
-        <div className='absolute inset-0'>
+        <div className='absolute inset-0 z-10'>
           <ChooseMeetingDatesPopup
             onClose={() => setPopUpVisible(false)}
             data={selectedProgramTimesData}

@@ -315,16 +315,17 @@ export default function ClassDetails() {
             <option key={-1} value="">
               Select...
             </option>
+  
+
             {allCourseData.map((course) => (
               <option key={course.id} value={course.id}>
                 {course.class_name}
               </option>
             ))}
+
           </select>
-          <button
-            className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4"
-            onClick={handleCreateCourse}
-          >
+          <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4"
+            onClick={handleCreateCourse}>
             Create Course
           </button>
           <input
@@ -337,29 +338,29 @@ export default function ClassDetails() {
 
       <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md">
         <div className="relative">
-          <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6">
+          <button className="font-bold border border-light-gray rounded-md shadow-md text-sm 
+                             px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6">
             Auto Generate Details
           </button>
         </div>
         <h2 className="pb-10 text-center font-bold text-2xl">Class Details</h2>
+          <div className="flex flex-col">
+            <div className="w-3/4 m-auto">
+              <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+                <div>
+                  <label className="font-bold">Additional Comments &nbsp;</label>
+                  <Tooltip text="Additional comments displayed on the class webpage for students">
+                    <span>ⓘ</span>
+                  </Tooltip>
+                </div>
 
-        <div className="flex flex-col">
-          <div className="w-3/4 m-auto">
-            <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-              <div>
-                <label className="font-bold">Additional Comments &nbsp;</label>
-
-                <Tooltip text="Additional comments displayed on the class webpage for students">
-                  <span>ⓘ</span>
-                </Tooltip>
-              </div>
-
-              <textarea
-                className="border border-light-gray mt-3"
-                name="class_comment"
-                value={selectedClassData.class_comment ?? ""}
-                onChange={(event) => handleInputChange(event.target)}
-              />
+                <textarea
+                  className="border border-light-gray mt-3"
+                  name="class_comment"
+                  value={selectedClassData.class_comment ?? ""}
+                  onChange={(event) => handleInputChange(event.target)}
+                />
+                
             </div>
 
             {/* Class Times */}
@@ -383,7 +384,6 @@ export default function ClassDetails() {
             <div>
               <MeetingLocation
                 isClassLocation={true}
-                isClassTime={true}
                 param={{
                   functionPassed: handleInputChange,
                   loadPageFunction: setClassLocRec,
@@ -422,16 +422,12 @@ export default function ClassDetails() {
 
           {changesMade && (
             <div className="flex flex-row justify-end my-5">
-              <button
-                className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-                onClick={handleSaveChanges}
-              >
+              <button className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold" 
+              onClick={handleSaveChanges}>
                 Save Class Changes
               </button>
-              <button
-                className="bg-purple text-white rounded-md p-2 hover:text-gold"
-                onClick={handleCancelChanges}
-              >
+              <button className="bg-purple text-white rounded-md p-2 hover:text-gold"
+                onClick={handleCancelChanges}>
                 Discard Class Changes
               </button>
             </div>

@@ -123,6 +123,7 @@ export default function Courses() {
   //               Local Data Function                  //
   ////////////////////////////////////////////////////////
 
+  
   // called when student chooses a course from drop down menu
  // const handleCourseChange = (e) => {
   //  const selectedCourse = parseInt(e.target.value);
@@ -130,6 +131,7 @@ export default function Courses() {
   //  updateCourseInfo(selectedCourse);
   // };
 
+  // called when student clicks on one of the courses they're registered in
   const handleButtonClick = (course) => {
     setSelectedCourseId(course.id);
     updateCourseInfo(course.id);
@@ -173,26 +175,14 @@ export default function Courses() {
           </div>
         )}
 
-      
-
-        {/*REDO CSS CODE HERE*/}
-        <div className="p-2.5">
-        </div>
-
-        {/* Second Box */}
-        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
+        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <MeetingInformation />
         </div>
 
-        <div className="p-2.5">
-        </div>
-
-        {/* Third Box */}
-        <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md">
+        <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <button className="bg-purple p-2 rounded-md text-white hover:text-gold" onClick={() => setPopUpVisible(!isPopUpVisible)}> Schedule New Meeting</button>
         </div>
 
-        
       </div>
           
       {isPopUpVisible && (
