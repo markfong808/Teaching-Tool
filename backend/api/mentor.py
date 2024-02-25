@@ -379,7 +379,7 @@ def generate_appointment_events(mentor_id, availability_type, date, start_time, 
     
 
 # Generate appointment events at 30-minute intervals within the specified time range.
-def generate_appointment_tuples(mentor_id, course_id, program_id, date, start_time, end_time, physical_location, availability_id, timeSplit):
+def generate_appointment_tuples(mentor_id, course_id, program_id, date, start_time, end_time, physical_location, virtual_link, availability_id, timeSplit):
     try:
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
@@ -389,12 +389,12 @@ def generate_appointment_tuples(mentor_id, course_id, program_id, date, start_ti
                 type=program_id,
                 mentor_id=mentor_id,
                 class_id=course_id,
-                class_name="TEMP",
                 appointment_date=date,
                 start_time=start_datetime.strftime("%H:%M"),
                 end_time=end_datetime.strftime("%H:%M"),
                 status="posted",
                 physical_location=physical_location,
+                meeting_url=virtual_link,
                 availability_id=availability_id
             )
             db.session.add(new_appointment)
@@ -404,12 +404,12 @@ def generate_appointment_tuples(mentor_id, course_id, program_id, date, start_ti
                     type=program_id,
                     mentor_id=mentor_id,
                     class_id=course_id,
-                    class_name="TEMP",
                     appointment_date=date,
                     start_time=start_datetime.strftime("%H:%M"),
                     end_time=(start_datetime + timedelta(minutes=timeSplit)).strftime("%H:%M"),
                     status="posted",
                     physical_location=physical_location,
+                    meeting_url=virtual_link,
                     availability_id=availability_id
                 )
                 start_datetime += timedelta(minutes=timeSplit)
@@ -432,6 +432,7 @@ def add_all_mentor_availability(class_id):
         allAvailabilties = data.get('availabilities')
         timeSplit = data.get('duration')
         physical_location = data.get('physical_location')
+        virtual_link = data.get('virtual_link')
         
         if timeSplit:
             timeSplit = int(timeSplit)
@@ -439,14 +440,14 @@ def add_all_mentor_availability(class_id):
             timeSplit = 0
 
         for availabilityEntry in allAvailabilties:
-            add_mentor_single_availability(class_id, mentor_id, availabilityEntry, physical_location, timeSplit)
+            add_mentor_single_availability(class_id, mentor_id, availabilityEntry, physical_location, virtual_link, timeSplit)
 
         return jsonify({"message": "all availability added successfully"}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-def add_mentor_single_availability(class_id, mentor_id, data, physical_location, timeSplit):
+def add_mentor_single_availability(class_id, mentor_id, data, physical_location, virtual_link, timeSplit):
     try:
         program_id = data.get('id')
         date = data.get('date')
@@ -485,9 +486,8 @@ def add_mentor_single_availability(class_id, mentor_id, data, physical_location,
                 db.session.commit()
                 
                 # Generate appointment events
-                print(timeSplit)
                 if (timeSplit != 0):
-                    generate_appointment_tuples(mentor_id, class_id, program_id, date, start_time, end_time, physical_location, new_availability.id, timeSplit)
+                    generate_appointment_tuples(mentor_id, class_id, program_id, date, start_time, end_time, physical_location, virtual_link, new_availability.id, timeSplit)
                 return jsonify({"message": "availability added successfully"}), 201
             else:
                 return jsonify({"error": "appointment datetime must be in the future"}), 400

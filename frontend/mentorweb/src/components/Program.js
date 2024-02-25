@@ -396,7 +396,7 @@ export default function Program() {
         course_id: selectedCourseId
       };
 
-      await fetch(`/course/add-program`, {
+      const response = await fetch(`/course/add-program`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -405,6 +405,10 @@ export default function Program() {
         },
         body: JSON.stringify(payload),
       });
+
+      if (response.status === 400) {
+        window.alert("Program Type already exists.");
+      }
 
       setIsPageLoaded(false); // flag to reload page to add new program to dropdown selector
     } catch (error) {
@@ -836,6 +840,7 @@ export default function Program() {
             id={selectedCourseId}
             duration={selectedProgramData.duration}
             physical_location={selectedProgramData.physical_location}
+            virtual_link={selectedProgramData.virtual_link}
             program_id={selectedProgramId}
             program_name={selectedProgramData.type}
           />

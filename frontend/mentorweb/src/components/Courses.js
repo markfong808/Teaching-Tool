@@ -130,7 +130,6 @@ export default function Courses() {
 
   // called when a student clicks on one of the courses they're registered in
   const handleButtonClick = (course) => {
-    setSelectedCourseId(course.id);
     updateCourseInfo(course.id);
     setClassInformationPopupVisible(true);
   };

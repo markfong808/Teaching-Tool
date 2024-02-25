@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, \
     set_access_cookies, get_jwt, create_access_token
-from sqlalchemy import extract, or_, func
+from sqlalchemy import extract, or_, func, and_
+from sqlalchemy.exc import IntegrityError
 from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment, ClassInformation, ClassTimes, CourseMembers
 from . import db
 from datetime import datetime, timedelta, timezone
@@ -234,19 +235,26 @@ def add_user_to_course():
 def add_new_program():
     try:
         data = request.get_json()
-        name = data.get('name')
-        course_id = data.get('course_id')
 
         if data:
-            new_details = ProgramType(
-                type=name,
-                class_id=course_id,
-            )
-            db.session.add(new_details)
-            db.session.commit()
-            
-            return jsonify({"message": "Added to program successfully"}), 200
+            name = data.get('name')
+            course_id = data.get('course_id')
+
+            program = ProgramType.query.filter(and_(ProgramType.type == name, ProgramType.class_id == course_id)).first()
+
+            if program:
+                return jsonify({"error": "Program type already exists"}), 400
+            else:
+                new_details = ProgramType(
+                    type=name,
+                    class_id=course_id,
+                )
+                db.session.add(new_details)
+                db.session.commit()
+                
+                return jsonify({"message": "Added to program successfully"}), 200
         else:
             return jsonify({"error": "Insufficient details to add program to course"}), 404
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500

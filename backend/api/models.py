@@ -43,8 +43,6 @@ class ProgramType(db.Model):
     max_weekly_meetings = db.Column(db.Integer)
     max_monthly_meetings = db.Column(db.Integer)
 
-    __table_args__ = (UniqueConstraint('type', 'class_id'), )
-
 
 class Availability(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -66,7 +64,6 @@ class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
-    class_name = db.Column(db.String(255))                                                                       # ADDED
     physical_location = db.Column(db.String(255))                                                                # ADDED
     type = db.Column(db.String(50))
     appointment_date = db.Column(db.String(150))  # YYYY-MM-DD
@@ -79,6 +76,7 @@ class Appointment(db.Model):
     availability_id = db.Column(db.Integer, db.ForeignKey('availability.id'))
     availability = db.relationship('Availability', back_populates='appointments')
     appointment_comment = db.relationship('AppointmentComment', backref='appointment', cascade='all, delete-orphan')
+    class_information = db.relationship('ClassInformation', back_populates='appointments')
     
     
 class Feedback(db.Model):
@@ -111,6 +109,7 @@ class ClassInformation(db.Model):                                               
     office_hours_link = db.Column(db.String(255))                                                          # ADDED
     discord_link = db.Column(db.String(255))                                                               # ADDED
     class_comment = db.Column(db.Text)                                                                     # ADDED
+    appointments = db.relationship('Appointment', back_populates='class_information')
 
 class studentGroup(db.Model):                                                                              # ADDED
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
