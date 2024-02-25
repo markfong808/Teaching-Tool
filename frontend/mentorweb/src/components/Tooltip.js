@@ -10,7 +10,7 @@ export function Tooltip({ text, children }) {
             onMouseLeave={() => setIsVisible(false)}
         >
             {children}
-            {isVisible && <div id="tooltip" className="bg-black text-white rounded-md p-2 w-[200px] absolute bottom-full overflow-auto z-10">
+            {isVisible && <div id="tooltip" className="bg-dark-gray text-white rounded-md p-2 w-[400px] absolute bottom-full overflow-auto z-10">
                 {text}
             </div>}
 
