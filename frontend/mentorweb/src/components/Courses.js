@@ -112,8 +112,6 @@ export default function Courses() {
 
       // fetch instructor information from selected course
       fetchInstructorInfo(selectedCourse.teacher_id);
-    } else {
-      console.error("Selected course not found");
     }
   };
 

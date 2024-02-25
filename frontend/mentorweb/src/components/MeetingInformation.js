@@ -65,6 +65,7 @@ export default function MeetingInformation({ courseId }) {
 
     useEffect(() => {
         fetchMeetings();
+        fetchProgramTypeDetails();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, activeTab]);
 
@@ -83,7 +84,7 @@ export default function MeetingInformation({ courseId }) {
             });
             const apiData = await response.json();
             const programDetails = apiData.map(program => ({
-                type: program.type,
+                type: program.id,
                 description: program.description
             }));
             setTypeDescriptions(programDetails);
@@ -91,11 +92,6 @@ export default function MeetingInformation({ courseId }) {
             console.error("Error fetching data:", error);
         }
     };
-
-    useEffect(() => {
-        fetchProgramTypeDetails();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -446,9 +442,8 @@ export default function MeetingInformation({ courseId }) {
                         <label htmlFor="type" className="font-bold">
                             Type&nbsp;
                         </label>
-                        <Tooltip text={typeDescriptions.find(desc => desc.name === selectedMeeting.type).description}>
+                        <Tooltip text={typeDescriptions.find(desc => desc.type === selectedMeeting.type)?.description || "No description for this program type :("}>
                             <span>ⓘ
-
                             </span>
                         </Tooltip>
                     </div>

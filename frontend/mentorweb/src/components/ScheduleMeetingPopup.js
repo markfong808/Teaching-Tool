@@ -57,21 +57,25 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
             fetch(`/student/appointments-available/${encodeURIComponent(selectedProgramId)}/${encodeURIComponent(courseId)}`)
                 .then(response => response.json())
                 .then(data => {
-                    const timeslots = data.available_appointments
+                    if (data.available_appointments.length > 0) {
+                        const timeslots = data.available_appointments
                         .filter(appointment => appointment.status === 'posted')
                         .map(appointment => ({
                             startTime: new Date(`${appointment.date}T${appointment.start_time}`),
                             endTime: new Date(`${appointment.date}T${appointment.end_time}`),
                             id: appointment.appointment_id
                         }));
-                    setAvailableTimeslots(timeslots);
+                        setAvailableTimeslots(timeslots);
 
-                    if (timeslots) {
-                        const startDate = new Date(timeslots[0].startTime);
-                        const endDate = new Date(timeslots[0].endTime);
-                        const timeDifference = endDate - startDate;
-                        const minutes = Math.floor(timeDifference / (1000 * 60));
-                        setSelectedTimeDuration(minutes);
+                        if (timeslots) {
+                            const startDate = new Date(timeslots[0].startTime);
+                            const endDate = new Date(timeslots[0].endTime);
+                            const timeDifference = endDate - startDate;
+                            const minutes = Math.floor(timeDifference / (1000 * 60));
+                            setSelectedTimeDuration(minutes);
+                        }
+                    } else {
+                        window.alert("No available appointments at this time.");
                     }
                 })
                 .catch(error => console.error('Error:', error));

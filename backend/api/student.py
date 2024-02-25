@@ -123,7 +123,7 @@ def get_student_appointments_for_class(class_id):
             student_appointments = []
             appointments = appointments.join(ClassInformation, ClassInformation.id == Appointment.class_id).all()
             for appt in appointments:
-                mentor = User.query.get(appt.student_id) if appt.student_id else None
+                mentor = User.query.get(appt.mentor_id) if appt.mentor_id else None
                 mentor_info = {
                     "first_name": mentor.first_name,
                     "email": mentor.email,
@@ -193,7 +193,7 @@ def get_student_appointments_for_class(class_id):
             student_appointments = []
             appointments = appointments.join(ClassInformation, ClassInformation.id == Appointment.class_id).all()
             for appt in appointments:
-                mentor = User.query.get(appt.student_id) if appt.student_id else None
+                mentor = User.query.get(appt.mentor_id) if appt.mentor_id else None
                 mentor_info = {
                     "first_name": mentor.first_name,
                     "email": mentor.email,
