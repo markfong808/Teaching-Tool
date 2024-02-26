@@ -20,7 +20,14 @@ module.exports = {
       'headlines': ["Encode Sans", "sans-serif"],
       'body': ["Open Sans", "sans-serif"],
     },
-    extend: {},
+    extend: {
+      width: {
+        '14%': '14%',
+        '12%': '12%',
+        '8%': '8%',
+        '6%': '6%',
+      },
+    },
   },
   plugins: [],
 }

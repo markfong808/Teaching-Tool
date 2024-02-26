@@ -125,7 +125,7 @@ export default function ManageTimes() {
                     value={selectedCourseId}
                     onChange={(e) => handleCourseChange(e)}
                 >
-                    <option key={-1} value='-1'>Select...</option>
+                    <option key={-1} value='-1'>All Courses</option>
                     {allCourseData.map((course) => (
                     <option key={course.id} value={course.id}>{course.class_name}</option>
                     ))}
@@ -137,6 +137,8 @@ export default function ManageTimes() {
             <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
                     <MeetingInformation loadPage={loadAppointments} courseId={selectedCourseId}/>
             </div>
+            {/* Empty Space at bottom of webpage */}
+            <div className="p-10"></div>
         </div>
     );
 }

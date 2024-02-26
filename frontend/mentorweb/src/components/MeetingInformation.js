@@ -22,6 +22,7 @@ export default function MeetingInformation({ courseId }) {
         meeting_url: '',
     });
     const [changesMade, setChangesMade] = useState(false);
+    const [showTable, setShowTable] = useState(false);
 
 
     useEffect(() => {
@@ -527,34 +528,42 @@ export default function MeetingInformation({ courseId }) {
     return (
         <div id="content-container" className="flex flex-col w-full m-auto items-center">
             <div className="font-bold text-center text-2xl">
-                <h1>Your {capitalizeFirstLetter(activeTab)} Meetings</h1>
+                <h1>Your {capitalizeFirstLetter(activeTab)} Appointments</h1>
             </div>
             <div id="tabs" className="p-2 m-2 rounded-md">
                 <button className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold" onClick={() => handleTabClick('upcoming')}>Upcoming</button>
                 <button className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold" onClick={() => handleTabClick('pending')}>Pending</button>
                 <button className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold" onClick={() => handleTabClick('past')}>Past</button>
             </div>
+
+            <button
+                className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-start"
+                onClick={() => setShowTable(!showTable)}
+            >
+            Show Table
+            </button>
+
             <div id="table" className="w-full">
                 {selectedMeeting ? renderMeetingDetails() : (
-                    <table className="w-full border">
+                    <table className="w-full border text-center">
                         {data.length > 0 ? (
                             <>
                                 <thead className="bg-purple text-white">
                                     <tr>
-                                        <th className="border-r text-start">Type</th>
-                                        <th className="border-r text-start">Class Name</th>
-                                        <th className="border-r text-start">Day</th>
-                                        <th className="border-r text-start">Date</th>
-                                        <th className="border-r text-start">Time (PST)</th>
-                                        <th className="border-r text-start">Physical Location</th>
-                                        <th className="border-r text-start">Meeting URL</th>
-                                        <th className="text-start">Status</th>
+                                        <th className="border-r w-14%">Type</th>
+                                        <th className="border-r w-14%">Class Name</th>
+                                        <th className="border-r w-8%">Day</th>
+                                        <th className="border-r w-12%">Date</th>
+                                        <th className="border-r w-12%">Time (PST)</th>
+                                        <th className="border-r w-12%">Physical Location</th>
+                                        <th className="border-r w-14%">Meeting URL</th>
+                                        <th className="w-6%">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {data.map((meeting) => (
-                                        <tr key={meeting.appointment_id} onClick={() => handleMeetingClick(meeting)} className="hover:bg-gray border-b">
-                                            <td className="cursor-pointer text-blue underline border-r">{meeting.type}</td>
+                                {showTable && data.map((meeting) => (
+                                        <tr key={meeting.appointment_id} onClick={() => handleMeetingClick(meeting)} className="cursor-pointer hover:bg-gray border-b">
+                                            <td className='border-r'>{meeting.type}</td>
                                             <td className='border-r'>{meeting.class_name}</td>
                                             <td className='border-r'>{getDayFromDate(meeting.date)}</td>
                                             <td className='border-r'>{formatDate(meeting.date)}</td>
@@ -571,8 +580,8 @@ export default function MeetingInformation({ courseId }) {
                                 <tr>
                                     <td colSpan="5">
                                         <div>
-                                            <img src="https://assets.calendly.com/assets/frontend/media/no-events-2ed89b6c6379caebda4e.svg" alt="No meetings" className="m-auto" />
-                                            <h2 className="text-center">No {activeTab} meetings</h2>
+                                            <img src="https://assets.calendly.com/assets/frontend/media/no-events-2ed89b6c6379caebda4e.svg" alt="No appointments" className="m-auto" />
+                                            <h2 className="text-center">No {activeTab} appointments</h2>
                                         </div>
                                     </td>
                                 </tr>

@@ -223,8 +223,10 @@ export default function Courses() {
       </div>
           
       {isPopUpVisible && (
-          <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)}/>
-        )}
+        <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)}/>
+      )}
+      {/* Empty Space at bottom of webpage */}
+      <div className="p-10"></div>
     </div>
   );
 }

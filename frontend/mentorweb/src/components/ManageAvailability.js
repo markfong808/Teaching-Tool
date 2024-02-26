@@ -6,6 +6,7 @@ import { getCookie } from '../utils/GetCookie';
 export default function ManageAvailability({ courseId }) {
     const { user } = useContext(UserContext);
     const [data, setData] = useState([]);
+    const [showTable, setShowTable] = useState(false);
 
     const fetchAvailability = async () => {
         if (!user) return;
@@ -105,47 +106,56 @@ export default function ManageAvailability({ courseId }) {
         }
     }
 
+    
+
     return (
         <div className="w-full m-auto">
             <div className='text-center font-bold text-2xl pb-5'>
                 <h1>Manage Availability</h1>
             </div>
-
-            <div className="border w-3/8 m-auto">
-                <table className='w-full'>
-                    <thead className='border-b border-light-gray bg-purple text-white'>
-                        <td className='border-r border-light-gray'>Type</td>
-                        <td className='border-r border-light-gray'>Class Name</td>
-                        <td className='border-r border-light-gray'>Day</td>
-                        <td className='border-r border-light-gray'>Date</td>
-                        <td className='border-r border-light-gray'>Time (PST)</td>
-                        <td className='border-r border-light-gray'>Status</td>
-                        <td>Delete?</td>
-                    </thead>
-                    <tbody>
-                        {data.map((availability) => (
-                            <tr className='border'>
-                                <td className='border-r'>{availability.type}</td>
-                                <td className='border-r'>{availability.class_name}</td>
-                                <td className='border-r'>{getDayFromDate(availability.date)}</td>
-                                <td className='border-r'>{formatDate(availability.date)}</td>
-                                <td className='border-r'>{formatTime(availability.start_time)} - {formatTime(availability.end_time)} </td>
-                                <td className='border-r'>
-                                    <select
-                                        onChange={(e) => handleAvailabilityStatusChange(availability.id, e.target.value)}
-                                        value="Change Availability Status"
-                                    >
-                                        <option value="">{capitalizeFirstLetter(availability.status)}</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </td>
-                                <td><button onClick={() => handleDeleteAvailability(availability.id)}>Delete</button></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <button
+                className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2"
+                onClick={() => setShowTable(!showTable)}
+            >
+            Show Table
+            </button>
+      
+          <div className="border w-3/8 m-auto text-center">
+            <table className='w-full'>
+              <thead className='border-b border-light-gray bg-purple text-white'>
+                <th className='border-r border-light-gray w-14%'>Type</th>
+                <th className='border-r border-light-gray w-14%'>Class Name</th>
+                <th className='border-r border-light-gray w-8%'>Day</th>
+                <th className='border-r border-light-gray w-12%'>Date</th>
+                <th className='border-r border-light-gray w-12%'>Time (PST)</th>
+                <th className='border-r border-light-gray w-6%'>Status</th>
+                <th className='w-6%'>Delete?</th>
+              </thead>
+              <tbody>
+                {showTable && data.map((availability) => (
+                  <tr className='border' key={availability.id}>
+                    <td className='border-r'>{availability.type}</td>
+                        <td className='border-r'>{availability.class_name}</td>
+                        <td className='border-r'>{getDayFromDate(availability.date)}</td>
+                        <td className='border-r'>{formatDate(availability.date)}</td>
+                        <td className='border-r'>{formatTime(availability.start_time)} - {formatTime(availability.end_time)} </td>
+                        <td className='border-r'>
+                        <select
+                            onChange={(e) => handleAvailabilityStatusChange(availability.id, e.target.value)}
+                            value={capitalizeFirstLetter(availability.status)}
+                        >
+                            <option value="">{capitalizeFirstLetter(availability.status)}</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        </td>
+                        <td><button onClick={() => handleDeleteAvailability(availability.id)}>Delete</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-    )
+      )
+      
 }
