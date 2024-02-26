@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from .models import ProgramType, User
+from .models import ProgramType, User, Appointment, Availability, ClassTimes
 from . import db
 
 programs = Blueprint('programs', __name__)
@@ -9,6 +9,12 @@ programs = Blueprint('programs', __name__)
 def is_admin(user_id):
     user = User.query.filter_by(id=user_id).first()
     if user.account_type != 'admin':
+        return False
+    return True
+
+def is_mentor(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if user.account_type != 'mentor':
         return False
     return True
 
@@ -133,3 +139,36 @@ def set_program_details():
             return jsonify({"error": "Program type doesn't exist"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@programs.route('/program/delete/<int:program_id>', methods=['DELETE'])
+@jwt_required()
+def delete_program_type(program_id):
+    try: 
+        user_id = get_jwt_identity()
+        if not is_mentor(user_id):
+            return jsonify({"msg": "Mentor access required"}), 401
+
+        # delete program
+        program = ProgramType.query.get_or_404(program_id)
+        db.session.delete(program)
+
+        # delete appointments
+        appointments = Appointment.query.filter_by(type=program_id).all()
+        for appointment in appointments:
+            db.session.delete(appointment)
+
+        # delete availability
+        availabilities = Availability.query.filter_by(type=program_id).all()
+        for availability in availabilities:
+            db.session.delete(availability)
+
+        # delete class_times
+        times = ClassTimes.query.filter_by(program_id=program_id).all()
+        for time in times:
+            db.session.delete(time)
+
+        db.session.commit()
+        return jsonify({"msg": "Program deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 404

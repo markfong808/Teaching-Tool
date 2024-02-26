@@ -24,6 +24,9 @@ export default function Program() {
   const [post, setPost] = useState(false);
   const [isCourseSelected, setIsCourseSelected] = useState(false);
   const [isProgramSelected, setIsProgramSelected] = useState(false);
+  const [locationChecker, setLocationChecker] = useState(false);
+  const [timeChecker, setTimeChecker] = useState(false);
+  const [enableDurationAndDates, setEnableDurationAndDates] = useState(false);
 
 
   // Class Data Variables
@@ -350,6 +353,10 @@ export default function Program() {
 
     const selectedProgram = selectedClassData.programs.find(program => program.id === programId);
 
+    if (!selectedProgram.duration) {
+      selectedProgram.duration = '';
+    }
+
     if (selectedProgram) {
       // Update selectedClassData with selectedCourse.id
       setSelectedProgramData(selectedProgram);
@@ -374,7 +381,7 @@ export default function Program() {
 
   // update classData with user input
   const handleInputChange = (e) => {
-    if (!e || e.target.value.includes("a")) {
+    if (!e || (e.target.name === "duration" && e.target.value.includes("a"))) {
       return;
     }
 
@@ -482,9 +489,6 @@ export default function Program() {
     // Set the selectedProgramTimesData variable
     setSelectedProgramTimesData(updatedTimesData);
   };
-  
-  
-  
 
   const handleLimitInputChange = (e) => {
     const { name, value } = e.target;
@@ -541,6 +545,33 @@ export default function Program() {
       setSelectedProgramTimesData({});
     }
     setChangesMade(false); // Reset changes made
+  };
+
+  const handleDeleteProgramType = async () => {
+    if (window.confirm("Are your sure you want to delete this program type?")) {
+
+        try {
+            const response = await fetch(`/program/delete/${selectedProgramId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+
+            if (response.ok) {
+                // If the cancellation was successful, update the state to reflect that
+                alert("Program Type deleted successfully!")
+                // reload webpage details (like program switch)
+                await fetchCourseList();
+                handleProgramChange({target: {value: "-1"}});
+            } else {
+                throw new Error('Failed to delete program type');
+            }
+        } catch (error) {
+            console.error("Error deleting program type:", error);
+        }
+    }
   };
 
   const showBox = () => {
@@ -607,11 +638,29 @@ export default function Program() {
     }
   }, [selectedProgramId]);
 
-  /*useEffect(() => {
-    if (!selectedProgramData.duration || selectedProgramData.duration === '') {
-      setBoxShown(false);
+  useEffect(() => {
+    if (selectedProgramTimesData && Object.keys(selectedProgramTimesData).length > 0) {
+      setTimeChecker(true);
+    } else {
+      setTimeChecker(false);
     }
-  }, [selectedProgramData.duration]);*/
+  }, [selectedProgramTimesData]);
+
+  useEffect(() => {
+    if (selectedProgramData.physical_location && selectedProgramData.physical_location !== '') {
+      setLocationChecker(true);
+    } else {
+      setLocationChecker(false);
+    }
+  }, [selectedProgramData.physical_location, selectedProgramData.virtual_link]);
+
+  useEffect(() => {
+    if (locationChecker && timeChecker) {
+      setEnableDurationAndDates(true);
+    } else {
+      setEnableDurationAndDates(false);
+    }
+  }, [locationChecker, timeChecker]);
 
   useEffect(() => {
     //console.log(isCourseSelected);
@@ -622,7 +671,7 @@ export default function Program() {
     //console.log(selectedClassData);
     //console.log(allTimesData);
     //console.log(allCourseData);
-    console.log(selectedProgramData);
+    //console.log(selectedProgramData);
     //console.log(selectedProgramTimesData);
   }, [selectedClassData, allTimesData, allCourseData, selectedProgramData, selectedProgramTimesData]);
 
@@ -692,9 +741,12 @@ export default function Program() {
         <div className="flex flex-col w-3/4 px-5 m-auto">
           <div className='py-5 border border-light-gray rounded-md shadow-md'>
             <div className="relative">
-              <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6" disabled={!isProgramSelected}>
-                Auto Generate Details
-              </button>
+            <button className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 ${!isProgramSelected ? "opacity-50" : ""}`} disabled={!isProgramSelected}>
+              Auto Generate Details
+            </button>
+            <button className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 ${!isProgramSelected ? "opacity-50" : ""}`} onClick={handleDeleteProgramType} disabled={!isProgramSelected}>
+              Delete Program
+            </button>
             </div>
             <h2 className="pb-10 text-center font-bold text-2xl">
               Class Availability
@@ -749,7 +801,7 @@ export default function Program() {
                     class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
                     checked={boxShown}
                     onChange={showBox}
-                    disabled={!isProgramSelected}
+                    disabled={!enableDurationAndDates}
                   ></input>
                   {boxShown && (
                     <input
@@ -766,9 +818,9 @@ export default function Program() {
                     />
                   )}
                   <button
-                    className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2"
+                    className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 ${!enableDurationAndDates ? "opacity-50" : ""}`}
                     onClick={() => setPopUpVisible(!isPopUpVisible)}
-                    disabled={!isProgramSelected}
+                    disabled={!enableDurationAndDates}
                   >
                     Choose Meeting Dates
                   </button>
