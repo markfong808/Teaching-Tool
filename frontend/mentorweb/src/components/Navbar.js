@@ -46,9 +46,6 @@ export default function Navbar() {
                                 )}
                                 {user.account_type === "mentor" && (
                                     <>
-                                        <CustomLink to="/mentor/meetings" className="hover:text-gold font-headlines">MEETINGS</CustomLink>
-                                        <CustomLink to="/mentor/add-availability" className="hover:text-gold font-headlines">ADD AVAILABILITY</CustomLink>
-                                        <CustomLink to="/mentor/manage-availability" className="hover:text-gold font-headlines">MANAGE AVAILABILITY</CustomLink>
                                         <CustomLink to="/mentor/manage-times" className="hover:text-gold font-headlines">MANAGE TIMES</CustomLink>
                                         <CustomLink to="/mentor/edit-class-availability" className="hover:text-gold font-headlines">CLASS AVAILABILITY</CustomLink>
                                         <CustomLink to="/mentor/edit-class-details" className="hover:text-gold font-headlines">CLASS DETAILS</CustomLink>

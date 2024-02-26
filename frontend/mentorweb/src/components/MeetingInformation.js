@@ -467,7 +467,7 @@ export default function MeetingInformation({ courseId }) {
                         onChange={handleInputChange}
                     />
 
-                    <label htmlFor="meeting_url" className="font-bold pt-2">Student's Meeting URL</label>
+                    <label htmlFor="meeting_url" className="font-bold pt-2">Your Meeting URL</label>
                     <input className="w-full border border-light-gray bg-gray"
                         type="text"
                         name="meeting_url"
