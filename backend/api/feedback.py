@@ -108,7 +108,7 @@ def get_all_feedback():
 def get_feedback(appointment_id):
     feedback = Feedback.query.filter_by(appointment_id=appointment_id).first()
     if not feedback:
-        return jsonify({"error": "No feedback found for this appointment"}), 404
+        return jsonify({"message": "No feedback found for this appointment"}), 404
 
     
     feedback_data = {

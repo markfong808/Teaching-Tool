@@ -1,9 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { UserContext } from '../context/UserContext';
-import { capitalizeFirstLetter } from '../utils/FormatDatetime';
 import { getCookie } from '../utils/GetCookie';
-import { Tooltip } from './Tooltip';
-import { ClassContext } from "../context/ClassContext.js";
 import ScheduleMeetingPopup from './ScheduleMeetingPopup.js';
 import MeetingInformation from './MeetingInformation.js';
 import CourseInformationPopup from './CourseInformationPopup.js';
@@ -30,21 +27,7 @@ export default function Courses() {
   });
 
   // Class Data Variables
-  const contextValue = useContext(ClassContext);
-  const { classInstance } = contextValue || {};
-  const [classData, setClassData] = useState({
-    class_name: classInstance?.class_name || "",
-    class_comment: classInstance?.class_comment || "",
-    class_time: classInstance?.class_time || "",
-    class_location: classInstance?.class_location || "",
-    class_link: classInstance?.class_link || "",
-    class_recordings_link: classInstance?.class_recordings_link || "",
-    office_hours_time: classInstance?.office_hours_time || "",
-    office_hours_location: classInstance?.office_hours_location || "",
-    office_hours_link: classInstance?.office_hours_link || "",
-    discord_link: classInstance?.discord_link || "",
-    teacher_id: classInstance?.teacher_id || "",
-  });
+  const [classData, setClassData] = useState({});
 
 
 
@@ -131,7 +114,9 @@ export default function Courses() {
   // called when a student clicks on one of the courses they're registered in
   const handleButtonClick = (course) => {
     updateCourseInfo(course.id);
-    setClassInformationPopupVisible(true);
+    setTimeout(() => {
+      setClassInformationPopupVisible(true);
+    }, 10);
   };
 
   // main webpage load function
@@ -190,8 +175,7 @@ export default function Courses() {
           </div>
         )}
 
-        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-          <div className='w-2/3'>
+        <div className='w-2/3'>
             <h1>
               <strong>Select Course:</strong>
             </h1>
@@ -202,7 +186,7 @@ export default function Courses() {
               onChange={(e) => handleCourseChange(e)}
             >
               <option key={-1} value="-1">
-                Select...
+                All Courses
               </option>
               {allCourseData.map((course) => (
                 <option key={course.id} value={course.id}>
@@ -212,6 +196,7 @@ export default function Courses() {
             </select>
           </div>
 
+        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <MeetingInformation courseId={selectedCourseId}/>
         </div>
 

@@ -7,13 +7,13 @@ const CourseInformationPopup = ({onClose, courseData, instructorData}) => {
             <h2 className="pb-10 text-center font-bold text-4xl">{courseData.class_name}</h2>
             <div className="grid grid-cols-2 font-bold">
                 <div className="flex flex-col">
-                    <label> Class Times: <span className="font-normal">{courseData.class_time}</span></label>
+                    <label> Class Times: <span className="font-normal">{courseData.class_times}</span></label>
                     <label> Class Location: <span className="font-normal">{courseData.class_location}</span></label>
                     <label> Class Recordings Link: <span className="font-normal"> {courseData.class_recordings_link}</span></label>
                     <label> Comments: &nbsp; <p className="font-normal">{courseData.class_comment}</p></label>
                 </div>
                 <div className="flex flex-col justify-self-end">
-                    <label> Office Hours: <span className="font-normal">{courseData.office_hours_time}</span></label>
+                    <label> Office Hours: <span className="font-normal">{courseData.office_hours}</span></label>
                     <label> Office Hours Location: <span className="font-normal"> {courseData.office_hours_location}</span></label>
                     <label> Instructor: <span className="font-normal"> {instructorData.title} {instructorData.last_name}</span></label>
                     <label> Discord: <span className="font-normal">{courseData.discord_link}</span></label>

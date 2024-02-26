@@ -237,11 +237,6 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
       }, [isPageLoaded, user]);
 
     useEffect(() => {
-        console.log(selectedClassData);
-        console.log(allCourseData);
-    }, [selectedClassData, allCourseData]);
-
-    useEffect(() => {
         fetchProgramTypeDetails();
         setCourseId(selectedCourseId);
         // eslint-disable-next-line react-hooks/exhaustive-deps

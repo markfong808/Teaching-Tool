@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, \
     set_access_cookies, get_jwt, create_access_token
 from sqlalchemy import extract, or_, and_, func
-from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment, ClassInformation, CourseMembers
+from .models import MentorMeetingSettings, User, Appointment, ProgramType, Availability, AppointmentComment, ClassInformation, CourseMembers, ClassTimes
 from . import db
 from datetime import datetime, timedelta, timezone
 from .mail import send_email
@@ -46,6 +46,9 @@ def get_courses():
             student_courses_info = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).filter_by(user_id=user_id).all()
             courses_list = []
             for course in student_courses_info:
+                courseTimes = findStandardTimes(course.id, "Class Times")
+                officeHours = findStandardTimes(course.id, "Office Hours")
+
                 course_info = {
                     'id': course.id,
                     'class_name': course.class_name,
@@ -57,6 +60,8 @@ def get_courses():
                     'office_hours_link': course.office_hours_link,
                     'discord_link': course.discord_link,
                     'teacher_id': course.teacher_id,
+                    'class_times': courseTimes,
+                    'office_hours': officeHours
                 }
                 courses_list.append(course_info)
             return jsonify(courses_list), 200
@@ -64,6 +69,36 @@ def get_courses():
             return jsonify({"error": "student not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+def convert_to_standard_time(military_time):
+    military_time_obj = datetime.strptime(military_time, "%H:%M")
+    formatted_hours = military_time_obj.strftime("%I").lstrip("0")
+    standard_time = military_time_obj.strftime(f"{formatted_hours}:%M %p")
+
+    return standard_time
+
+def findStandardTimes(id, type):
+    try:
+        times = (
+            ClassTimes.query
+            .join(ProgramType, ClassTimes.program_id == ProgramType.id)
+            .filter(ClassTimes.class_id == id, ProgramType.type == type)
+            .all()
+        )
+
+        if len(times) > 0:
+            tempString =""
+            for obj in times:
+                if tempString != "":
+                    tempString += "/"
+                tempString += (obj.day + " " + convert_to_standard_time(obj.start_time) + "-" + convert_to_standard_time(obj.end_time))
+            times = tempString
+        else:
+            times = "No Known " + type
+
+        return times
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500   
 
 
 @student.route('/program/description', methods=['GET'])
@@ -523,7 +558,6 @@ def create_comment(appointment_id):
         else:
             return jsonify({"error": "appointment not found"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
     
 # Get comments for specific appointment as a mentor

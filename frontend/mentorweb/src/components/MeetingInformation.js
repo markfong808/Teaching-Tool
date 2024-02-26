@@ -22,7 +22,7 @@ export default function MeetingInformation({ courseId }) {
         meeting_url: '',
     });
     const [changesMade, setChangesMade] = useState(false);
-    const [showTable, setShowTable] = useState(false);
+    const [showTable, setShowTable] = useState(true);
 
 
     useEffect(() => {
@@ -43,7 +43,6 @@ export default function MeetingInformation({ courseId }) {
             : `/student/appointments`;
 
         try {
-            console.log(courseId);
             const response = await fetch(`${apiEndpoint}/${encodeURIComponent(courseId)}?type=${activeTab}`, {
                 credentials: 'include',
             });
@@ -95,6 +94,9 @@ export default function MeetingInformation({ courseId }) {
     };
 
     const handleInputChange = (e) => {
+        if (user.account_type !== "mentor")
+            return;
+
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
         setChangesMade(true);
@@ -448,8 +450,9 @@ export default function MeetingInformation({ courseId }) {
                             </span>
                         </Tooltip>
                     </div>
-                    {selectedMeeting.type}
 
+                    <label className="font-bold pt-2">Class</label>
+                    {selectedMeeting.class_name}
 
                     <label htmlFor="date" className="font-bold pt-2">Date</label>
                     {getDayFromDate(selectedMeeting.date) + ", " + formatDate(selectedMeeting.date)}
@@ -466,6 +469,13 @@ export default function MeetingInformation({ courseId }) {
                         value={formData.notes}
                         onChange={handleInputChange}
                     />
+
+                    {selectedMeeting.physical_location ? (
+                    <>
+                        <label className="font-bold pt-2">Physical Location</label>
+                        {selectedMeeting.physical_location}
+                    </>
+                    ) : null}
 
                     <label htmlFor="meeting_url" className="font-bold pt-2">Your Meeting URL</label>
                     <input className="w-full border border-light-gray bg-gray"
@@ -485,11 +495,11 @@ export default function MeetingInformation({ courseId }) {
                             <label htmlFor="email" className="font-bold pt-2">Email</label>
                             {selectedMeeting.student.email}
 
-                            <label htmlFor="about" className="font-bold pt-2">About</label>
+                            {/*<label htmlFor="about" className="font-bold pt-2">About</label>
                             {selectedMeeting.student.about}
 
                             <label htmlFor="social_url" className="font-bold pt-2">Social URL</label>
-                            {selectedMeeting.student.social_url}
+                            {selectedMeeting.student.social_url}*/}
                         </div>
                     )}
                     {/* display mentor details if student view */}
@@ -502,11 +512,11 @@ export default function MeetingInformation({ courseId }) {
                             <label htmlFor="email" className="font-bold pt-2">Email</label>
                             {selectedMeeting.mentor.email}
 
-                            <label htmlFor="about" className="font-bold pt-2">About</label>
+                            {/*<label htmlFor="about" className="font-bold pt-2">About</label>
                             {selectedMeeting.mentor.about}
 
                             <label htmlFor="social_url" className="font-bold pt-2">Social URL</label>
-                            {selectedMeeting.mentor.social_url}
+                            {selectedMeeting.mentor.social_url}*/}
                         </div>
                     )}
                 </div>
@@ -540,7 +550,7 @@ export default function MeetingInformation({ courseId }) {
                 className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-start"
                 onClick={() => setShowTable(!showTable)}
             >
-            Show Table
+            {showTable ? 'Hide Table' : 'Show Table'}
             </button>
 
             <div id="table" className="w-full">
@@ -563,14 +573,14 @@ export default function MeetingInformation({ courseId }) {
                                 <tbody>
                                 {showTable && data.map((meeting) => (
                                         <tr key={meeting.appointment_id} onClick={() => handleMeetingClick(meeting)} className="cursor-pointer hover:bg-gray border-b">
-                                            <td className='border-r'>{meeting.type}</td>
-                                            <td className='border-r'>{meeting.class_name}</td>
-                                            <td className='border-r'>{getDayFromDate(meeting.date)}</td>
-                                            <td className='border-r'>{formatDate(meeting.date)}</td>
-                                            <td className='border-r'>{formatTime(meeting.start_time)} - {formatTime(meeting.end_time)}</td>
-                                            <td className='border-r'>{meeting.physical_location}</td>
-                                            <td className='border-r'>{meeting.meeting_url}</td>
-                                            <td>{capitalizeFirstLetter(meeting.status)}</td>
+                                            <td className='border-r'>{meeting.type || '-------'}</td>
+                                            <td className='border-r'>{meeting.class_name || '-------'}</td>
+                                            <td className='border-r'>{getDayFromDate(meeting.date) || '-------'}</td>
+                                            <td className='border-r'>{formatDate(meeting.date) || '-------'}</td>
+                                            <td className='border-r'>{(meeting.start_time && meeting.end_time) ? `${formatTime(meeting.start_time)} - ${formatTime(meeting.end_time)}` : '-------'}</td>
+                                            <td className='border-r'>{meeting.physical_location || '-------'}</td>
+                                            <td className='border-r'>{meeting.meeting_url || '-------'}</td>
+                                            <td>{capitalizeFirstLetter(meeting.status) || '-------'}</td>
                                         </tr>
                                     ))}
                                 </tbody>

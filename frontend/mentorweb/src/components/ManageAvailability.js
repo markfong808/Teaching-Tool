@@ -6,7 +6,7 @@ import { getCookie } from '../utils/GetCookie';
 export default function ManageAvailability({ courseId }) {
     const { user } = useContext(UserContext);
     const [data, setData] = useState([]);
-    const [showTable, setShowTable] = useState(false);
+    const [showTable, setShowTable] = useState(true);
 
     const fetchAvailability = async () => {
         if (!user) return;
@@ -18,7 +18,6 @@ export default function ManageAvailability({ courseId }) {
             });
 
             const apiData = await response.json();
-            console.log(apiData);
 
             const sortedData = (apiData['mentor_availability'] || []).sort((a, b) => {
                 const dateTimeA = new Date(`${a.date}T${a.start_time}`);
@@ -117,7 +116,7 @@ export default function ManageAvailability({ courseId }) {
                 className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2"
                 onClick={() => setShowTable(!showTable)}
             >
-            Show Table
+            {showTable ? 'Hide Table' : 'Show Table'}
             </button>
       
           <div className="border w-3/8 m-auto text-center">
