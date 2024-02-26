@@ -5,11 +5,12 @@ import { getCookie } from '../utils/GetCookie';
 import { Tooltip } from './Tooltip';
 
 export default function ProfileSettings() {
+    const csrfToken = getCookie('csrf_access_token');
     const { user, setUser } = useContext(UserContext);
     const [textBoxShown, setTextBoxShown] = useState(false);
     const [formData, setFormData] = useState({
         name: user?.name || '',
-        pronouns: user?.pronouns || 'undefined',
+        pronouns: user?.pronouns || 'Undefined',
         title: user?.title || '',
         discord_id: user?.discord_id || '',
         about: user?.about || '',
@@ -17,7 +18,8 @@ export default function ProfileSettings() {
         meeting_url: user?.meeting_url || '',
     });
 
-    const [tempPronouns, setTempPronouns] = useState('');
+    const [pronounsType, setPronounsType] = useState('');
+    const [pronounsUserInput, setPronounsUserInput] = useState('');
     const [changesMade, setChangesMade] = useState(false);
 
     useEffect(() => {
@@ -25,22 +27,40 @@ export default function ProfileSettings() {
         if (user) {
             setFormData({
                 name: user.name || '',
-                pronouns: user.pronouns || 'undefined',
+                pronouns: user.pronouns || 'Undefined',
                 title: user.title || '',
                 discord_id: user.discord_id || '',
                 about: user.about || '',
                 linkedin_url: user.linkedin_url || '',
                 meeting_url: user.meeting_url || '',
             });
-            const value = user.pronouns || '';
-            setTempPronouns(value);
+
+            console.log(user.pronouns);
+
+            if (user.pronouns !== "Undefined" || user.pronouns !== "He/Him" || user.pronouns !== "She/Her" || user.pronouns !== "They/Them") {
+                console.log("HIT");
+                setPronounsType("Other");
+                setPronounsUserInput(user.pronouns);
+            } else { // could have bug
+                console.log("PASS");
+                setPronounsType(user.pronouns);
+                setPronounsUserInput('');
+            }
         }
     }, [user]);
 
 
     useEffect(() => {
-        console.log(formData);
+        console.log("USE EFFECT: ", formData);
     }, [formData]);
+
+    useEffect(() => {
+        console.log("Type: ", pronounsType);
+    }, [pronounsType]);
+
+    useEffect(() => {
+        console.log("userInput: ", pronounsUserInput);
+    }, [pronounsUserInput]);
 
 
     useEffect(() => {
@@ -55,21 +75,16 @@ export default function ProfileSettings() {
         let newValue = value;
 
 
-        if (newValue === "undefined") {
+        if (newValue === "Undefined") {
             return;
         }
 
-        if (name === "pronouns" && (value === "" || value === tempPronouns)) {
-            setTextBoxShown(true);
-        } else {
-            setTextBoxShown(false);
-        }
-
-        if (name === "pronouns" && value === "" && tempPronouns !== '') {
-            setFormData({ ...formData, [name]: tempPronouns });
+        if (name === "pronouns" && pronounsType === "Other" && pronounsUserInput !== '') {
+            setFormData({ ...formData, [name]: pronounsUserInput });
         } else {
             setFormData({ ...formData, [name]: newValue });
         }
+
 
         // Check if changes were made
         const formIsSameAsUser = (
@@ -77,7 +92,7 @@ export default function ProfileSettings() {
             (name === 'about' && value === user.about) ||
             (name === 'pronouns' && value === user.pronouns) ||
             (name === 'title' && value === user.title) ||
-            (name === 'discord' && value === user.discord_id) ||
+            (name === 'discord_id' && value === user.discord_id) ||
             (name === 'linkedin_url' && value === user.linkedin_url) ||
             (name === 'meeting_url' && value === user.meeting_url)
         );
@@ -85,6 +100,14 @@ export default function ProfileSettings() {
         // Set changesMade to true if form data does not match initial user data
         setChangesMade(!formIsSameAsUser);
     };
+
+    useEffect(() => {
+        if (pronounsType === "Other") {
+            setTextBoxShown(true);
+        } else {
+            setTextBoxShown(false);
+        }
+    }, [pronounsType]);
 
     const handleCancelChanges = () => {
         // Reset form data to initial user data
@@ -101,11 +124,6 @@ export default function ProfileSettings() {
     };
 
     const handleSaveChanges = async () => {
-        const updatedFormData = {
-            ...formData,
-            auto_approve_appointments: formData.auto_approve_appointments ? 1 : 0,
-        };
-        const csrfToken = getCookie('csrf_access_token');
         try {
             const response = await fetch('/profile/update', {
                 method: 'POST',
@@ -114,17 +132,18 @@ export default function ProfileSettings() {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
-                body: JSON.stringify(updatedFormData),
+                body: JSON.stringify(formData),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Profile update failed');
             }
+
             setChangesMade(false); // Reset changes made
             // Update the user context with the new data
             const updatedUser = await response.json();
-            setUser((currentUser) => ({ ...currentUser, ...updatedUser }));
+            setUser(updatedUser);
         } catch (error) {
             console.error('Error updating profile:', error);
         }
@@ -151,7 +170,7 @@ export default function ProfileSettings() {
                     <input className='border border-light-gray mb-3'
                         name="name"
                         value={formData.name}
-                        onChange={handleInputChange} // => old peep code
+                        onChange={handleInputChange}
                     />
 
                     <div>
@@ -159,43 +178,43 @@ export default function ProfileSettings() {
                         <select
                             className="border border-light-gray rounded ml-2"
                             name="pronouns"
-                            value={formData.pronouns}
+                            value={pronounsType}
                             onChange={handleInputChange}
                         >
-                            <option key={-1} value="undefined">Select...</option>
-                            <option key={"He/Him"} value="He/Him"> He/Him</option>
-                            <option key={"She/Her"} value="She/Her">She/Her</option>
-                            <option key={"They/Them"} value="They/Them">They/Them</option>
-                            <option key={""} value={`${["undefined", "He/Him", "She/Her", "They/Them", ""].includes(String(formData.pronouns)) ? "" : formData.pronouns}`}>Other</option>
+                            <option key="Undefined" value="Undefined">Select...</option>
+                            <option key="He/Him" value="He/Him"> He/Him</option>
+                            <option key="She/Her" value="She/Her">She/Her</option>
+                            <option key="They/Them" value="They/Them">They/Them</option>
+                            <option key="Other" value="Other">Other</option>
                         </select>
                         {textBoxShown && (
                             <input className='border border-light-gray ml-2 mt-1'
                                 name="pronouns"
-                                value={tempPronouns}
-                                onChange={(e) => setTempPronouns(e.target.value)}
-                                onBlur={() => handleInputChange({ target: { name: "pronouns", value: tempPronouns } })}
+                                value={pronounsUserInput}
+                                onChange={(e) => setPronounsUserInput(e.target.value)}
+                                onBlur={() => handleInputChange({ target: { name: "pronouns", value: pronounsUserInput } })}
                             />
                         )}
                     </div>
 
                     {user?.account_type === 'mentor' && (
-                    <div className='mt-3'>
-                        <label className='font-bold inline-block'>Title</label>
-                        <select
-                            className="border border-light-gray rounded ml-2"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleInputChange}
-                        >
-                            <option key={-1} value=''>No Title...</option>
-                            <option key={"Prof."} value="Prof.">Prof.</option>
-                            <option key={"Dr."} value="Dr.">Dr.</option>
-                            <option key={"Mr."} value="Mr.">Mr.</option>
-                            <option key={"Mrs."} value="Mrs.">Mrs.</option>
-                            <option key={"Ms."} value="Ms.">Ms.</option>
+                        <div className='mt-3'>
+                            <label className='font-bold inline-block'>Title</label>
+                            <select
+                                className="border border-light-gray rounded ml-2"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleInputChange}
+                            >
+                                <option key={-1} value=''>No Title...</option>
+                                <option key={"Prof."} value="Prof.">Prof.</option>
+                                <option key={"Dr."} value="Dr.">Dr.</option>
+                                <option key={"Mr."} value="Mr.">Mr.</option>
+                                <option key={"Mrs."} value="Mrs.">Mrs.</option>
+                                <option key={"Ms."} value="Ms.">Ms.</option>
 
-                        </select>
-                    </div>
+                            </select>
+                        </div>
                     )}
 
 
@@ -220,35 +239,6 @@ export default function ProfileSettings() {
                         disabled
                     />
 
-                    <div>
-                        <label className='font-bold'>About Me&nbsp;</label>
-                        <Tooltip text="Provide a brief introduction or summary about yourself.">
-                            <span>
-                                ⓘ
-                            </span>
-                        </Tooltip>
-                    </div>
-                    <textarea className='border border-light-gray mb-3'
-                        name="about"
-                        value={formData.about}
-                        onChange={handleInputChange}
-                    />
-
-                    <div>
-                        <label className='font-bold'> Social URL&nbsp;</label>
-                        <Tooltip text="Please provide only one URL of your choice - LinkedIn, GitHub, etc.">
-                            <span>
-                                ⓘ
-                            </span>
-                        </Tooltip>
-                    </div>
-
-                    <input className='border border-light-gray mb-3'
-                        type="text"
-                        name="linkedin_url"
-                        value={formData.linkedin_url}
-                        onChange={handleInputChange}
-                    />
 
                     <div>
                         <label className='font-bold'>Your Personal Meeting URL&nbsp;</label>

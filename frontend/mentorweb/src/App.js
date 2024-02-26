@@ -153,7 +153,7 @@ function App() {
           />
           <Route path="/profile"
             element={
-              <ProtectedRoute allowedAccountTypes={['student', 'mentor', 'admin']}>
+              <ProtectedRoute allowedAccountTypes={['mentor']}>
                 <ProfileSettings />
               </ProtectedRoute>
             }

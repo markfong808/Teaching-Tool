@@ -65,6 +65,9 @@ def get_user_data(user_id):
         return {
             'id': user.id,
             'name': user.first_name,
+            'pronouns': user.pronouns,
+            'title': user.title,
+            'discord_id': user.discord_id,
             'email': user.email,
             'account_type': user.account_type,
             'status': user.status,
@@ -84,6 +87,7 @@ def update_profile():
         data = request.get_json()
         user_id = get_jwt_identity()
         user = User.query.filter_by(id=user_id).first()
+        
 
         if not user:
             return jsonify({"error": "User doesn't exist"}), 404
@@ -91,14 +95,17 @@ def update_profile():
         # Update fields if they are provided in the request
         if 'name' in data:
             user.first_name = data['name']
-        if 'linkedin_url' in data:
-            user.linkedin_url = data['linkedin_url']
-        if 'about' in data:
-            user.about = data['about']
+        if 'pronouns' in data:
+            print(user.pronouns)
+            user.pronouns = data['pronouns']
+        if 'title' in data:
+            print(user.title)
+            user.title = data['title']
+        if 'discord_id' in data:
+            user.discord_id = data['discord_id']
         if 'meeting_url' in data:
             user.meeting_url = data['meeting_url']
-        if 'auto_approve_appointments' in data:
-            user.auto_approve_appointments = data['auto_approve_appointments']
+       
 
         db.session.commit()
         response = get_user_data(user_id)
