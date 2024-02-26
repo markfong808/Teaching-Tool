@@ -149,6 +149,7 @@ def get_student_appointments_for_class(class_id):
 
         student_appointments.append({
             "appointment_id": appt.id,
+            "program_id": appt.type,
             "type": program_type,
             "class_name": course_name,
             "date": appt.appointment_date,

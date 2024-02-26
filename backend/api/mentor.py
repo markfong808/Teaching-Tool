@@ -475,7 +475,6 @@ def add_mentor_single_availability(class_id, mentor_id, data, physical_location,
                 new_availability = Availability(
                     user_id=mentor_id,
                     class_id=class_id,
-                    class_name="TEMP",
                     type=program_id,
                     date=date,
                     start_time=start_time,
@@ -486,8 +485,7 @@ def add_mentor_single_availability(class_id, mentor_id, data, physical_location,
                 db.session.commit()
                 
                 # Generate appointment events
-                if (timeSplit != 0):
-                    generate_appointment_tuples(mentor_id, class_id, program_id, date, start_time, end_time, physical_location, virtual_link, new_availability.id, timeSplit)
+                generate_appointment_tuples(mentor_id, class_id, program_id, date, start_time, end_time, physical_location, virtual_link, new_availability.id, timeSplit)
                 return jsonify({"message": "availability added successfully"}), 201
             else:
                 return jsonify({"error": "appointment datetime must be in the future"}), 400
@@ -873,38 +871,28 @@ def get_mentor_availabilities(class_id):
             if (class_id == '-1'):
                 availability_data = Availability.query.filter(
                     and_(Availability.user_id == mentor_id, Availability.date > str(current_date))
-                ).join(ClassInformation, Availability.class_id == ClassInformation.id).all()
-                availability_list = []
-                for availability in availability_data:
-                    availability_info = {
-                        'id': availability.id,
-                        'type': availability.type,
-                        'class_name': availability.class_name,
-                        'date': availability.date,
-                        'start_time': availability.start_time,
-                        'end_time': availability.end_time,
-                        'status': availability.status
-                    }
-                    availability_list.append(availability_info)
-                return jsonify({"mentor_availability": availability_list}), 200
-
-            else: 
+                ).all()
+            else:
                 availability_data = Availability.query.filter(
                     and_(Availability.user_id == mentor_id, Availability.date > str(current_date), Availability.class_id == class_id)
                 ).all()
-                availability_list = []
-                for availability in availability_data:
-                    availability_info = {
-                        'id': availability.id,
-                        'type': availability.type,
-                        'class_name': availability.class_name,
-                        'date': availability.date,
-                        'start_time': availability.start_time,
-                        'end_time': availability.end_time,
-                        'status': availability.status
-                    }
-                    availability_list.append(availability_info)
-                return jsonify({"mentor_availability": availability_list}), 200
+                
+            availability_list = []
+            for availability in availability_data:
+                program_type = get_program_type(availability.type)
+                course_name = get_course_name(availability.class_id)
+
+                availability_info = {
+                    'id': availability.id,
+                    'type': program_type,
+                    'class_name': course_name,
+                    'date': availability.date,
+                    'start_time': availability.start_time,
+                    'end_time': availability.end_time,
+                    'status': availability.status
+                }
+                availability_list.append(availability_info)
+            return jsonify({"mentor_availability": availability_list}), 200
         else:
             return jsonify({"error": "class_id undefined for availability"}), 404
     except Exception as e:
@@ -921,131 +909,98 @@ def get_mentor_appointments_for_class(class_id):
     current_date_str = current_time_pst.strftime('%Y-%m-%d')
     current_time_str = current_time_pst.strftime('%H:%M')
 
-    if class_id:
-        # all classes
-        if class_id == '-1':
-            appointments = Appointment.query.filter_by(mentor_id=mentor_id)
-            
-            if meeting_type in ['upcoming', 'past', 'pending']:
-                if meeting_type == 'upcoming':
-                    appointments = appointments.filter(
-                        or_(
-                            Appointment.appointment_date > current_date_str,
-                            (Appointment.appointment_date == current_date_str) & (Appointment.start_time >= current_time_str)
-                        ),
-                        Appointment.status == 'reserved'
-                    )
-                elif meeting_type == 'past':
-                    appointments = appointments.filter(
-                        or_(
-                            Appointment.appointment_date < current_date_str,
-                            (Appointment.appointment_date == current_date_str) & (Appointment.start_time < current_time_str)
-                        ),
-                        Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
-                    )
-                elif meeting_type == 'pending':
-                    appointments = appointments.filter(
-                        or_(
-                            Appointment.appointment_date > current_date_str,
-                            (Appointment.appointment_date == current_date_str) & (Appointment.start_time >= current_time_str)
-                        ),
-                        Appointment.status == 'pending'
-                    )
+    if not class_id:
+        return jsonify({"error": "class_id undefined for appointments"}), 404
 
-            mentor_appointments = []
-            for appt in appointments.all():
-                student = User.query.get(appt.student_id) if appt.student_id else None
-                student_info = {
-                    "first_name": student.first_name,
-                    "email": student.email,
-                    "about": student.about,
-                    "social_url": student.linkedin_url
-                } if student else {}
+    appointments_query = Appointment.query.filter(Appointment.mentor_id == mentor_id)
 
-                mentor_appointments.append({
-                    "appointment_id": appt.id,
-                    "class_id": appt.class_id,
-                    "class_name": appt.class_name,
-                    "type": appt.type,
-                    "date": appt.appointment_date,
-                    "start_time": appt.start_time,
-                    "end_time": appt.end_time,
-                    "status": appt.status,
-                    "notes": appt.notes,
-                    "physical_location": appt.physical_location,
-                    "meeting_url": appt.meeting_url,
-                    "student": student_info
-                })
-            return jsonify(mentor_appointments=mentor_appointments), 200
-        # single class
-        else:
-            appointments = Appointment.query.filter(
-                and_(
-                    Appointment.mentor_id == mentor_id,
-                    Appointment.class_id == class_id
-                )
+    if class_id != '-1':
+        appointments_query = appointments_query.filter(Appointment.class_id == class_id)
+
+    if meeting_type in ['upcoming', 'past', 'pending']:
+        if meeting_type == 'upcoming':
+            appointments_query = appointments_query.filter(
+                or_(
+                    Appointment.appointment_date > current_date_str,
+                    and_(
+                        Appointment.appointment_date == current_date_str,
+                        Appointment.start_time >= current_time_str
+                    )
+                ),
+                Appointment.status == 'reserved'
+            )
+        elif meeting_type == 'past':
+            appointments_query = appointments_query.filter(
+                or_(
+                    Appointment.appointment_date < current_date_str,
+                    and_(
+                        Appointment.appointment_date == current_date_str,
+                        Appointment.start_time < current_time_str
+                    )
+                ),
+                Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
+            )
+        elif meeting_type == 'pending':
+            appointments_query = appointments_query.filter(
+                or_(
+                    Appointment.appointment_date > current_date_str,
+                    and_(
+                        Appointment.appointment_date == current_date_str,
+                        Appointment.start_time >= current_time_str
+                    )
+                ),
+                Appointment.status == 'pending'
             )
 
-            if meeting_type in ['upcoming', 'past', 'pending']:
-                if meeting_type == 'upcoming':
-                    appointments = appointments.filter(
-                        or_(
-                            Appointment.appointment_date > current_date_str,
-                            and_(
-                                Appointment.appointment_date == current_date_str,
-                                Appointment.start_time >= current_time_str
-                            )
-                        ),
-                        Appointment.status == 'reserved'
-                    )
-                elif meeting_type == 'past':
-                    appointments = appointments.filter(
-                        or_(
-                            Appointment.appointment_date < current_date_str,
-                            and_(
-                                Appointment.appointment_date == current_date_str,
-                                Appointment.start_time < current_time_str
-                            )
-                        ),
-                        Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
-                    )
-                elif meeting_type == 'pending':
-                    appointments = appointments.filter(
-                        or_(
-                            Appointment.appointment_date > current_date_str,
-                            and_(
-                                Appointment.appointment_date == current_date_str,
-                                Appointment.start_time >= current_time_str
-                            )
-                        ),
-                        Appointment.status == 'pending'
-                    )
+    mentor_appointments = []
+    appointments = appointments_query.all()
 
-            mentor_appointments = []
-            for appt in appointments.all():
-                student = User.query.get(appt.student_id) if appt.student_id else None
-                student_info = {
-                    "first_name": student.first_name,
-                    "email": student.email,
-                    "about": student.about,
-                    "social_url": student.linkedin_url
-                } if student else {}
+    for appt in appointments:
+        student = User.query.get(appt.student_id) if appt.student_id else None
+        student_info = {
+            "first_name": student.first_name,
+            "email": student.email,
+            "about": student.about,
+            "social_url": student.linkedin_url
+        } if student else {}
 
-                mentor_appointments.append({
-                    "appointment_id": appt.id,
-                    "class_id": appt.class_id,
-                    "class_name": appt.class_name,
-                    "type": appt.type,
-                    "date": appt.appointment_date,
-                    "start_time": appt.start_time,
-                    "end_time": appt.end_time,
-                    "status": appt.status,
-                    "notes": appt.notes,
-                    "physical_location": appt.physical_location,
-                    "meeting_url": appt.meeting_url,
-                    "student": student_info
-                })
+        program_type = get_program_type(appt.type)
+        course_name = get_course_name(appt.class_id)
 
-            return jsonify(mentor_appointments=mentor_appointments), 200
-    else:
-        return jsonify({"error": "class_id undefined for appointments"}), 404
+        mentor_appointments.append({
+            "appointment_id": appt.id,
+            "program_id": appt.type,
+            "type": program_type,
+            "class_name": course_name,
+            "date": appt.appointment_date,
+            "start_time": appt.start_time,
+            "end_time": appt.end_time,
+            "status": appt.status,
+            "notes": appt.notes,
+            "physical_location": appt.physical_location,
+            "meeting_url": appt.meeting_url,
+            "mentor": student_info
+        })
+
+    return jsonify(mentor_appointments=mentor_appointments), 200
+
+# helper function to get program_type
+def get_program_type(program_id): 
+    try: 
+        program = ProgramType.query.filter_by(id=program_id).first()
+
+        if program:
+            return program.type
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# helper function to get course_name
+def get_course_name(course_id): 
+    try: 
+        course = ClassInformation.query.filter_by(id=course_id).first()
+
+        if course:
+            return course.class_name
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

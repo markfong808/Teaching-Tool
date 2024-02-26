@@ -442,7 +442,7 @@ export default function MeetingInformation({ courseId }) {
                         <label htmlFor="type" className="font-bold">
                             Type&nbsp;
                         </label>
-                        <Tooltip text={typeDescriptions.find(desc => desc.type === selectedMeeting.type)?.description || "No description for this program type :("}>
+                        <Tooltip text={typeDescriptions.find(desc => desc.type === Number(selectedMeeting.program_id))?.description || "No description for this program type :("}>
                             <span>ⓘ
                             </span>
                         </Tooltip>

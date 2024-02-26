@@ -22,6 +22,9 @@ export default function Program() {
   const [resetOfficeHoursTable, setResetOfficeHoursTable] = useState(false);
   const [loadLocRec, setLocRec] = useState(false);
   const [post, setPost] = useState(false);
+  const [isCourseSelected, setIsCourseSelected] = useState(false);
+  const [isProgramSelected, setIsProgramSelected] = useState(false);
+
 
   // Class Data Variables
   const [programName, setProgramName] = useState("");
@@ -105,7 +108,7 @@ export default function Program() {
 
       if (fetchedCourseTimes !== null) {
         const tempData = fetchedCourseTimes
-          .filter(item => item.type !== 'class_times')
+          .filter(item => item.type !== 'Class Times')
           .reduce((acc, item) => {
             const programId = item.program_id;
             
@@ -217,7 +220,20 @@ export default function Program() {
 
   const postProgramToDatabase = async () => {
     try {
-        await fetch(`/program/setDetails`, {
+      // Set default values for max_daily_meetings, max_weekly_meetings, and max_monthly_meetings if they are empty or null
+      if (selectedProgramData.max_daily_meetings === '' || selectedProgramData.max_daily_meetings === null) {
+        selectedProgramData.max_daily_meetings = 999;
+      }
+
+      if (selectedProgramData.max_weekly_meetings === '' || selectedProgramData.max_weekly_meetings === null) {
+        selectedProgramData.max_weekly_meetings = 999;
+      }
+
+      if (selectedProgramData.max_monthly_meetings === '' || selectedProgramData.max_monthly_meetings === null) {
+        selectedProgramData.max_monthly_meetings = 999;
+      }
+
+      await fetch(`/program/setDetails`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -257,8 +273,8 @@ export default function Program() {
     // update course info displayed on page to selectedCourseId
     updateCourseInfo(selectedCourse);
 
-    setSelectedProgramId('-1');
-    updateProgramInfo('-1');
+    setSelectedProgramId(-1);
+    updateProgramInfo(-1);
     //fetchSelectedProgramTimesData();
     setSelectedProgramTimesData({});
 
@@ -314,8 +330,21 @@ export default function Program() {
   };
 
   const updateProgramInfo = (programId) => {
-    if (!programId || programId === '-1') {
-      setSelectedProgramData({});
+    if (!programId || programId === -1) {
+      setSelectedProgramData({
+        id: '',
+        type: '',
+        description: '',
+        duration: '',
+        physical_location: '',
+        virtual_link: '',
+        auto_approve_appointments: true,
+        max_daily_meetings: '',
+        max_weekly_meetings: '',
+        max_monthly_meetings: '',
+      });
+
+      setBoxShown(false);
       return;
     }
 
@@ -324,6 +353,10 @@ export default function Program() {
     if (selectedProgram) {
       // Update selectedClassData with selectedCourse.id
       setSelectedProgramData(selectedProgram);
+    }
+
+    if (!selectedProgram.duration || selectedProgram.duration === '') {
+      setBoxShown(false);
     }
   };
 
@@ -341,7 +374,7 @@ export default function Program() {
 
   // update classData with user input
   const handleInputChange = (e) => {
-    if (!e || e.target.value === 'a') {
+    if (!e || e.target.value.includes("a")) {
       return;
     }
 
@@ -552,9 +585,6 @@ export default function Program() {
     }
   }, [selectedProgramData]);
 
-  /*handleInputChange({target: {name: 'duration', value: ''}});
-      setSelectedProgramData({ ...selectedProgramData, duration: '' });*/
-
   useEffect(() => {
     if (selectedCourseId && selectedCourseId !== '-1') {
       updateCourseInfo(selectedCourseId);
@@ -562,10 +592,37 @@ export default function Program() {
   }, [selectedCourseId, allCourseData]);
 
   useEffect(() => {
+    if (selectedCourseId !== '' && selectedCourseId !== -1) {
+      setIsCourseSelected(true);
+    } else {
+      setIsCourseSelected(false);
+    }
+  }, [selectedCourseId]);
+
+  useEffect(() => {
+    if (selectedProgramId !== '' && selectedProgramId !== -1) {
+      setIsProgramSelected(true);
+    } else {
+      setIsProgramSelected(false);
+    }
+  }, [selectedProgramId]);
+
+  /*useEffect(() => {
+    if (!selectedProgramData.duration || selectedProgramData.duration === '') {
+      setBoxShown(false);
+    }
+  }, [selectedProgramData.duration]);*/
+
+  useEffect(() => {
+    //console.log(isCourseSelected);
+    //console.log(isProgramSelected);
+  }, [isProgramSelected, isCourseSelected]);
+
+  useEffect(() => {
     //console.log(selectedClassData);
     //console.log(allTimesData);
     //console.log(allCourseData);
-    //console.log(selectedProgramData);
+    console.log(selectedProgramData);
     //console.log(selectedProgramTimesData);
   }, [selectedClassData, allTimesData, allCourseData, selectedProgramData, selectedProgramTimesData]);
 
@@ -607,6 +664,7 @@ export default function Program() {
                 id="course-dropdown"
                 value={selectedProgramId}
                 onChange={(e) => handleProgramChange(e)}
+                disabled={!isCourseSelected}
               >
                 <option key={-1} value="">
                   Select...
@@ -634,7 +692,7 @@ export default function Program() {
         <div className="flex flex-col w-3/4 px-5 m-auto">
           <div className='py-5 border border-light-gray rounded-md shadow-md'>
             <div className="relative">
-              <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6">
+              <button className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6" disabled={!isProgramSelected}>
                 Auto Generate Details
               </button>
             </div>
@@ -657,7 +715,8 @@ export default function Program() {
                     className="border border-light-gray mt-3"
                     name="description"
                     value={selectedProgramData.description ?? ""}
-                    //onChange={(event) => handleInputChange(event)}
+                    onChange={(event) => handleInputChange(event)}
+                    disabled={!isProgramSelected}
                   />
                 </div>
                 {/* Office Hours Times */}
@@ -676,42 +735,40 @@ export default function Program() {
                     reset={resetOfficeHoursTable}
                     program_id={selectedProgramData.id}
                     program_type={selectedProgramData.type}
+                    disabled={!isProgramSelected}
                   />
                 </div>
 
                 <div className="flex flex-row items-center mt-4">
                   <label className="whitespace-nowrap font-bold text-2xl">
-                    Create Drop-Ins?
+                    Define Meeting Duration?
                   </label>
                   <input
                     type="checkbox"
                     id="myCheckbox"
                     class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
-                    checked={!boxShown}
+                    checked={boxShown}
                     onChange={showBox}
+                    disabled={!isProgramSelected}
                   ></input>
                   {boxShown && (
-                    <>
-                      <label className="whitespace-nowrap ml-2">
-                        Meeting Duration:
-                      </label>
-                      <input
-                        className="border border-light-gray ml-1 mt-1"
-                        name="duration"
-                        value={selectedProgramData.duration}
-                        onChange={(event) => {
-                          const inputValue = event.target.value;
-                          const numericValue = inputValue.replace(/[^0-9]/g, "a"); // Remove non-numeric characters
-                          handleInputChange({
-                            target: { name: "duration", value: numericValue },
-                          });
-                        }}
-                      />
-                    </>
+                    <input
+                      className="border border-light-gray ml-3 mt-1 w-20"
+                      name="duration"
+                      value={selectedProgramData.duration}
+                      onChange={(event) => {
+                        const inputValue = event.target.value;
+                        const numericValue = inputValue.replace(/[^0-9]/g, "a"); // Remove non-numeric characters
+                        handleInputChange({
+                          target: { name: "duration", value: numericValue },
+                        });
+                      }}
+                    />
                   )}
                   <button
                     className="ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2"
                     onClick={() => setPopUpVisible(!isPopUpVisible)}
+                    disabled={!isProgramSelected}
                   >
                     Choose Meeting Dates
                   </button>
@@ -732,6 +789,7 @@ export default function Program() {
             }}
             loadPage={loadLocRec}
             changes={changesMade}
+            disabled={!isProgramSelected}
           />
           <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
             {user?.account_type === "mentor" && (
@@ -749,6 +807,7 @@ export default function Program() {
                     value="true"
                     checked={selectedProgramData.auto_approve_appointments === true}
                     onChange={handleInputChange}
+                    disabled={!isProgramSelected}
                   />
                 </label>
                 &nbsp;&nbsp;
@@ -761,6 +820,7 @@ export default function Program() {
                     value="false"
                     checked={selectedProgramData.auto_approve_appointments === false}
                     onChange={handleInputChange}
+                    disabled={!isProgramSelected}
                   />
                 </label>
               </div>
@@ -778,6 +838,7 @@ export default function Program() {
                       min="1"
                       value={selectedProgramData.max_daily_meetings}
                       onChange={handleLimitInputChange}
+                      disabled={!isProgramSelected}
                     />
                   </div>
                   <div className="flex flex-col mr-5">
@@ -789,6 +850,7 @@ export default function Program() {
                       min="1"
                       value={selectedProgramData.max_weekly_meetings}
                       onChange={handleLimitInputChange}
+                      disabled={!isProgramSelected}
                     />
                   </div>
                   <div className="flex flex-col">
@@ -800,6 +862,7 @@ export default function Program() {
                       min="1"
                       value={selectedProgramData.max_monthly_meetings}
                       onChange={handleLimitInputChange}
+                      disabled={!isProgramSelected}
                     />
                   </div>
                 </div>

@@ -36,8 +36,10 @@ def get_times(course_id):
         if courseTimes:
             course_times_list = []
             for courseTime in courseTimes:
+                program_type = get_program_type(courseTime.program_id)
+
                 course_time_info = {
-                    'type': courseTime.type,
+                    'type': program_type,
                     'day': courseTime.day,
                     'start_time': courseTime.start_time,
                     'end_time': courseTime.end_time,
@@ -47,6 +49,17 @@ def get_times(course_id):
             return jsonify(course_times_list), 200
         else:
             return jsonify(None), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+# helper function to get program_type
+def get_program_type(program_id): 
+    try: 
+        program = ProgramType.query.filter_by(id=program_id).first()
+
+        if program:
+            return program.type
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -62,7 +75,6 @@ def get_program_times(program_id):
             program_times_list = []
             for programTime in programTimes:
                 program_time_info = {
-                    'type': programTime.type,
                     'day': programTime.day,
                     'start_time': programTime.start_time,
                     'end_time': programTime.end_time,
@@ -106,7 +118,6 @@ def set_class_time(class_id):
                 for entry in converted_list:
                     new_time = ClassTimes(
                         class_id=course_id,
-                        type="TEMP",                                                     #remove types from classTimes
                         day=entry[0],
                         start_time=entry[1],
                         end_time=entry[2],

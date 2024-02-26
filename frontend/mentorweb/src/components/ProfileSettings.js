@@ -23,65 +23,44 @@ export default function ProfileSettings() {
     const [changesMade, setChangesMade] = useState(false);
 
     useEffect(() => {
-        // Update form data when user context updates
-        if (user) {
-            setFormData({
-                name: user.name || '',
-                pronouns: user.pronouns || 'Undefined',
-                title: user.title || '',
-                discord_id: user.discord_id || '',
-                about: user.about || '',
-                linkedin_url: user.linkedin_url || '',
-                meeting_url: user.meeting_url || '',
-            });
-
-            console.log(user.pronouns);
-
-            if (user.pronouns !== "Undefined" || user.pronouns !== "He/Him" || user.pronouns !== "She/Her" || user.pronouns !== "They/Them") {
-                console.log("HIT");
-                setPronounsType("Other");
-                setPronounsUserInput(user.pronouns);
-            } else { // could have bug
-                console.log("PASS");
-                setPronounsType(user.pronouns);
-                setPronounsUserInput('');
-            }
+        //console.log(formData.pronouns);
+        if (formData.pronouns !== "Undefined" && formData.pronouns !== "He/Him" && formData.pronouns !== "She/Her" && formData.pronouns !== "They/Them") {
+            setPronounsType("Other");
+            setPronounsUserInput(formData.pronouns);
+        } else { // could have bug
+            setPronounsType(formData.pronouns);
+            setPronounsUserInput('');
         }
-    }, [user]);
-
-
-    useEffect(() => {
-        console.log("USE EFFECT: ", formData);
-    }, [formData]);
-
-    useEffect(() => {
-        console.log("Type: ", pronounsType);
-    }, [pronounsType]);
-
-    useEffect(() => {
-        console.log("userInput: ", pronounsUserInput);
-    }, [pronounsUserInput]);
-
-
-    useEffect(() => {
-        if (user) {
-            //fetchLimits();
-        }
-    }, [user]);
-
+    }, [formData.pronouns]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         let newValue = value;
 
 
-        if (newValue === "Undefined") {
+        if (name === "pronouns" && newValue === "Undefined") {
             return;
         }
 
+        if (name === "pronouns" && newValue === "Other") {
+            setPronounsType("Other");
+            return;
+        }
+
+        if (name === "pronouns" && newValue !== "Other") {
+            setPronounsType(newValue);
+        }
+
+        console.log(newValue);
+        console.log(pronounsType);
+        console.log(pronounsUserInput);
+        
+
         if (name === "pronouns" && pronounsType === "Other" && pronounsUserInput !== '') {
+            console.log("Hit");
             setFormData({ ...formData, [name]: pronounsUserInput });
         } else {
+            console.log("Miss");
             setFormData({ ...formData, [name]: newValue });
         }
 

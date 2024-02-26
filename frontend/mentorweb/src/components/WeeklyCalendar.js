@@ -4,7 +4,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { SingleInputTimeRangeField } from '@mui/x-date-pickers-pro/SingleInputTimeRangeField';
 
-export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, reset, program_id, program_type }) {
+export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, reset, program_id, program_type, disabled }) {
   // Local Variables
   const [timePickersList, setTimePickers] = useState({
     Monday: false,
@@ -173,7 +173,7 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, r
     <div>
       <div>
         <div className="font-bold text-2xl mb-4">
-          <label style={{ whiteSpace: 'nowrap' }}>{isClassTimes ? "Set Class Time:" : `Set ${program_type} Times:`}</label>
+          <label style={{ whiteSpace: 'nowrap' }}>{isClassTimes ? "Set Class Time:" : `Set ${program_type || ""} Times:`}</label>
         </div>
       </div>
       <div>
@@ -181,21 +181,21 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, r
                 <thead className="border">
                     <tr>
                     <th
-                        className={`border-r w-1/5 ${timePickersList.Monday ? "bg-light-gray" : "bg-white"}`}
+                        className={`border-r w-1/5 ${timePickersList.Monday ? "bg-light-gray" : "bg-white"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
                         name="Monday"
                         onClick={() => handleWeekdayClick("Monday")}>
                         Monday
                     </th>
 
                     <th
-                        className={`border-r w-1/5 ${timePickersList.Tuesday ? "bg-light-gray" : "bg-white"}`}
+                        className={`border-r w-1/5 ${timePickersList.Tuesday ? "bg-light-gray" : "bg-white"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
                         name="Tuesday"
                         onClick={() => handleWeekdayClick("Tuesday")}>
                         Tuesday
                     </th>
 
                     <th
-                        className={`border-r w-1/5 ${timePickersList.Wednesday ? "bg-light-gray" : "bg-white"}`}
+                        className={`border-r w-1/5 ${timePickersList.Wednesday ? "bg-light-gray" : "bg-white"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
                         name="Wednesday"
                         onClick={() => handleWeekdayClick("Wednesday")}>
                         Wednesday
@@ -203,14 +203,14 @@ export default function WeeklyCalendar({ isClassTimes, param, times, loadPage, r
 
                     <th
                         className={`border-r w-1/5 ${
-                        timePickersList.Thursday ? "bg-light-gray" : "bg-white"}`}
+                        timePickersList.Thursday ? "bg-light-gray" : "bg-white"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
                         name="Thursday"
                         onClick={() => handleWeekdayClick("Thursday")}>
                         Thursday
                     </th>
 
                     <th
-                        className={`border-r w-1/5 ${timePickersList.Friday ? "bg-light-gray" : "bg-white"}`}
+                        className={`border-r w-1/5 ${timePickersList.Friday ? "bg-light-gray" : "bg-white"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
                         name="Friday"
                         onClick={() => handleWeekdayClick("Friday")}>
                         Friday

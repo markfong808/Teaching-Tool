@@ -1,7 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { ClassContext } from "../context/ClassContext.js";
 import { UserContext } from '../context/UserContext.js';
-import ScheduleNewMeeting from './ScheduleNewMeeting.js';
 import { ScheduleMeeting } from 'react-schedule-meeting';
 import { format } from 'date-fns';
 import { getCookie } from '../utils/GetCookie';

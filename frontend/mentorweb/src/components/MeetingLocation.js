@@ -1,4 +1,4 @@
-export default function MeetingLocation({isClassLocation, param, data }) {
+export default function MeetingLocation({isClassLocation, param, data, disabled }) {
 
     /////////////////////////////////////////////
     //        Handling Input Function          //
@@ -29,6 +29,7 @@ export default function MeetingLocation({isClassLocation, param, data }) {
                             name = {isClassLocation ? "physical_location" : "physical_location"}
                             value= {isClassLocation ? data.physical_location ?? '' : data.physical_location ?? ''}
                             onChange={handleInputChange}
+                            disabled={disabled}
                         />
                 </div>
                 <div className={isClassLocation ? "flex flex-row items-center mb-2" : "flex flex-row items-center mb-1"}>
@@ -37,6 +38,7 @@ export default function MeetingLocation({isClassLocation, param, data }) {
                             name={isClassLocation ? "virtual_link" : "virtual_link"}
                             value={isClassLocation ? data.virtual_link ?? '' : data.virtual_link ?? ''}
                             onChange={handleInputChange}
+                            disabled={disabled}
                         />
                 </div>
                     

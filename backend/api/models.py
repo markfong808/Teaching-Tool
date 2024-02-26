@@ -48,7 +48,6 @@ class Availability(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
-    class_name = db.Column(db.String(255))                                                                       # ADDED
     type = db.Column(db.String(50))
     date = db.Column(db.String(150))  # YYYY-MM-DD
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
@@ -126,7 +125,6 @@ class CourseMembers(db.Model):                                                  
 class ClassTimes(db.Model):                                                                                # ADDED
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
     class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                # ADDED
-    type = db.Column(db.String(50))                                                                        # ADDED
     day = db.Column(db.String(50))                                                                         # ADDED
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                          # ADDED
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                            # ADDED
