@@ -6,6 +6,7 @@ import WeeklyCalendar from './WeeklyCalendar.js';
 import { ClassContext } from "../context/ClassContext.js";
 import ChooseMeetingDatesPopup from './ChooseMeetingDatesPopup.js';
 import MeetingLocation from './MeetingLocation.js';
+import CreateProgramTypePopup from './CreateProgramTypePopup.js';
 
 
 export default function Program() {
@@ -15,6 +16,7 @@ export default function Program() {
   const [changesMade, setChangesMade] = useState(false);
   const [boxShown, setBoxShown] = useState(false);
   const [isPopUpVisible, setPopUpVisible] = useState(false);
+  const [isCreateProgramTypePopup, setCreateProgramTypePopup] = useState(false);
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
@@ -27,6 +29,7 @@ export default function Program() {
   const [locationChecker, setLocationChecker] = useState(false);
   const [timeChecker, setTimeChecker] = useState(false);
   const [enableDurationAndDates, setEnableDurationAndDates] = useState(false);
+  const [isAllCoursesSelected, setIsAllCoursesSelected] = useState(true);
 
 
   // Class Data Variables
@@ -66,7 +69,7 @@ export default function Program() {
   const [allTimesData, setAllTimesData] = useState({});
   const [selectedProgramTimesData, setSelectedProgramTimesData] = useState({});
 
-  
+
 
 
   ////////////////////////////////////////////////////////
@@ -77,14 +80,14 @@ export default function Program() {
   // can make a new backend function to only get courseIds
   const fetchCourseList = async () => {
     if (user.account_type !== "mentor") return;
-  
+
     try {
-      const response = await fetch(`/mentor/courses`, {
+      const response = await fetch(`/mentor/courses?type=${String(isAllCoursesSelected)}`, {
         credentials: 'include',
       });
-  
+
       const fetchedCourseList = await response.json();
-  
+
       setAllCourseData(fetchedCourseList);
     } catch (error) {
       console.error("Error fetching course list:", error);
@@ -114,19 +117,19 @@ export default function Program() {
           .filter(item => item.type !== 'Class Times')
           .reduce((acc, item) => {
             const programId = item.program_id;
-            
+
             if (!acc[programId]) {
               acc[programId] = {};
             }
-            
+
             acc[programId][item.day] = {
               start_time: item.start_time,
               end_time: item.end_time,
             };
-      
+
             return acc;
           }, {});
-      
+
         setAllTimesData(tempData);
       } else {
         setAllTimesData({});
@@ -154,7 +157,7 @@ export default function Program() {
       }
 
       const fetchedProgramTimes = await response.json();
-      
+
       if (fetchedProgramTimes !== null) {
         //setAllTimesData(fetchedProgramTimes);
 
@@ -167,7 +170,7 @@ export default function Program() {
             return acc;
           }, {});
 
-          setSelectedProgramTimesData(tempData);
+        setSelectedProgramTimesData(tempData);
       } else {
         setSelectedProgramTimesData({});
       }
@@ -186,7 +189,7 @@ export default function Program() {
   // saves all class and times details to database
   const handleSaveChanges = async () => {
     if (Object.keys(selectedProgramTimesData).length > 0) {
-      setAllTimesData({...allTimesData, [selectedProgramId]: selectedProgramTimesData});
+      setAllTimesData({ ...allTimesData, [selectedProgramId]: selectedProgramTimesData });
       setPost(true);
     }
     if (selectedProgramData) {
@@ -204,15 +207,15 @@ export default function Program() {
   // ClassInformation table in database for attached course
   const postClassDetailsToDatabase = async () => {
     try {
-        await fetch(`/course/setTime/${encodeURIComponent(selectedClassData.id)}`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-          },
-          body: JSON.stringify(allTimesData),
-        });
+      await fetch(`/course/setTime/${encodeURIComponent(selectedClassData.id)}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify(allTimesData),
+      });
 
       setChangesMade(false); // Hide Save/Cancel Buttons
     } catch (error) {
@@ -243,7 +246,7 @@ export default function Program() {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': csrfToken,
         },
-        body: JSON.stringify({data: selectedProgramData, course_id: selectedCourseId}),
+        body: JSON.stringify({ data: selectedProgramData, course_id: selectedCourseId }),
       });
 
       setChangesMade(false); // Hide Save/Cancel Buttons
@@ -393,7 +396,7 @@ export default function Program() {
         for (const data of Object.entries(selectedProgramTimesData)) {
           const startDate = new Date(`1970-01-01T${data[1].start_time}`);
           const endDate = new Date(`1970-01-01T${data[1].end_time}`);
-      
+
           const timeDifference = endDate - startDate;
           const minutes = Math.floor(timeDifference / (1000 * 60));
           if (minutes < maxRecommendedTimeSplit) {
@@ -461,14 +464,14 @@ export default function Program() {
     if (!e) {
       return;
     }
-  
+
     const tempType = e.type;
     const tempDay = e.name;
     const tempValue = e.value;
-  
+
     // Create a new object to store the modified data
     let updatedTimesData = { ...selectedProgramTimesData };
-  
+
     // Check if the day already exists in selectedProgramTimesData
     if (tempValue.length === 0) {
       // If e.value.length == 0, delete the day from selectedProgramTimesData
@@ -485,7 +488,7 @@ export default function Program() {
         },
       };
     }
-  
+
     // Set the selectedProgramTimesData variable
     setSelectedProgramTimesData(updatedTimesData);
   };
@@ -525,8 +528,8 @@ export default function Program() {
     }
 
     setSelectedProgramData({
-      ...selectedProgramData, 
-      "max_daily_meetings": newLimitData.max_daily_meetings, 
+      ...selectedProgramData,
+      "max_daily_meetings": newLimitData.max_daily_meetings,
       "max_weekly_meetings": newLimitData.max_weekly_meetings,
       "max_monthly_meetings": newLimitData.max_monthly_meetings,
     });
@@ -550,34 +553,34 @@ export default function Program() {
   const handleDeleteProgramType = async () => {
     if (window.confirm("Are your sure you want to delete this program type?")) {
 
-        try {
-            const response = await fetch(`/program/delete/${selectedProgramId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-            });
+      try {
+        const response = await fetch(`/program/delete/${selectedProgramId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+          },
+        });
 
-            if (response.ok) {
-                // If the cancellation was successful, update the state to reflect that
-                alert("Program Type deleted successfully!")
-                // reload webpage details (like program switch)
-                await fetchCourseList();
-                handleProgramChange({target: {value: "-1"}});
-            } else {
-                throw new Error('Failed to delete program type');
-            }
-        } catch (error) {
-            console.error("Error deleting program type:", error);
+        if (response.ok) {
+          // If the cancellation was successful, update the state to reflect that
+          alert("Program Type deleted successfully!")
+          // reload webpage details (like program switch)
+          await fetchCourseList();
+          handleProgramChange({ target: { value: "-1" } });
+        } else {
+          throw new Error('Failed to delete program type');
         }
+      } catch (error) {
+        console.error("Error deleting program type:", error);
+      }
     }
   };
 
   const showBox = () => {
     if (boxShown) {
       // need to make work with save/cancel changes button
-      handleInputChange({target: {name: 'duration', value: ''}});
+      handleInputChange({ target: { name: 'duration', value: '' } });
       setBoxShown(false);
     } else {
       setBoxShown(true);
@@ -610,7 +613,7 @@ export default function Program() {
     );
   }, [showSaveCancelButtons]);
 
-  useEffect(()=> {
+  useEffect(() => {
     if (Number(selectedProgramData.duration) > 0) {
       setBoxShown(true);
     }
@@ -675,7 +678,10 @@ export default function Program() {
     //console.log(selectedProgramTimesData);
   }, [selectedClassData, allTimesData, allCourseData, selectedProgramData, selectedProgramTimesData]);
 
-  const [isAllCoursesSelected, setIsAllCoursesSelected] = useState(true);
+  const tabSelect = (boolean) => {
+    setIsAllCoursesSelected(boolean);
+    setIsPageLoaded(false);
+  };
 
   if (!user) {
     return <div>Loading user data...</div>;
@@ -688,35 +694,42 @@ export default function Program() {
         <div className=" flex w-full cursor-pointer justify-center">
           <div
             className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-metallic-gold" : "bg-gold"}`}
-            onClick={() => setIsAllCoursesSelected(true)}
-          >All Courses</div>
+            onClick={() => tabSelect(true)}
+          >All Course Programs</div>
           <div
             className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-gold" : "bg-metallic-gold"}`}
-            onClick={() => setIsAllCoursesSelected(false)}
-          >Single Course</div>
+            onClick={() => tabSelect(false)}
+          >Single Course Programs</div>
         </div>
 
         <div className="w-3/4 p-5 m-auto">
-          <div className="flex items-center">
-            <h1>
-              <strong>Select Course:</strong>
-            </h1>
-            <select
-              className="border border-light-gray rounded ml-2"
-              id="course-dropdown"
-              value={selectedCourseId}
-              onChange={(e) => handleCourseChange(e)}
-            >
-              <option key={-1} value="-1">
-                Select...
-              </option>
-              {allCourseData.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.class_name}
-                </option>
-              ))}
-            </select>
-            <div className="flex flex-row items-center ml-5">
+          <div className="flex justify-between">
+            <div className='ml-10'>
+              {!isAllCoursesSelected && (
+                <div className='flex'>
+                  <h1>
+                    <strong>Select Course:</strong>
+                  </h1>
+                  <select
+                    className="border border-light-gray rounded ml-2"
+                    id="course-dropdown"
+                    value={selectedCourseId}
+                    onChange={(e) => handleCourseChange(e)}
+                  >
+                    <option key={-1} value="-1">
+                      Select...
+                    </option>
+                    {allCourseData.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.class_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center mr-10">
               <h1>
                 <strong>Select Program type:</strong>
               </h1>
@@ -736,7 +749,7 @@ export default function Program() {
               </select>
               <button
                 className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4"
-                onClick={createProgramType}
+                onClick={() => setCreateProgramTypePopup(!isCreateProgramTypePopup)}
               >
                 Create Program Type
               </button>
@@ -749,27 +762,27 @@ export default function Program() {
           </div>
         </div>
 
-        
+
         <div className="flex flex-col w-3/4 px-5 m-auto">
           <div className='py-5 border border-light-gray rounded-md shadow-md'>
             <div className="relative">
-            <button className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 ${!isProgramSelected ? "opacity-50" : ""}`} disabled={!isProgramSelected}>
-              Auto Generate Details
-            </button>
-            <button className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 ${!isProgramSelected ? "opacity-50" : ""}`} onClick={handleDeleteProgramType} disabled={!isProgramSelected}>
-              Delete Program
-            </button>
+              <button className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 ${!isProgramSelected ? "opacity-50" : ""}`} disabled={!isProgramSelected}>
+                Auto Generate Details
+              </button>
+              <button className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 ${!isProgramSelected ? "opacity-50" : ""}`} onClick={handleDeleteProgramType} disabled={!isProgramSelected}>
+                Delete Program
+              </button>
             </div>
             <h2 className="pb-10 text-center font-bold text-2xl">
               Class Availability
             </h2>
 
-            
+
             <div className="flex flex-col">
               <div className="w-3/4 m-auto">
-              <div className='flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5'>
+                <div className='flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5'>
                   <div>
-                      <label className='font-bold'>Program Description &nbsp;</label>
+                    <label className='font-bold'>Program Description &nbsp;</label>
                     <Tooltip text="Description of the program type related to meetings for a class.">
                       <span>ⓘ</span>
                     </Tooltip>
@@ -935,28 +948,28 @@ export default function Program() {
           </div>
         </div>
 
-       
-        
-        
+
+
+
         <div className='w-3/4 m-auto'>
-        
+
         </div>
         {changesMade && (
-              <div className="flex flex-row justify-end my-5">
-                <button
-                  className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-                  onClick={handleSaveChanges}
-                >
-                  Save Class Changes
-                </button>
-                <button
-                  className="bg-purple text-white rounded-md p-2 hover:text-gold"
-                  onClick={handleCancelChanges}
-                >
-                  Discard Class Changes
-                </button>
-              </div>
-            )}
+          <div className="flex flex-row justify-end my-5">
+            <button
+              className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
+              onClick={handleSaveChanges}
+            >
+              Save Class Changes
+            </button>
+            <button
+              className="bg-purple text-white rounded-md p-2 hover:text-gold"
+              onClick={handleCancelChanges}
+            >
+              Discard Class Changes
+            </button>
+          </div>
+        )}
       </div>
 
       {isPopUpVisible && (
@@ -972,8 +985,14 @@ export default function Program() {
             program_name={selectedProgramData.type}
           />
         </div>
-   
       )}
+
+      {isCreateProgramTypePopup && (
+        <div className='absolute inset-0 z-10'>
+          <CreateProgramTypePopup onClose={() => setCreateProgramTypePopup(false)} />
+        </div>
+      )}
+
       {/* Empty Space at bottom of webpage */}
       <div className="p-10"></div>
     </div>
