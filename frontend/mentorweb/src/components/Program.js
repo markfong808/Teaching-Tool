@@ -24,7 +24,7 @@ export default function Program() {
   const [resetOfficeHoursTable, setResetOfficeHoursTable] = useState(false);
   const [loadLocRec, setLocRec] = useState(false);
   const [post, setPost] = useState(false);
-  const [isCourseSelected, setIsCourseSelected] = useState(false);
+  const [isCourseSelected, setIsCourseSelected] = useState(true);
   const [isProgramSelected, setIsProgramSelected] = useState(false);
   const [locationChecker, setLocationChecker] = useState(false);
   const [timeChecker, setTimeChecker] = useState(false);
@@ -34,7 +34,7 @@ export default function Program() {
 
   // Class Data Variables
   const [programName, setProgramName] = useState("");
-  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedCourseId, setSelectedCourseId] = useState('-2');
   const [selectedProgramId, setSelectedProgramId] = useState('');
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedClassData, setSelectedClassData] = useState({
@@ -82,7 +82,7 @@ export default function Program() {
     if (user.account_type !== "mentor") return;
 
     try {
-      const response = await fetch(`/mentor/courses?type=${String(isAllCoursesSelected)}`, {
+      const response = await fetch(`/mentor/courses`, {
         credentials: 'include',
       });
 
@@ -281,7 +281,7 @@ export default function Program() {
 
     setSelectedProgramId(-1);
     updateProgramInfo(-1);
-    //fetchSelectedProgramTimesData();
+
     setSelectedProgramTimesData({});
 
     // update timesData to selectedCourseId
@@ -332,6 +332,12 @@ export default function Program() {
     if (selectedCourse) {
       // Update selectedClassData with selectedCourse.id
       setSelectedClassData(selectedCourse);
+    } else {
+      setSelectedClassData({
+        id: '',
+        class_name: '',
+        programs: [],
+      });
     }
   };
 
@@ -587,6 +593,15 @@ export default function Program() {
     }
   };
 
+  const tabSelect = (boolean) => {
+    setIsAllCoursesSelected(boolean);
+    if (boolean) {
+      handleCourseChange({target: {value: "-2"}});
+    } else {
+      handleCourseChange({target: {value: "-1"}});
+    }
+  };
+
 
 
   ////////////////////////////////////////////////////////
@@ -623,10 +638,11 @@ export default function Program() {
     if (selectedCourseId && selectedCourseId !== '-1') {
       updateCourseInfo(selectedCourseId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourseId, allCourseData]);
 
   useEffect(() => {
-    if (selectedCourseId !== '' && selectedCourseId !== -1) {
+    if ((selectedCourseId !== '' && selectedCourseId !== -1) || selectedCourseId === -2) {
       setIsCourseSelected(true);
     } else {
       setIsCourseSelected(false);
@@ -677,11 +693,6 @@ export default function Program() {
     //console.log(selectedProgramData);
     //console.log(selectedProgramTimesData);
   }, [selectedClassData, allTimesData, allCourseData, selectedProgramData, selectedProgramTimesData]);
-
-  const tabSelect = (boolean) => {
-    setIsAllCoursesSelected(boolean);
-    setIsPageLoaded(false);
-  };
 
   if (!user) {
     return <div>Loading user data...</div>;
@@ -753,11 +764,6 @@ export default function Program() {
               >
                 Create Program Type
               </button>
-              <input
-                className="border border-light-gray ml-2"
-                value={programName}
-                onChange={(e) => setProgramName(e.target.value)}
-              />
             </div>
           </div>
         </div>
@@ -945,31 +951,25 @@ export default function Program() {
                 </div>
               )}
             </div>
+            {changesMade && (
+              <div className="flex flex-row justify-end my-5 mr-6">
+                <button
+                  className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
+                  onClick={handleSaveChanges}
+                >
+                  Save Class Changes
+                </button>
+                <button
+                  className="bg-purple text-white rounded-md p-2 hover:text-gold"
+                  onClick={handleCancelChanges}
+                >
+                  Discard Class Changes
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-
-
-
-        <div className='w-3/4 m-auto'>
-
-        </div>
-        {changesMade && (
-          <div className="flex flex-row justify-end my-5">
-            <button
-              className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-              onClick={handleSaveChanges}
-            >
-              Save Class Changes
-            </button>
-            <button
-              className="bg-purple text-white rounded-md p-2 hover:text-gold"
-              onClick={handleCancelChanges}
-            >
-              Discard Class Changes
-            </button>
-          </div>
-        )}
       </div>
 
       {isPopUpVisible && (

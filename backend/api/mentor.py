@@ -806,9 +806,7 @@ def delete_comment(appointment_id, comment_id):
 def get_courses():
     try:
         user_id = get_jwt_identity()
-        dataType = request.args.get('type')
         mentor = User.query.get(user_id)
-        print(dataType)
         
         if mentor:
             all_mentor_courses = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).filter_by(user_id=user_id).all()
