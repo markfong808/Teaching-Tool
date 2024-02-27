@@ -438,33 +438,6 @@ export default function Program() {
     }));
   };
 
-  const createProgramType = async () => {
-    try {
-      const payload = {
-        name: programName,
-        course_id: selectedCourseId
-      };
-
-      const response = await fetch(`/course/add-program`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": csrfToken,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.status === 400) {
-        window.alert("Program Type already exists.");
-      }
-
-      setIsPageLoaded(false); // flag to reload page to add new program to dropdown selector
-    } catch (error) {
-      console.error("Error creating program:", error);
-    }
-  };
-
   // update timesData based on user entries
   const handleTimesChange = (e) => {
     if (!e) {
@@ -989,7 +962,10 @@ export default function Program() {
 
       {isCreateProgramTypePopup && (
         <div className='absolute inset-0 z-10'>
-          <CreateProgramTypePopup onClose={() => setCreateProgramTypePopup(false)} />
+          <CreateProgramTypePopup onClose={() => setCreateProgramTypePopup(false)}
+          courseId={selectedCourseId}
+          loadFunction={setIsPageLoaded}
+          />
         </div>
       )}
 
