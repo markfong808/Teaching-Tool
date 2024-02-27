@@ -6,7 +6,7 @@ export default function Navbar() {
     const { user } = useContext(UserContext);
 
     return (
-        <nav className="bg-purple text-white flex flex-row justify-between align-middle items-stretch gap-8 px-4 py-1 mb-8">
+        <nav className="bg-purple text-white flex flex-row justify-between align-middle items-stretch gap-8 px-4 py-1">
             <Link to="/" className="text-4xl hover:text-gold font-headlines">
                 UWTechPrep
             </Link>

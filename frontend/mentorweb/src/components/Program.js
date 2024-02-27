@@ -675,6 +675,7 @@ export default function Program() {
     //console.log(selectedProgramTimesData);
   }, [selectedClassData, allTimesData, allCourseData, selectedProgramData, selectedProgramTimesData]);
 
+  const [isAllCoursesSelected, setIsAllCoursesSelected] = useState(true);
 
   if (!user) {
     return <div>Loading user data...</div>;
@@ -684,6 +685,17 @@ export default function Program() {
   return (
     <div>
       <div className="flex flex-col m-auto">
+        <div className=" flex w-full cursor-pointer justify-center">
+          <div
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-metallic-gold" : "bg-gold"}`}
+            onClick={() => setIsAllCoursesSelected(true)}
+          >All Courses</div>
+          <div
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-gold" : "bg-metallic-gold"}`}
+            onClick={() => setIsAllCoursesSelected(false)}
+          >Single Course</div>
+        </div>
+
         <div className="w-3/4 p-5 m-auto">
           <div className="flex items-center">
             <h1>
