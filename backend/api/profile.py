@@ -46,13 +46,19 @@ def get_user_profile():
 def get_instructor_info(instructor_id):
     user = User.query.get(instructor_id)
     
-    if user.account_type == "mentor":
+
+    if user:
         return jsonify({
             'id': user.id,
             'email': user.email,
+            'first_name': user.first_name,
             'last_name': user.last_name,
             'title': user.title,
             'pronouns': user.pronouns,
+            'discord_id': user.discord_id,
+            'meeting_url': user.meeting_url,
+            'account_type': user.account_type,
+            'student_id': user.student_id,
         }), 200
     else:
         return jsonify({'error': 'User does not exist'}), 404
