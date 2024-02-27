@@ -827,99 +827,99 @@ export default function Program() {
                 </div>
               </div>
             </div>
-          </div>
-          <MeetingLocation
-            isClassLocation={false}
-            param={{
-              functionPassed: handleInputChange,
-              loadPageFunction: setLocRec,
-              changesMade: setChangesMade,
-            }}
-            data={{
-              physical_location: selectedProgramData.physical_location,
-              virtual_link: selectedProgramData.virtual_link,
-            }}
-            loadPage={loadLocRec}
-            changes={changesMade}
-            disabled={!isProgramSelected}
-          />
-          <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
-            {user?.account_type === "mentor" && (
-              <div className="w-1/2">
-                <label className="font-bold text-lg">
-                  Auto-Accept Meeting Requests?
-                </label>
-                <br />
-                <label className="ml-2">
-                  Yes
-                  <input
-                    className="mb-3 ml-1"
-                    type="radio"
-                    name="auto_approve_appointments"
-                    value="true"
-                    checked={selectedProgramData.auto_approve_appointments === true}
-                    onChange={handleInputChange}
-                    disabled={!isProgramSelected}
-                  />
-                </label>
-                &nbsp;&nbsp;
-                <label>
-                  No
-                  <input
-                    className="ml-1"
-                    type="radio"
-                    name="auto_approve_appointments"
-                    value="false"
-                    checked={selectedProgramData.auto_approve_appointments === false}
-                    onChange={handleInputChange}
-                    disabled={!isProgramSelected}
-                  />
-                </label>
-              </div>
-            )}
-            {user?.account_type === "mentor" && (
-              <div className="flex flex-col">
-                <h2 className="font-bold text-lg">Set Meeting Limits</h2>
-                <div className="flex flex-row justify-between">
-                  <div className="flex flex-col mr-5">
-                    <label>Daily Max</label>
+            <MeetingLocation
+              isClassLocation={false}
+              param={{
+                functionPassed: handleInputChange,
+                loadPageFunction: setLocRec,
+                changesMade: setChangesMade,
+              }}
+              data={{
+                physical_location: selectedProgramData.physical_location,
+                virtual_link: selectedProgramData.virtual_link,
+              }}
+              loadPage={loadLocRec}
+              changes={changesMade}
+              disabled={!isProgramSelected}
+            />
+            <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
+              {user?.account_type === "mentor" && (
+                <div className="w-1/2">
+                  <label className="font-bold text-lg">
+                    Auto-Accept Meeting Requests?
+                  </label>
+                  <br />
+                  <label className="ml-2">
+                    Yes
                     <input
-                      className="border border-light-gray w-28"
-                      type="number"
-                      name="max_daily_meetings"
-                      min="1"
-                      value={selectedProgramData.max_daily_meetings}
-                      onChange={handleLimitInputChange}
+                      className="mb-3 ml-1"
+                      type="radio"
+                      name="auto_approve_appointments"
+                      value="true"
+                      checked={selectedProgramData.auto_approve_appointments === true}
+                      onChange={handleInputChange}
                       disabled={!isProgramSelected}
                     />
-                  </div>
-                  <div className="flex flex-col mr-5">
-                    <label>Weekly Max</label>
+                  </label>
+                  &nbsp;&nbsp;
+                  <label>
+                    No
                     <input
-                      className="border border-light-gray w-28"
-                      type="number"
-                      name="max_weekly_meetings"
-                      min="1"
-                      value={selectedProgramData.max_weekly_meetings}
-                      onChange={handleLimitInputChange}
+                      className="ml-1"
+                      type="radio"
+                      name="auto_approve_appointments"
+                      value="false"
+                      checked={selectedProgramData.auto_approve_appointments === false}
+                      onChange={handleInputChange}
                       disabled={!isProgramSelected}
                     />
-                  </div>
-                  <div className="flex flex-col">
-                    <label>Total Max</label>
-                    <input
-                      className="border border-light-gray w-28"
-                      type="number"
-                      name="max_monthly_meetings"
-                      min="1"
-                      value={selectedProgramData.max_monthly_meetings}
-                      onChange={handleLimitInputChange}
-                      disabled={!isProgramSelected}
-                    />
+                  </label>
+                </div>
+              )}
+              {user?.account_type === "mentor" && (
+                <div className="flex flex-col">
+                  <h2 className="font-bold text-lg">Set Meeting Limits</h2>
+                  <div className="flex flex-row justify-between">
+                    <div className="flex flex-col mr-5">
+                      <label>Daily Max</label>
+                      <input
+                        className="border border-light-gray w-28"
+                        type="number"
+                        name="max_daily_meetings"
+                        min="1"
+                        value={selectedProgramData.max_daily_meetings}
+                        onChange={handleLimitInputChange}
+                        disabled={!isProgramSelected}
+                      />
+                    </div>
+                    <div className="flex flex-col mr-5">
+                      <label>Weekly Max</label>
+                      <input
+                        className="border border-light-gray w-28"
+                        type="number"
+                        name="max_weekly_meetings"
+                        min="1"
+                        value={selectedProgramData.max_weekly_meetings}
+                        onChange={handleLimitInputChange}
+                        disabled={!isProgramSelected}
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label>Total Max</label>
+                      <input
+                        className="border border-light-gray w-28"
+                        type="number"
+                        name="max_monthly_meetings"
+                        min="1"
+                        value={selectedProgramData.max_monthly_meetings}
+                        onChange={handleLimitInputChange}
+                        disabled={!isProgramSelected}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

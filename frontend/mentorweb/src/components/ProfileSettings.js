@@ -33,7 +33,7 @@ export default function ProfileSettings() {
         }
     }, [formData.pronouns]);
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e) => {  // other: name:pronouns value: user input shit     good to go: pronouns, he/him
         const { name, value } = e.target;
         let newValue = value;
 
@@ -42,27 +42,9 @@ export default function ProfileSettings() {
             return;
         }
 
-        if (name === "pronouns" && newValue === "Other") {
-            setPronounsType("Other");
-            return;
-        }
-
-        if (name === "pronouns" && newValue !== "Other") {
-            setPronounsType(newValue);
-        }
-
-        console.log(newValue);
-        console.log(pronounsType);
-        console.log(pronounsUserInput);
+        if (name === "pronouns" && (newValue === "He/Him "))
         
-
-        if (name === "pronouns" && pronounsType === "Other" && pronounsUserInput !== '') {
-            console.log("Hit");
-            setFormData({ ...formData, [name]: pronounsUserInput });
-        } else {
-            console.log("Miss");
-            setFormData({ ...formData, [name]: newValue });
-        }
+        setFormData({ ...formData, [name]: newValue });
 
 
         // Check if changes were made
