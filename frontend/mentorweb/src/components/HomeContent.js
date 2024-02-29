@@ -2,7 +2,7 @@ import React from "react";
 
 export default function HomeContent() {
     return (
-        <div className="w-2/3 m-auto">
+        <div className="w-2/3 m-auto mt-8">
             <h1 className="text-purple text-center text-4xl font-headlines">Welcome to UWTechPrep!</h1>
             <section>
                 <p>At TechPrep, we connect industry professionals with CS students seeking guidance for technical interviews.

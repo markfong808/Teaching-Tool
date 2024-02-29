@@ -14,6 +14,8 @@ module.exports = {
       'gray': '#D9D9D9',
       'light-gray': '#a8a29e',
       'dark-gray': '#4f4f4f',
+      'popup-gray': '#f0f0f0',
+      'calendar-popup-gray': '#f5f5f5',
       'blue': '#0081E3'
     },
     fontFamily: {

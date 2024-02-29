@@ -23,12 +23,17 @@ export default function ProfileSettings() {
 
     useEffect(() => {
         if (formData.pronouns !== "Undefined" && formData.pronouns !== "He/Him" && formData.pronouns !== "She/Her" && formData.pronouns !== "They/Them") {
+            setPronounsType("Other");
             setPronounsUserInput(formData.pronouns);
         } else { // could have bug
             setPronounsType(formData.pronouns);
             setPronounsUserInput('');
         }
     }, [formData.pronouns]);
+
+    useEffect(() => {
+        console.log(formData.pronouns);
+    },[formData.pronouns]);
 
 
     const handleInputChange = (e) => {
@@ -132,7 +137,7 @@ export default function ProfileSettings() {
 
 
     return (
-        <div className="flex flex-col w-2/3 m-auto">
+        <div className="flex flex-col w-2/3 m-auto mt-8">
             <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
                 <h2 className='pb-10 text-center font-bold text-2xl'>Account Settings</h2>
                 <div className="flex flex-col">
@@ -186,7 +191,7 @@ export default function ProfileSettings() {
 
 
                     {allProfileData.account_type === 'mentor' && (
-                        <div className='mt-3'>
+                        <div className='mt-3 mb-3'>
                             <label className='font-bold inline-block'>Title</label>
                             <select
                                 className="border border-light-gray rounded ml-2"

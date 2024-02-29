@@ -70,7 +70,7 @@ def get_user_data(user_id):
     if user:
         return {
             'id': user.id,
-            'name': user.first_name,
+            'first_name': user.first_name,
             'pronouns': user.pronouns,
             'title': user.title,
             'discord_id': user.discord_id,
@@ -99,13 +99,11 @@ def update_profile():
             return jsonify({"error": "User doesn't exist"}), 404
 
         # Update fields if they are provided in the request
-        if 'name' in data:
-            user.first_name = data['name']
+        if 'first_name' in data:
+            user.first_name = data['first_name']
         if 'pronouns' in data:
-            print(user.pronouns)
             user.pronouns = data['pronouns']
         if 'title' in data:
-            print(user.title)
             user.title = data['title']
         if 'discord_id' in data:
             user.discord_id = data['discord_id']

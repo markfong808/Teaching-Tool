@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 const CourseInformationPopup = ({onClose, courseData, instructorData}) => {
     return (
-        <div className="fixed top-1/2 left-1/2  transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md p-6 relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onClose}>Close</button>
+        <div className="fixed top-1/2 left-1/2 w-5/12 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative">
+            <button className="absolute top-0 right-2 text-gray-500 hover:text-gray-700 cursor-pointer font-bold" onClick={onClose}>x</button>
             <h2 className="pb-10 text-center font-bold text-4xl">{courseData.class_name}</h2>
             <div className="grid grid-cols-2 font-bold">
                 <div className="flex flex-col">
