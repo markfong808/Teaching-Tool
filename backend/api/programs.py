@@ -19,9 +19,9 @@ def is_mentor(user_id):
         return False
     return True
 
-@programs.route('/programs', methods=['GET'])
-def get_programs():
-    programs = ProgramType.query.all()
+@programs.route('/programs/<course_id>', methods=['GET'])
+def get_programs(course_id):
+    programs = ProgramType.query.filter_by(class_id=course_id).all()
     return jsonify([{
         "id": program.id,
         "type": program.type,

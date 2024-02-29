@@ -1,24 +1,25 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { UserContext } from '../context/UserContext';
-import { getCookie } from '../utils/GetCookie';
-import ScheduleMeetingPopup from './ScheduleMeetingPopup.js';
-import MeetingInformation from './MeetingInformation.js';
-import CourseInformationPopup from './CourseInformationPopup.js';
-import DropinsTable from './DropinsTable.js';
+import React, { useState, useContext, useEffect } from "react";
+import { UserContext } from "../context/UserContext";
+import { getCookie } from "../utils/GetCookie";
+import ScheduleMeetingPopup from "./ScheduleMeetingPopup.js";
+import MeetingInformation from "./MeetingInformation.js";
+import CourseInformationPopup from "./CourseInformationPopup.js";
+import DropinsTable from "./DropinsTable.js";
 
 export default function Courses() {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
   const { user, setUser } = useContext(UserContext);
   const [isPopUpVisible, setPopUpVisible] = useState(false);
-  const [isClassInformationPopupVisible, setClassInformationPopupVisible] = useState(false);
+  const [isClassInformationPopupVisible, setClassInformationPopupVisible] =
+    useState(false);
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
 
   // Local Variables
-  const [selectedCourseId, setSelectedCourseId] = useState('-1');
+  const [selectedCourseId, setSelectedCourseId] = useState("-1");
   const [allCourseData, setAllCourseData] = useState([]);
   const [instructorData, setInstructorData] = useState({
     id: "",
@@ -31,18 +32,14 @@ export default function Courses() {
   // Class Data Variables
   const [classData, setClassData] = useState({});
 
-
-
   ////////////////////////////////////////////////////////
   //               Fetch Data Functions                 //
   ////////////////////////////////////////////////////////
 
   // fetch all courses the student is associated with from database
   const fetchCourseList = async () => {
-    
     if (user.account_type !== "student") return;
 
-    
     try {
       const response = await fetch(`/student/courses`, {
         credentials: "include",
@@ -52,7 +49,6 @@ export default function Courses() {
 
       // set courses a student is enrolled in with fetched data
       setAllCourseData(fetchedCourseList);
-
     } catch (error) {
       console.error("Error fetching course list:", error);
     }
@@ -77,8 +73,6 @@ export default function Courses() {
     }
   };
 
-
-
   ////////////////////////////////////////////////////////
   //                 Update Function                    //
   ////////////////////////////////////////////////////////
@@ -89,7 +83,9 @@ export default function Courses() {
       return;
     }
 
-    const selectedCourse = allCourseData.find((course) => course.id === courseId);
+    const selectedCourse = allCourseData.find(
+      (course) => course.id === courseId
+    );
 
     if (selectedCourse) {
       // update classData with selectedCourse
@@ -99,8 +95,6 @@ export default function Courses() {
       fetchInstructorInfo(selectedCourse.teacher_id);
     }
   };
-
-
 
   ////////////////////////////////////////////////////////
   //               Local Data Function                  //
@@ -137,7 +131,6 @@ export default function Courses() {
     setReloadAppointmentsTable(true);
   };
 
-  
   ////////////////////////////////////////////////////////
   //               UseEffect Function                   //
   ////////////////////////////////////////////////////////
@@ -150,7 +143,6 @@ export default function Courses() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
 
- 
   // HTML for webpage
   return (
     <div>
@@ -158,7 +150,7 @@ export default function Courses() {
         <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
           {allCourseData.map((course) => (
             <button
-              key={course.id} 
+              key={course.id}
               className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
               onClick={() => handleButtonClick(course)}
             >
@@ -167,51 +159,66 @@ export default function Courses() {
           ))}
         </div>
 
-        <div className='w-2/3'>
-            <h1>
-              <strong>Select Course:</strong>
-            </h1>
-            <select
-              className="border border-light-gray rounded ml-2"
-              id="course-dropdown"
-              value={selectedCourseId}
-              onChange={(e) => handleCourseChange(e)}
-            >
-              <option key={-1} value="-1">
-                All Courses
+        <div className="w-2/3">
+          <h1>
+            <strong>Select Course:</strong>
+          </h1>
+          <select
+            className="border border-light-gray rounded ml-2"
+            id="course-dropdown"
+            value={selectedCourseId}
+            onChange={(e) => handleCourseChange(e)}
+          >
+            <option key={-1} value="-1">
+              All Courses
+            </option>
+            {allCourseData.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.class_name}
               </option>
-              {allCourseData.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.class_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-          <DropinsTable courseId={selectedCourseId}/>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-          <MeetingInformation courseId={selectedCourseId} reloadTable={reloadAppointmentsTable} param={ { resetLoad: setReloadAppointmentsTable } }/>
+          <DropinsTable courseId={selectedCourseId} />
+        </div>
+
+        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+          <MeetingInformation
+            courseId={selectedCourseId}
+            reloadTable={reloadAppointmentsTable}
+            param={{ resetLoad: setReloadAppointmentsTable }}
+          />
         </div>
 
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
-          <button className="bg-purple p-2 rounded-md text-white hover:text-gold" onClick={() => setPopUpVisible(!isPopUpVisible)}> Schedule New Meeting</button>
+          <button
+            className="bg-purple p-2 rounded-md text-white hover:text-gold"
+            onClick={() => setPopUpVisible(!isPopUpVisible)}
+          >
+            {" "}
+            Schedule New Meeting
+          </button>
         </div>
-
-        
       </div>
 
       {isClassInformationPopupVisible && (
-          <div className='fixed inset-0'>
-            <CourseInformationPopup onClose={() => setClassInformationPopupVisible(false)} courseData={classData} instructorData={instructorData} />
-          </div>
-        )}
-          
+        <div className="fixed inset-0">
+          <CourseInformationPopup
+            onClose={() => setClassInformationPopupVisible(false)}
+            courseData={classData}
+            instructorData={instructorData}
+          />
+        </div>
+      )}
+
       {isPopUpVisible && (
-        <div className='fixed inset-0'>
-          <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)} param={ { reloadAppointments: reloadAppointments } }/>
+        <div className="fixed inset-0">
+          <ScheduleMeetingPopup
+            onClose={() => setPopUpVisible(false)}
+            param={{ reloadAppointments: reloadAppointments }}
+          />
         </div>
       )}
       {/* Empty Space at bottom of webpage */}
