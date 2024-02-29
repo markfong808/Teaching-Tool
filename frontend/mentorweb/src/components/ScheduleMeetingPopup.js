@@ -272,7 +272,7 @@ const ScheduleMeetingPopup = ({ onClose, courses, param }) => {
 
     return (
         <div className={isPopupGrown ? "fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative" : "fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative"}>
-            <button className="absolute top-0 right-2 text-gray-500 hover:text-gray-700 cursor-pointer font-bold" onClick={onClose}>x</button>
+            <button className="absolute top-1 right-1 cursor-pointer fas fa-times" onClick={onClose}></button>
             <div className="flex flex-col p-5 m-auto">
                 <div className="flex items-center">
                     <h1 className="whitespace-nowrap"><strong>Select Course:</strong></h1>

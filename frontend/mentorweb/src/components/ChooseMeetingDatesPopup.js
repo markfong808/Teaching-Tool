@@ -87,7 +87,7 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_locatio
 
     return (
         <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-calendar-popup-gray border border-gray-300 shadow-md pb-7 relative">
-            <button className="absolute top-0 right-2 text-gray-500 hover:text-gray-700 cursor-pointer font-bold" onClick={onClose}>x</button>
+            <button className="absolute top-1 right-1 cursor-pointer fas fa-times" onClick={onClose}></button>
             <div className="flex flex-row py-5 m-auto">
                 <div className='w-2/3 m-auto font-body'>
                     <div id="calendar-container">
