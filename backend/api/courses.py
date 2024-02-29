@@ -246,26 +246,33 @@ def add_user_to_course():
 def add_new_program():
     try:
         data = request.get_json()
+        user_id = get_jwt_identity()
+        instructor = User.query.get(user_id)
 
-        if data:
-            name = data.get('name')
-            course_id = data.get('course_id')
+        if instructor:
+            if data:
+                name = data.get('name')
+                course_id = data.get('course_id')
+                isDropins = data.get('isDropins')
 
-            program = ProgramType.query.filter(and_(ProgramType.type == name, ProgramType.class_id == course_id)).first()
+                program = ProgramType.query.filter(and_(ProgramType.type == name, ProgramType.class_id == course_id)).first()
 
-            if program:
-                return jsonify({"error": "Program type already exists"}), 400
+                if program:
+                    return jsonify({"error": "Program type already exists"}), 400
+                else:
+                    new_details = ProgramType(
+                        type=name,
+                        class_id=course_id,
+                        instructor_id=user_id,
+                        isDropins=isDropins
+                    )
+                    db.session.add(new_details)
+                    db.session.commit()
+                    
+                    return jsonify({"message": "Added to program successfully"}), 200
             else:
-                new_details = ProgramType(
-                    type=name,
-                    class_id=course_id,
-                )
-                db.session.add(new_details)
-                db.session.commit()
-                
-                return jsonify({"message": "Added to program successfully"}), 200
+                return jsonify({"error": "Insufficient details to add program to course"}), 404
         else:
-            return jsonify({"error": "Insufficient details to add program to course"}), 404
+            return jsonify({"error": "Instructor not found"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500

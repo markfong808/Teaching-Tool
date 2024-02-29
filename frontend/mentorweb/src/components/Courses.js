@@ -4,6 +4,7 @@ import { getCookie } from '../utils/GetCookie';
 import ScheduleMeetingPopup from './ScheduleMeetingPopup.js';
 import MeetingInformation from './MeetingInformation.js';
 import CourseInformationPopup from './CourseInformationPopup.js';
+import DropinsTable from './DropinsTable.js';
 
 export default function Courses() {
   // General Variables
@@ -14,6 +15,7 @@ export default function Courses() {
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
 
   // Local Variables
   const [selectedCourseId, setSelectedCourseId] = useState('-1');
@@ -104,13 +106,6 @@ export default function Courses() {
   //               Local Data Function                  //
   ////////////////////////////////////////////////////////
 
-  // called when student chooses a course from drop down menu
- // const handleCourseChange = (e) => {
-  //  const selectedCourse = parseInt(e.target.value);
-  //  setSelectedCourseId(selectedCourse);
-  //  updateCourseInfo(selectedCourse);
-  // };
-
   // called when a student clicks on one of the courses they're registered in
   const handleButtonClick = (course) => {
     updateCourseInfo(course.id);
@@ -138,6 +133,10 @@ export default function Courses() {
     updateCourseInfo(selectedCourse);
   };
 
+  const reloadAppointments = () => {
+    setReloadAppointmentsTable(true);
+  };
+
   
   ////////////////////////////////////////////////////////
   //               UseEffect Function                   //
@@ -153,7 +152,6 @@ export default function Courses() {
 
  
   // HTML for webpage
-  // will change soon***
   return (
     <div>
       <div className="flex flex-col m-auto relative justify-center items-center">
@@ -168,12 +166,6 @@ export default function Courses() {
             </button>
           ))}
         </div>
-
-        {isClassInformationPopupVisible && (
-          <div className='absolute mt-40'>
-            <CourseInformationPopup onClose={() => setClassInformationPopupVisible(false)} courseData={classData} instructorData={instructorData} />
-          </div>
-        )}
 
         <div className='w-2/3'>
             <h1>
@@ -197,7 +189,11 @@ export default function Courses() {
           </div>
 
         <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-          <MeetingInformation courseId={selectedCourseId}/>
+          <DropinsTable courseId={selectedCourseId}/>
+        </div>
+
+        <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
+          <MeetingInformation courseId={selectedCourseId} reloadTable={reloadAppointmentsTable} param={ { resetLoad: setReloadAppointmentsTable } }/>
         </div>
 
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
@@ -206,9 +202,17 @@ export default function Courses() {
 
         
       </div>
+
+      {isClassInformationPopupVisible && (
+          <div className='absolute mt-40'>
+            <CourseInformationPopup onClose={() => setClassInformationPopupVisible(false)} courseData={classData} instructorData={instructorData} />
+          </div>
+        )}
           
       {isPopUpVisible && (
-        <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)}/>
+        <div className='fixed inset-0'>
+          <ScheduleMeetingPopup onClose={() => setPopUpVisible(false)} param={ { reloadAppointments: reloadAppointments } }/>
+        </div>
       )}
       {/* Empty Space at bottom of webpage */}
       <div className="p-10"></div>

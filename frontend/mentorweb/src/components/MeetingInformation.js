@@ -5,7 +5,7 @@ import { getCookie } from "../utils/GetCookie.js"
 import { Tooltip } from "../components/Tooltip.js";
 import Comment from "../components/Comment.js";
 
-export default function MeetingInformation({ courseId }) {
+export default function MeetingInformation({ courseId, reloadTable, param }) {
     const [data, setData] = useState([]);
     const [activeTab, setActiveTab] = useState('upcoming');
     const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -23,6 +23,8 @@ export default function MeetingInformation({ courseId }) {
     });
     const [changesMade, setChangesMade] = useState(false);
     const [showTable, setShowTable] = useState(true);
+    const [sortedBy, sortBy] = useState('Type');
+    const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
 
 
     useEffect(() => {
@@ -49,12 +51,16 @@ export default function MeetingInformation({ courseId }) {
             const apiData = await response.json();
             const key = user.account_type === "mentor" ? 'mentor_appointments' : 'student_appointments';
 
-            // Sort the meetings based on the date and start time
+            // Sort the appointment type
             const sortedData = (apiData[key] || []).sort((a, b) => {
-                // Convert date and time to Date objects for comparison
-                const dateTimeA = new Date(`${a.date}T${a.start_time}`);
-                const dateTimeB = new Date(`${b.date}T${b.start_time}`);
-                return dateTimeA - dateTimeB; // This will sort in ascending order
+                const dateComparison = new Date(a.date) - new Date(b.date);
+                if (dateComparison === 0) {
+                    return (
+                        new Date(`${a.date}T${a.start_time}`) -
+                        new Date(`${b.date}T${b.start_time}`)
+                    );
+                }
+                return dateComparison;
             });
 
             setData(sortedData);
@@ -67,7 +73,7 @@ export default function MeetingInformation({ courseId }) {
         fetchMeetings();
         fetchProgramTypeDetails();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, activeTab]);
+    }, [user, activeTab, reloadTable]);
 
     useEffect(() => {
         if (courseId !== null || courseId !== '') {
@@ -534,6 +540,43 @@ export default function MeetingInformation({ courseId }) {
         );
     };
 
+    const sortTable = (sort) => {
+        const daysOfWeekOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+        const sortedData = [...data].sort((a, b) => {
+            switch (sort) {
+                case 'Name':
+                    return a.type.localeCompare(b.type);
+                case 'class_name':
+                    return a.class_name.localeCompare(b.class_name);
+                case 'Day':
+                    return daysOfWeekOrder.indexOf(getDayFromDate(a.date)) - daysOfWeekOrder.indexOf(getDayFromDate(b.date));
+                case 'Date':
+                    const dateComparison = new Date(a.date) - new Date(b.date);
+                    if (dateComparison === 0) {
+                        return (
+                            new Date(`${a.date}T${a.start_time}`) -
+                            new Date(`${b.date}T${b.start_time}`)
+                        );
+                    }
+                    return dateComparison;
+                case 'Location':
+                    return a.physical_location.localeCompare(b.physical_location);
+                case 'Status':
+                    return a.status.localeCompare(b.status);
+                default:
+                    return 0;
+            }
+        });
+      
+        setData(sortedData);
+    };
+
+    useEffect(() => {
+        sortTable(sortedBy);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortedBy]);
+
     // Display meeting list
     return (
         <div id="content-container" className="flex flex-col w-full m-auto items-center">
@@ -560,14 +603,14 @@ export default function MeetingInformation({ courseId }) {
                             <>
                                 <thead className="bg-purple text-white">
                                     <tr>
-                                        <th className="border-r w-14%">Type</th>
-                                        <th className="border-r w-14%">Class Name</th>
-                                        <th className="border-r w-8%">Day</th>
-                                        <th className="border-r w-12%">Date</th>
-                                        <th className="border-r w-12%">Time (PST)</th>
-                                        <th className="border-r w-12%">Physical Location</th>
+                                        <th className="border-r w-14% hover:bg-gold" onClick={() => sortBy("Name")}>Type</th>
+                                        <th className="border-r w-14% cursor-pointer hover:bg-gold" onClick={() => sortBy("class_name")}>Class Name</th>
+                                        <th className="border-r w-8% hover:bg-gold" onClick={() => sortBy("Day")}>Day</th>
+                                        <th className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? 'bg-gold' : '' }`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Date</th>
+                                        <th className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? 'bg-gold' : '' }`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Time (PST)</th>
+                                        <th className="border-r w-12% hover:bg-gold" onClick={() => sortBy("Location")}>Physical Location</th>
                                         <th className="border-r w-14%">Meeting URL</th>
-                                        <th className="w-6%">Status</th>
+                                        <th className="w-6% hover:bg-gold" onClick={() => sortBy("Status")}>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>

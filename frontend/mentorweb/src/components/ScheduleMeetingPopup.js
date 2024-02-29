@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { getCookie } from '../utils/GetCookie';
 import Appointment from './Appointment';
 
-const ScheduleMeetingPopup = ({ onClose, courses }) => {
+const ScheduleMeetingPopup = ({ onClose, courses, param }) => {
     // General Variables
     const { user } = useContext(UserContext);
     const [showCalendar, setShowCalendar] = useState(false);
@@ -20,6 +20,7 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
     const [courseId, setCourseId] = useState('');
     const [selectedTimeDuration, setSelectedTimeDuration] = useState(0);
     const [selectedProgramId, setSelectedProgramId] = useState('');
+    const [isPopupGrown, setPopupGrown] = useState(false);
 
     const [selectedClassData, setSelectedClassData] = useState({
         id: '',
@@ -39,7 +40,7 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
         if (user.account_type !== "student") return;
       
         try {
-          const response = await fetch(`/mentor/courses`, {
+          const response = await fetch(`/student/get/appointment-programs`, {
             credentials: 'include',
           });
       
@@ -112,7 +113,7 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
             const csrfToken = getCookie('csrf_access_token');
             let isHandledError = false; // flag to indicate if the error has been handled
 
-            fetch(`/student/appointments/reserve/${appointmentID}`, {
+            fetch(`/student/appointments/reserve/${appointmentID}/${selectedCourseId}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -139,6 +140,8 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
                     if (data) {
                         setAppointmentStatus(data.status)
                         setBookingConfirmed(true);
+                        // reload page
+                        param.reloadAppointments();
                     }
                 })
                 .catch(error => {
@@ -189,6 +192,12 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
         updateCourseInfo(selectedCourse);
 
         setIsCourseVisible(true);
+
+        if (isPopupGrown && showCalendar) {
+            setSelectedProgramId('');
+            setShowCalendar(false);
+            setPopupGrown(false);
+        }
     };
 
     const handleProgramChange = (e) => {
@@ -205,8 +214,11 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
         // change selectedCourseId
         setSelectedProgramId(selectedProgram);
         if (e.target.value === "") {
+            setSelectedProgramId('');
+            setPopupGrown(false);
             setShowCalendar(false);
         } else {
+            setPopupGrown(true);
             setShowCalendar(true);
         }
         setSelectedTimeslot(null); // Reset the selected timeslot when changing type
@@ -242,6 +254,10 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCourseId]);
 
+    useEffect(() => {
+        //console.log(allCourseData);
+    }, [allCourseData]);
+
     // If booking is confirmed, render the Appointment component, otherwise render the booking UI
     if (bookingConfirmed) {
         return <Appointment
@@ -255,18 +271,18 @@ const ScheduleMeetingPopup = ({ onClose, courses }) => {
     }
 
     return (
-        <div className="fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md p-6 relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onClose}>Close</button>
+        <div className={isPopupGrown ? "fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative" : "fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative"}>
+            <button className="absolute top-0 right-2 text-gray-500 hover:text-gray-700 cursor-pointer font-bold" onClick={onClose}>x</button>
             <div className="flex flex-col p-5 m-auto">
                 <div className="flex items-center">
-                    <h1 className="whitespace-nowrap"><strong>Select Course:</strong> </h1>
+                    <h1 className="whitespace-nowrap"><strong>Select Course:</strong></h1>
                     <select
                         className="border border-light-gray rounded ml-2 mt-1"
                         id="course-dropdown"
                         value={selectedCourseId}
                         onChange={(e) => handleCourseChange(e)}
                     >
-                        <option key={-1} value="">Select...</option>
+                        <option key={-1} value="-1">Select...</option>
                         {allCourseData.map((course) => (
                             <option key={course.id} value={course.id}>
                                 {course.class_name}

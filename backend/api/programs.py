@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy import and_
 from .models import ProgramType, User, Appointment, Availability, ClassTimes
 from . import db
 
@@ -104,7 +105,6 @@ def delete_program(program_id):
 def set_program_details():
     try:
         obj = request.get_json()
-        print(obj)
         data = obj.get('data')
         program_id = data.get('id')  
         class_id = obj.get('course_id')
@@ -113,10 +113,21 @@ def set_program_details():
         duration = data.get('duration')
         physical_location = data.get('physical_location')
         virtual_link = data.get('virtual_link')
-        auto_approve_appointments = data.get('auto_approve_appointments')
-        max_daily_meetings = data.get('max_daily_meetings')
-        max_weekly_meetings = data.get('max_weekly_meetings')
-        max_monthly_meetings = data.get('max_monthly_meetings')
+        isDropins = data.get('isDropins')
+
+        if isDropins:
+            auto_approve_appointments = None
+            max_daily_meetings = None
+            max_weekly_meetings = None
+            max_monthly_meetings = None
+        else:
+            auto_approve_appointments = data.get('auto_approve_appointments')
+            max_daily_meetings = data.get('max_daily_meetings')
+            max_weekly_meetings = data.get('max_weekly_meetings')
+            max_monthly_meetings = data.get('max_monthly_meetings')
+
+        if duration == '':
+            duration = None
 
         program = ProgramType.query.filter_by(id=program_id).first()
 
@@ -131,6 +142,7 @@ def set_program_details():
             program.max_daily_meetings = max_daily_meetings
             program.max_weekly_meetings = max_weekly_meetings
             program.max_monthly_meetings = max_monthly_meetings
+            program.isDropins = isDropins
 
             db.session.commit()
             
@@ -138,6 +150,7 @@ def set_program_details():
         else:
             return jsonify({"error": "Program type doesn't exist"}), 404
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
     
 

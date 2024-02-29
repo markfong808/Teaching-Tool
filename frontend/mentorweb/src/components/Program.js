@@ -30,6 +30,8 @@ export default function Program() {
   const [timeChecker, setTimeChecker] = useState(false);
   const [enableDurationAndDates, setEnableDurationAndDates] = useState(false);
   const [isAllCoursesSelected, setIsAllCoursesSelected] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [isDropinsLayout, setIsDropinsLayout] = useState(true);
 
 
   // Class Data Variables
@@ -54,6 +56,7 @@ export default function Program() {
     max_daily_meetings: '',
     max_weekly_meetings: '',
     max_monthly_meetings: '',
+    isDropins: '',
   });
 
   const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
@@ -89,6 +92,16 @@ export default function Program() {
       const fetchedCourseList = await response.json();
 
       setAllCourseData(fetchedCourseList);
+
+      if (!hasLoaded) {
+        const containsGlobalPrograms = fetchedCourseList.find(course => course.id === -2);
+
+        if (containsGlobalPrograms) {
+          setSelectedCourseId(containsGlobalPrograms.id);
+          updateCourseInfo(containsGlobalPrograms.id);
+        }
+        setHasLoaded(true);
+      }
     } catch (error) {
       console.error("Error fetching course list:", error);
     }
@@ -354,6 +367,7 @@ export default function Program() {
         max_daily_meetings: '',
         max_weekly_meetings: '',
         max_monthly_meetings: '',
+        isDropins: '',
       });
 
       setBoxShown(false);
@@ -605,6 +619,13 @@ export default function Program() {
     if (Number(selectedProgramData.duration) > 0) {
       setBoxShown(true);
     }
+
+    if (selectedProgramData.isDropins !== '' && selectedProgramData.isDropins === false) {
+      setIsDropinsLayout(false);
+    } else {
+      setIsDropinsLayout(true);
+    }
+  
   }, [selectedProgramData]);
 
   useEffect(() => {
@@ -639,7 +660,7 @@ export default function Program() {
   }, [selectedProgramTimesData]);
 
   useEffect(() => {
-    if (selectedProgramData.physical_location && selectedProgramData.physical_location !== '') {
+    if ((selectedProgramData.physical_location && selectedProgramData.physical_location !== '') || (selectedProgramData.virtual_link && selectedProgramData.virtual_link !== '')) {
       setLocationChecker(true);
     } else {
       setLocationChecker(false);
@@ -657,7 +678,8 @@ export default function Program() {
   useEffect(() => {
     //console.log(isCourseSelected);
     //console.log(isProgramSelected);
-  }, [isProgramSelected, isCourseSelected]);
+    //console.log(isDropinsLayout);
+  }, [isProgramSelected, isCourseSelected, isDropinsLayout]);
 
   useEffect(() => {
     //console.log(selectedClassData);
@@ -677,11 +699,11 @@ export default function Program() {
       <div className="flex flex-col m-auto">
         <div className=" flex w-full cursor-pointer justify-center">
           <div
-            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-metallic-gold" : "bg-gold"}`}
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-gold" : "bg-metallic-gold"}`}
             onClick={() => tabSelect(true)}
           >All Course Programs</div>
           <div
-            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-gold" : "bg-metallic-gold"}`}
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${isAllCoursesSelected ? "bg-metallic-gold" : "bg-gold"}`}
             onClick={() => tabSelect(false)}
           >Single Course Programs</div>
         </div>
@@ -704,9 +726,11 @@ export default function Program() {
                       Select...
                     </option>
                     {allCourseData.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.class_name}
-                      </option>
+                      course.id !== -2 && (
+                        <option key={course.id} value={course.id}>
+                          {course.class_name}
+                        </option>
+                      )
                     ))}
                   </select>
                 </div>
@@ -732,11 +756,15 @@ export default function Program() {
                 ))}
               </select>
               <button
-                className="font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4"
+                className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 ${!isCourseSelected ? "opacity-50" : ""}`}
                 onClick={() => setCreateProgramTypePopup(!isCreateProgramTypePopup)}
+                disabled={!isCourseSelected}
               >
                 Create Program Type
               </button>
+              <Tooltip text='For Class Times and Office Hours programs, please use the title "Class Times" or "Office Hours" respectively'>
+                <span>ⓘ</span>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -770,7 +798,7 @@ export default function Program() {
                   <textarea
                     className="border border-light-gray mt-3"
                     name="description"
-                    value={selectedProgramData.description ?? ""}
+                    value={selectedProgramData.description || ""}
                     onChange={(event) => handleInputChange(event)}
                     disabled={!isProgramSelected}
                   />
@@ -846,84 +874,86 @@ export default function Program() {
               changes={changesMade}
               disabled={!isProgramSelected}
             />
-            <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
-              {user?.account_type === "mentor" && (
-                <div className="w-1/2">
-                  <label className="font-bold text-lg">
-                    Auto-Accept Meeting Requests?
-                  </label>
-                  <br />
-                  <label className="ml-2">
-                    Yes
-                    <input
-                      className="mb-3 ml-1"
-                      type="radio"
-                      name="auto_approve_appointments"
-                      value="true"
-                      checked={selectedProgramData.auto_approve_appointments === true}
-                      onChange={handleInputChange}
-                      disabled={!isProgramSelected}
-                    />
-                  </label>
-                  &nbsp;&nbsp;
-                  <label>
-                    No
-                    <input
-                      className="ml-1"
-                      type="radio"
-                      name="auto_approve_appointments"
-                      value="false"
-                      checked={selectedProgramData.auto_approve_appointments === false}
-                      onChange={handleInputChange}
-                      disabled={!isProgramSelected}
-                    />
-                  </label>
-                </div>
-              )}
-              {user?.account_type === "mentor" && (
-                <div className="flex flex-col">
-                  <h2 className="font-bold text-lg">Set Meeting Limits</h2>
-                  <div className="flex flex-row justify-between">
-                    <div className="flex flex-col mr-5">
-                      <label>Daily Max</label>
+            {!isDropinsLayout && (
+              <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
+                {user?.account_type === "mentor" && (
+                  <div className="w-1/2">
+                    <label className="font-bold text-lg">
+                      Auto-Accept Meeting Requests?
+                    </label>
+                    <br />
+                    <label className="ml-2">
+                      Yes
                       <input
-                        className="border border-light-gray w-28"
-                        type="number"
-                        name="max_daily_meetings"
-                        min="1"
-                        value={selectedProgramData.max_daily_meetings}
-                        onChange={handleLimitInputChange}
+                        className="mb-3 ml-1"
+                        type="radio"
+                        name="auto_approve_appointments"
+                        value="true"
+                        checked={selectedProgramData.auto_approve_appointments === true}
+                        onChange={handleInputChange}
                         disabled={!isProgramSelected}
                       />
-                    </div>
-                    <div className="flex flex-col mr-5">
-                      <label>Weekly Max</label>
+                    </label>
+                    &nbsp;&nbsp;
+                    <label>
+                      No
                       <input
-                        className="border border-light-gray w-28"
-                        type="number"
-                        name="max_weekly_meetings"
-                        min="1"
-                        value={selectedProgramData.max_weekly_meetings}
-                        onChange={handleLimitInputChange}
+                        className="ml-1"
+                        type="radio"
+                        name="auto_approve_appointments"
+                        value="false"
+                        checked={selectedProgramData.auto_approve_appointments === false}
+                        onChange={handleInputChange}
                         disabled={!isProgramSelected}
                       />
-                    </div>
-                    <div className="flex flex-col">
-                      <label>Total Max</label>
-                      <input
-                        className="border border-light-gray w-28"
-                        type="number"
-                        name="max_monthly_meetings"
-                        min="1"
-                        value={selectedProgramData.max_monthly_meetings}
-                        onChange={handleLimitInputChange}
-                        disabled={!isProgramSelected}
-                      />
+                    </label>
+                  </div>
+                )}
+                {user?.account_type === "mentor" && (
+                  <div className="flex flex-col">
+                    <h2 className="font-bold text-lg">Set Meeting Limits</h2>
+                    <div className="flex flex-row justify-between">
+                      <div className="flex flex-col mr-5">
+                        <label>Daily Max</label>
+                        <input
+                          className="border border-light-gray w-28"
+                          type="number"
+                          name="max_daily_meetings"
+                          min="1"
+                          value={selectedProgramData.max_daily_meetings}
+                          onChange={handleLimitInputChange}
+                          disabled={!isProgramSelected}
+                        />
+                      </div>
+                      <div className="flex flex-col mr-5">
+                        <label>Weekly Max</label>
+                        <input
+                          className="border border-light-gray w-28"
+                          type="number"
+                          name="max_weekly_meetings"
+                          min="1"
+                          value={selectedProgramData.max_weekly_meetings}
+                          onChange={handleLimitInputChange}
+                          disabled={!isProgramSelected}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <label>Total Max</label>
+                        <input
+                          className="border border-light-gray w-28"
+                          type="number"
+                          name="max_monthly_meetings"
+                          min="1"
+                          value={selectedProgramData.max_monthly_meetings}
+                          onChange={handleLimitInputChange}
+                          disabled={!isProgramSelected}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
             {changesMade && (
               <div className="flex flex-row justify-end my-5 mr-6">
                 <button
@@ -946,7 +976,7 @@ export default function Program() {
       </div>
 
       {isPopUpVisible && (
-        <div className='absolute inset-0 z-10'>
+        <div className='fixed inset-0 z-10'>
           <ChooseMeetingDatesPopup
             onClose={() => setPopUpVisible(false)}
             data={selectedProgramTimesData}
@@ -956,12 +986,13 @@ export default function Program() {
             virtual_link={selectedProgramData.virtual_link}
             program_id={selectedProgramId}
             program_name={selectedProgramData.type}
+            isDropins={selectedProgramData.isDropins}
           />
         </div>
       )}
 
       {isCreateProgramTypePopup && (
-        <div className='absolute inset-0 z-10'>
+        <div className='fixed inset-0 z-10'>
           <CreateProgramTypePopup onClose={() => setCreateProgramTypePopup(false)}
           courseId={selectedCourseId}
           loadFunction={setIsPageLoaded}

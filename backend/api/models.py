@@ -33,6 +33,7 @@ class MentorMeetingSettings(db.Model):
 class ProgramType(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
+    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     physical_location = db.Column(db.String(255))                                                                # ADDED
     virtual_link = db.Column(db.String(255))                                                                     # ADDED
     type = db.Column(db.String(150))

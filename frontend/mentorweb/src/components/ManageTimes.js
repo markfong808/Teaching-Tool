@@ -7,28 +7,15 @@ import { getCookie } from '../utils/GetCookie';
 
 export default function ManageTimes() {
     // General Variables
-    const csrfToken = getCookie('csrf_access_token');
     const { user } = useContext(UserContext);
 
     // Load Variables
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
-  const [loadAppointments, setLoadAppointments] = useState(false);
+    const [isPageLoaded, setIsPageLoaded] = useState(false);
+    const [loadAppointments, setLoadAppointments] = useState(false);
 
     // Class Data Variables
-    const contextValue = useContext(ClassContext);
-    const { classInstance } = contextValue || {};
-    const [selectedCourseId, setSelectedCourseId] = useState('-1');
+    const [selectedCourseId, setSelectedCourseId] = useState(-1);
     const [allCourseData, setAllCourseData] = useState([]);
-    const [selectedClassData, setSelectedClassData] = useState({
-        id: classInstance?.id || '',
-        class_comment: classInstance?.class_comment || '',
-        class_location: classInstance?.class_location || '',
-        class_link: classInstance?.class_link || '',
-        class_recordings_link: classInstance?.class_recordings_link || '',
-        office_hours_location: classInstance?.office_hours_location || '',
-        office_hours_link: classInstance?.office_hours_link || '',
-        discord_link: classInstance?.discord_link || ''
-    });
 
 
 
@@ -77,27 +64,9 @@ export default function ManageTimes() {
         // change selectedCourseId
         setSelectedCourseId(selectedCourse);
 
-        // update course info displayed on page to selectedCourseId
-        updateCourseInfo(selectedCourse);
-
         // flag to child objects to reload their information
         // with times data or selectedClassData
         reloadChildInfo();
-    };
-
-    // update the selectedClassData based on a courseId
-    const updateCourseInfo = (courseId) => {
-        if (!courseId) {
-        setSelectedClassData({});
-        return;
-        }
-
-        const selectedCourse = allCourseData.find(course => course.id === courseId);
-
-        if (selectedCourse) {
-        // Update selectedClassData with selectedCourse
-        setSelectedClassData(selectedCourse);
-        }
     };
 
     // called when information on the webpage needs to be reloaded
@@ -116,7 +85,7 @@ export default function ManageTimes() {
 
     // Display meeting list
     return (
-        <div className="flex flex-col m-auto">
+        <div className="flex flex-col m-auto mt-8">
             <div className="w-3/4 p-5 m-auto items-center">
                 <h1 className="inline-block"> <strong>Select Course:</strong></h1>
                 <select

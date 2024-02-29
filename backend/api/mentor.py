@@ -90,7 +90,9 @@ def validate_availability_data(mentor_id, availability_type, date, start_time, e
     return None  # Data is valid
 
 
-def validate_availability_data_and_class(mentor_id, class_id, availability_id, date, start_time, end_time):
+def validate_availability_data_and_class(mentor_id, class_id, availability_id, date, start_time, end_time, isDropins):
+    class_id = int(class_id) if class_id else None
+    
     required_fields = [mentor_id, class_id, availability_id, date, start_time, end_time]
 
     # Check if any required field is missing
@@ -102,9 +104,11 @@ def validate_availability_data_and_class(mentor_id, class_id, availability_id, d
     if not mentor:
         return jsonify({"error": "mentor not found!"}), 404
     
-    classTuple = ClassInformation.query.filter_by(id=class_id, teacher_id=mentor.id).first()
-    if not classTuple:
-        return jsonify({"error": "class not found!"}), 404
+    if not isDropins:
+        if class_id != -2:
+            classTuple = ClassInformation.query.filter_by(id=class_id, teacher_id=mentor.id).first()
+            if not classTuple:
+                return jsonify({"error": "class not found!"}), 404
 
     # Validate availability_type
     programTuple = ProgramType.query.filter_by(id=availability_id).first()
@@ -433,64 +437,56 @@ def add_all_mentor_availability(class_id):
         timeSplit = data.get('duration')
         physical_location = data.get('physical_location')
         virtual_link = data.get('virtual_link')
-        
-        if timeSplit:
-            timeSplit = int(timeSplit)
-        else: 
-            timeSplit = 0
+        isDropins = data.get('isDropins')
 
         for availabilityEntry in allAvailabilties:
-            add_mentor_single_availability(class_id, mentor_id, availabilityEntry, physical_location, virtual_link, timeSplit)
+            add_mentor_single_availability(class_id, mentor_id, availabilityEntry, physical_location, virtual_link, timeSplit, isDropins)
 
         return jsonify({"message": "all availability added successfully"}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-def add_mentor_single_availability(class_id, mentor_id, data, physical_location, virtual_link, timeSplit):
+def add_mentor_single_availability(class_id, mentor_id, data, physical_location, virtual_link, timeSplit, isDropins):
     try:
         program_id = data.get('id')
         date = data.get('date')
         start_time = data.get('start_time')
         end_time = data.get('end_time')
-
-        course = ClassInformation.query.filter_by(id=class_id).first()
-
-        if course:
         
-            # Validate the data
-            validation_result = validate_availability_data_and_class(mentor_id, class_id, program_id, date, start_time, end_time)
-            if validation_result:
-                return validation_result
+        # Validate the data
+        validation_result = validate_availability_data_and_class(mentor_id, class_id, program_id, date, start_time, end_time, isDropins)
+        print(validation_result)
+        if validation_result:
+            return validation_result
+        
+        # Check if the same availability already exists for the mentor
+        if is_existing_availability_in_class(mentor_id, program_id, date, start_time, end_time):
+            return jsonify({"error": "availability time conflict or it already exists for this mentor"}), 400
+        
+        current_time = datetime.now() - timedelta(hours=8)
+        availability_datetime = datetime.strptime(date + ' ' + start_time, '%Y-%m-%d %H:%M')
+        
+        if availability_datetime > current_time:
+            # Add the new availability
+            new_availability = Availability(
+                user_id=mentor_id,
+                class_id=class_id,
+                type=program_id,
+                date=date,
+                start_time=start_time,
+                end_time=end_time, 
+                status='active'
+            )
+            db.session.add(new_availability) 
+            db.session.commit()
             
-            # Check if the same availability already exists for the mentor
-            if is_existing_availability_in_class(mentor_id, program_id, date, start_time, end_time):
-                return jsonify({"error": "availability time conflict or it already exists for this mentor"}), 400
-            
-            current_time = datetime.now() - timedelta(hours=8)
-            availability_datetime = datetime.strptime(date + ' ' + start_time, '%Y-%m-%d %H:%M')
-            
-            if availability_datetime > current_time:
-                # Add the new availability
-                new_availability = Availability(
-                    user_id=mentor_id,
-                    class_id=class_id,
-                    type=program_id,
-                    date=date,
-                    start_time=start_time,
-                    end_time=end_time, 
-                    status='active'
-                )
-                db.session.add(new_availability) 
-                db.session.commit()
-                
-                # Generate appointment events
+            # Generate appointment events
+            if not isDropins:
                 generate_appointment_tuples(mentor_id, class_id, program_id, date, start_time, end_time, physical_location, virtual_link, new_availability.id, timeSplit)
-                return jsonify({"message": "availability added successfully"}), 201
-            else:
-                return jsonify({"error": "appointment datetime must be in the future"}), 400
-        else: 
-            return jsonify({"error": "course not found"}), 404
+            return jsonify({"message": "availability added successfully"}), 201
+        else:
+            return jsonify({"error": "appointment datetime must be in the future"}), 400
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -667,8 +663,8 @@ def update_availability_status():
         status = data.get('status')
 
         mentor = User.query.filter_by(id=user_id, account_type='mentor').first()
-        if not mentor or not mentor.mentor_settings:
-            return jsonify({"error": "Mentor settings not found"}), 404
+        if not mentor:
+            return jsonify({"error": "Mentor not found"}), 404
 
         availability = Availability.query.filter_by(id=availability_id, user_id=user_id).first()
         if availability:
@@ -701,12 +697,14 @@ def update_availability_status():
                     Appointment.status.in_(['reserved', 'pending'])
                 ).count()
 
+                program = ProgramType.query.filter(id=availability.type).first()
+
                 error_message = "Meeting limit reached"
-                if monthly_count >= mentor.mentor_settings.max_monthly_meetings:
+                if monthly_count >= program.max_monthly_meetings:
                     error_message = "Monthly meeting limit reached"
-                elif weekly_count >= mentor.mentor_settings.max_weekly_meetings:
+                elif weekly_count >= program.max_weekly_meetings:
                     error_message = "Weekly meeting limit reached"
-                elif daily_count >= mentor.mentor_settings.max_daily_meetings:
+                elif daily_count >= program.max_daily_meetings:
                     error_message = "Daily meeting limit reached"
 
                 if error_message != "Meeting limit reached":
@@ -748,7 +746,6 @@ def create_comment(appointment_id):
         else:
             return jsonify({"error": "appointment not found"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
     
 # Get comments for specific appointment as a mentor
@@ -834,6 +831,7 @@ def get_courses():
                             'max_daily_meetings': program.max_daily_meetings,
                             'max_weekly_meetings': program.max_weekly_meetings,
                             'max_monthly_meetings': program.max_monthly_meetings,
+                            'isDropins': program.isDropins,
                         }
                         course_with_programs.append(program_info)
 
@@ -844,7 +842,55 @@ def get_courses():
                     }
 
                     courses_with_programs.append(formatTuple)
+
+                global_programs = get_global_programs()
+                courses_with_programs.append(global_programs)
+                
                 return jsonify(courses_with_programs), 200
+            else: 
+                return jsonify({"error": "no courses found for mentor"}), 404
+        else:
+            return jsonify({"error": "mentor not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+def get_global_programs():
+    try:
+        user_id = get_jwt_identity()
+        mentor = User.query.get(user_id)
+        
+        if mentor:
+            all_global_programs = ProgramType.query.filter(
+                and_(ProgramType.class_id == -2, ProgramType.instructor_id == user_id)
+            ).all()
+
+            if all_global_programs:
+                all_formatted_programs = []
+
+                for program in all_global_programs:
+                    program_info = {
+                        'id': program.id,
+                        'type': program.type,
+                        'description': program.description,
+                        'duration': program.duration,
+                        'physical_location': program.physical_location,
+                        'virtual_link': program.virtual_link,
+                        'auto_approve_appointments': program.auto_approve_appointments,
+                        'max_daily_meetings': program.max_daily_meetings,
+                        'max_weekly_meetings': program.max_weekly_meetings,
+                        'max_monthly_meetings': program.max_monthly_meetings,
+                        'isDropins': program.isDropins,
+                    }
+                    all_formatted_programs.append(program_info)
+
+                all_formatted_programs = {
+                    'id': -2,
+                    'class_name': 'All Courses',
+                    'programs': all_formatted_programs
+                }
+
+                return all_formatted_programs
             else: 
                 return jsonify({"error": "no courses found for mentor"}), 404
         else:
@@ -870,7 +916,7 @@ def get_mentor_availabilities(class_id):
         if class_id:
             if (class_id == '-1'):
                 availability_data = Availability.query.filter(
-                    and_(Availability.user_id == mentor_id, Availability.date > str(current_date))
+                    and_(Availability.user_id == mentor_id, Availability.date > str(current_date), Availability.class_id == -2)
                 ).all()
             else:
                 availability_data = Availability.query.filter(
@@ -879,17 +925,19 @@ def get_mentor_availabilities(class_id):
                 
             availability_list = []
             for availability in availability_data:
-                program_type = get_program_type(availability.type)
+                program = get_program_type(availability.type)
                 course_name = get_course_name(availability.class_id)
+
 
                 availability_info = {
                     'id': availability.id,
-                    'type': program_type,
+                    'type': program['type'],
                     'class_name': course_name,
                     'date': availability.date,
                     'start_time': availability.start_time,
                     'end_time': availability.end_time,
-                    'status': availability.status
+                    'status': availability.status,
+                    'isDropins': program['isDropins']
                 }
                 availability_list.append(availability_info)
             return jsonify({"mentor_availability": availability_list}), 200
@@ -909,13 +957,13 @@ def get_mentor_appointments_for_class(class_id):
     current_date_str = current_time_pst.strftime('%Y-%m-%d')
     current_time_str = current_time_pst.strftime('%H:%M')
 
-    if not class_id:
-        return jsonify({"error": "class_id undefined for appointments"}), 404
+    #if not class_id:
+        #return jsonify({"error": "class_id undefined for appointments"}), 404
 
     appointments_query = Appointment.query.filter(Appointment.mentor_id == mentor_id)
 
-    if class_id != '-1':
-        appointments_query = appointments_query.filter(Appointment.class_id == class_id)
+    #if class_id != '-1':
+        #appointments_query = appointments_query.filter(Appointment.class_id == class_id)
 
     if meeting_type in ['upcoming', 'past', 'pending']:
         if meeting_type == 'upcoming':
@@ -964,13 +1012,13 @@ def get_mentor_appointments_for_class(class_id):
             "social_url": student.linkedin_url
         } if student else {}
 
-        program_type = get_program_type(appt.type)
+        program = get_program_type(appt.type)
         course_name = get_course_name(appt.class_id)
 
         mentor_appointments.append({
             "appointment_id": appt.id,
             "program_id": appt.type,
-            "type": program_type,
+            "type": program['type'],
             "class_name": course_name,
             "date": appt.appointment_date,
             "start_time": appt.start_time,
@@ -990,7 +1038,8 @@ def get_program_type(program_id):
         program = ProgramType.query.filter_by(id=program_id).first()
 
         if program:
-            return program.type
+            returned_attributes = {'type': program.type, 'isDropins': program.isDropins}
+            return returned_attributes
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

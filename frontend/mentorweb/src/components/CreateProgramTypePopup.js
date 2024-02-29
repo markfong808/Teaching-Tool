@@ -13,7 +13,7 @@ const CreateProgramTypePopup = ({onClose, courseId, loadFunction}) => {
           const payload = {
             name: programTitle,
             course_id: courseId,
-            isDropIns: isDropIns
+            isDropins: isDropIns
           };
     
           const response = await fetch(`/course/add-program`, {
@@ -60,8 +60,8 @@ const CreateProgramTypePopup = ({onClose, courseId, loadFunction}) => {
     }, [isDropIns, isAppointments, programTitle]);
 
     return (
-        <div className="fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md p-7 relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onClose}>Close</button>
+        <div className="fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-7 relative">
+            <button className="absolute top-0 right-2 text-gray-500 hover:text-gray-700 cursor-pointer font-bold" onClick={onClose}>Close</button>
             <div className='flex flex-col items-center'>
                 <div className='mb-1'>
                     <label className='font-bold text-lg'>Program Name:</label>
@@ -77,8 +77,8 @@ const CreateProgramTypePopup = ({onClose, courseId, loadFunction}) => {
     
            
             <div className='mt-4 flex justify-center'>
-                <button className={`w-44 h-32 font-bold border border-light-gray rounded-md shadow-md text-2xl mr-2 ${isDropIns ? "bg-gold" : ""}`} onClick={handleDropInChange}>Drop-Ins</button>
-                <button className={`w-44 h-32 font-bold border border-light-gray rounded-md shadow-md text-2xl ml-2 ${isAppointments ? "bg-gold" : ""}`} onClick={handleAppointmentChange}>Appointment Based</button>
+                <button className={`w-44 h-32 font-bold border border-light-gray rounded-md shadow-md text-2xl mr-2 ${isDropIns ? "bg-gold" : "bg-white"}`} onClick={handleDropInChange}>Drop-Ins</button>
+                <button className={`w-44 h-32 font-bold border border-light-gray rounded-md shadow-md text-2xl ml-2 ${isAppointments ? "bg-gold" : "bg-white"}`} onClick={handleAppointmentChange}>Appointment Based</button>
             </div>
 
             {readyToCreate && (

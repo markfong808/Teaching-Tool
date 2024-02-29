@@ -6,7 +6,7 @@ import 'react-calendar/dist/Calendar.css';
 import '@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css';
 import { addDays } from 'date-fns';
 
-const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_location, virtual_link, program_id , program_type }) => {
+const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_location, virtual_link, program_id , program_type, isDropins }) => {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [showTimePicker, setShowTimePicker] = useState(false);
@@ -45,11 +45,19 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_locatio
                 }
             }
 
+            console.log(typeof duration);
+            if (!duration || duration === '') {
+                duration = 0;
+            } else {
+                duration = Number(duration);
+            }
+
             convertedAvailability = {
                 availabilities: convertedAvailability,
                 duration: duration,
                 physical_location: physical_location,
-                virtual_link: virtual_link
+                virtual_link: virtual_link,
+                isDropins: isDropins
             }
 
             await fetch(`/mentor/add-all-availability/${encodeURIComponent(class_id)}`, {
@@ -78,8 +86,8 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_locatio
     }, [id]);
 
     return (
-        <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 shadow-md pb-7 relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 cursor-pointer" onClick={onClose}>Close</button>
+        <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-calendar-popup-gray border border-gray-300 shadow-md pb-7 relative">
+            <button className="absolute top-0 right-2 text-gray-500 hover:text-gray-700 cursor-pointer font-bold" onClick={onClose}>x</button>
             <div className="flex flex-row py-5 m-auto">
                 <div className='w-2/3 m-auto font-body'>
                     <div id="calendar-container">
