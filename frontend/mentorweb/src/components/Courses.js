@@ -204,7 +204,7 @@ export default function Courses() {
       </div>
 
       {isClassInformationPopupVisible && (
-          <div className='absolute mt-40'>
+          <div className='fixed inset-0'>
             <CourseInformationPopup onClose={() => setClassInformationPopupVisible(false)} courseData={classData} instructorData={instructorData} />
           </div>
         )}

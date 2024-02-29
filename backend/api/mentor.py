@@ -844,14 +844,17 @@ def get_courses():
                     courses_with_programs.append(formatTuple)
 
                 global_programs = get_global_programs()
-                courses_with_programs.append(global_programs)
-                
+                if global_programs is not None:
+                    courses_with_programs.append(global_programs)
+                                
+
                 return jsonify(courses_with_programs), 200
             else: 
                 return jsonify({"error": "no courses found for mentor"}), 404
         else:
             return jsonify({"error": "mentor not found"}), 404
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
     
 
@@ -859,7 +862,7 @@ def get_global_programs():
     try:
         user_id = get_jwt_identity()
         mentor = User.query.get(user_id)
-        
+
         if mentor:
             all_global_programs = ProgramType.query.filter(
                 and_(ProgramType.class_id == -2, ProgramType.instructor_id == user_id)
@@ -892,11 +895,12 @@ def get_global_programs():
 
                 return all_formatted_programs
             else: 
-                return jsonify({"error": "no courses found for mentor"}), 404
+                return None
         else:
-            return jsonify({"error": "mentor not found"}), 404
+            return None
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(e)
+        return None
     
 
 # Get a list of availabilities added by a specific mentor

@@ -688,10 +688,12 @@ def get_student_dropins(course_id):
                         
                     # get global programs and add them to programs_in_course
                     global_programs = get_global_programs(course_information.teacher_id)
-                    global_programs = [{'id': program['id'], 'isDropins': program['isDropins']} for program in global_programs]
 
-                    for program in global_programs:
-                        all_formatted_programs.append(program)
+                    if global_programs is not None:
+                        global_programs = [{'id': program['id'], 'isDropins': program['isDropins']} for program in global_programs]
+
+                        for program in global_programs:
+                            all_formatted_programs.append(program)
 
                     # then filter by isDropins == True
                     all_formatted_programs = [program for program in all_formatted_programs if program.get('isDropins') == True]
@@ -721,6 +723,7 @@ def get_student_dropins(course_id):
         else:
             return jsonify({"error": "student not found"}), 404
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
     
 
@@ -842,6 +845,7 @@ def get_global_programs(instructor_id):
             else: 
                 return None
         else:
-            return jsonify({"error": "mentor not found"}), 404
+            return None
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(e)
+        return None

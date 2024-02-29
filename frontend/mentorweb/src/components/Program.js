@@ -684,7 +684,7 @@ export default function Program() {
   useEffect(() => {
     //console.log(selectedClassData);
     //console.log(allTimesData);
-    //console.log(allCourseData);
+    console.log(allCourseData);
     //console.log(selectedProgramData);
     //console.log(selectedProgramTimesData);
   }, [selectedClassData, allTimesData, allCourseData, selectedProgramData, selectedProgramTimesData]);
