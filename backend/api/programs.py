@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from sqlalchemy import and_
-from .models import ProgramType, User, Appointment, Availability, ClassTimes
+from sqlalchemy import and_, or_
+from .models import ProgramType, User, Appointment, Availability, ClassTimes, ClassInformation, CourseMembers
 from . import db
 
 programs = Blueprint('programs', __name__)
@@ -19,15 +19,120 @@ def is_mentor(user_id):
         return False
     return True
 
+#could be removed if you bring over the results from /student/programs in MeetingInformation.js to ScheduleNewMeeting.js
 @programs.route('/programs/<course_id>', methods=['GET'])
 def get_programs(course_id):
-    programs = ProgramType.query.filter_by(class_id=course_id).all()
-    return jsonify([{
-        "id": program.id,
-        "type": program.type,
-        "description": program.description,
-        "duration": program.duration
-    } for program in programs]), 200
+    try: 
+        course = ClassInformation.query.filter_by(class_id=course_id).first()
+
+        if course:
+            programs = ProgramType.query.filter(and_(or_(ProgramType.class_id==course_id, ProgramType.class_id==-2), ProgramType.instructor_id==course.teacher_id)).all()
+            return jsonify([{
+                "id": program.id,
+                "type": program.type,
+                "description": program.description,
+                "duration": program.duration
+            } for program in programs]), 200
+        else:
+            return jsonify({"error": "Course not found"}), 404
+    except Exception as e:
+        return jsonify({"msg": "Error fetching program description data for student", "error": str(e)}), 500
+    
+@programs.route('/instructor/programs', methods=['GET'])
+@jwt_required()
+def get_instructor_programs():
+    user_id = get_jwt_identity()
+
+    try: 
+        instructor = User.query.filter_by(id=user_id).first()
+
+        if instructor:
+            programs = ProgramType.query.filter(ProgramType.instructor_id==instructor.id).all()
+            return jsonify([{
+                "id": program.id,
+                "type": program.type,
+                "description": program.description,
+                "duration": program.duration
+            } for program in programs]), 200
+        else:
+            return jsonify({"error": "Instructor not found"}), 404
+    except Exception as e:
+        return jsonify({"msg": "Error fetching program description data for instructor", "error": str(e)}), 500
+    
+    
+@programs.route('/student/programs', methods=['GET'])
+@jwt_required()
+def get_student_programs():
+    try:
+        user_id = get_jwt_identity()
+        student = User.query.get(user_id)
+        
+        if student:
+            all_student_courses = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).filter_by(user_id=user_id).all()
+
+            if all_student_courses:
+
+                all_programs = []
+
+                for course in all_student_courses:
+                    class_id = course.id
+
+                    all_programs_in_course = ProgramType.query.filter_by(class_id=class_id).all()
+
+                    global_programs = get_global_programs(course.teacher_id)
+
+                    for program in all_programs_in_course:
+                        program_info = {
+                            'id': program.id,
+                            'type': program.type,
+                            'description': program.description,
+                            'duration': program.duration,
+                        }
+                        all_programs.append(program_info)
+                        
+                    if global_programs is not None:
+                        for global_program in global_programs:
+                            if not any(existing_program['id'] == global_program['id'] for existing_program in all_programs):
+                                all_programs.append(global_program)
+                
+                return jsonify(all_programs), 200
+            else: 
+                return jsonify({"error": "no courses found for student"}), 404
+        else:
+            return jsonify({"error": "student not found"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+    
+def get_global_programs(instructor_id):
+    try:
+        mentor = User.query.get(instructor_id)
+        
+        if mentor:
+            all_global_programs = ProgramType.query.filter(
+                and_(ProgramType.class_id == -2, ProgramType.instructor_id == instructor_id)
+            ).all()
+
+            if all_global_programs:
+                all_formatted_programs = []
+
+                for program in all_global_programs:
+                    program_info = {
+                        'id': program.id,
+                        'type': program.type,
+                        'description': program.description,
+                        'duration': program.duration,
+                    }
+                    all_formatted_programs.append(program_info)
+
+                return all_formatted_programs
+            else: 
+                return None
+        else:
+            return None
+    except Exception as e:
+        return None
+
     
 
 @programs.route('/program', methods=['POST'])

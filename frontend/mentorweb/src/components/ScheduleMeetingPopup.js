@@ -1,5 +1,5 @@
 /* ScheduleMeetingPopup.js
- * Last Edited: 2/28/24
+ * Last Edited: 2/29/24
  *
  * UI Popup shown when student presses "Schedule New Meeting"
  * in their "Courses" tab. Gives the student access to see
@@ -8,6 +8,7 @@
  * Known bugs:
  * - Appointment Reserved Screen is transparent
  * - the Popup is not fully closed out of when an appointment has been booked
+ * - Sizing bugs when cancelling appointments and other actions
  *
  */
 
@@ -47,7 +48,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   });
 
   ////////////////////////////////////////////////////////
-  //                 Fetch Functions                    //
+  //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
   // fetch all appointment-based programs for the student's courses
@@ -67,7 +68,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     }
   };
 
-  // not efficient enough
+  // fetches all of the descriptions for each program in a course
   const fetchProgramTypeDetails = async () => {
     if (!user) return;
     try {
@@ -89,6 +90,57 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     }
   };
 
+  // when selectedProgramId or selectedCourseId change,
+  // if they are real values, fetch the available appointments
+  // for the program
+  useEffect(() => {
+    if (selectedProgramId && selectedCourseId !== "") {
+      fetch(
+        `/student/appointments-available/${encodeURIComponent(
+          selectedProgramId
+        )}/${encodeURIComponent(selectedCourseId)}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          // if there is real data
+          if (data.available_appointments.length > 0) {
+            const timeslots = data.available_appointments
+              .filter((appointment) => appointment.status === "posted")
+              .map((appointment) => ({
+                startTime: new Date(
+                  `${appointment.date}T${appointment.start_time}`
+                ),
+                endTime: new Date(
+                  `${appointment.date}T${appointment.end_time}`
+                ),
+                id: appointment.appointment_id,
+              }));
+
+            // set available timeslots to all available appointments
+            setAvailableTimeslots(timeslots);
+
+            // set the duration of the timeslots (all timeslots should have the same duration)
+            if (timeslots) {
+              const startDate = new Date(timeslots[0].startTime);
+              const endDate = new Date(timeslots[0].endTime);
+              const timeDifference = endDate - startDate;
+              const minutes = Math.floor(timeDifference / (1000 * 60));
+              setSelectedTimeDuration(minutes);
+            }
+          } else {
+            window.alert("No available appointments at this time.");
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+  }, [selectedProgramId, selectedCourseId]);
+
+  ////////////////////////////////////////////////////////
+  //               Fetch Post Functions                 //
+  ////////////////////////////////////////////////////////
+
+  // called when a student clicks to reserve an appointment
+  // after fetch, will update page based on backend response
   const bookAppointment = () => {
     if (selectedTimeslot) {
       const appointmentID = selectedTimeslot.availableTimeslot.id;
@@ -147,17 +199,24 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     }
   };
 
+  ////////////////////////////////////////////////////////
+  //                 Handler Functions                  //
+  ////////////////////////////////////////////////////////
+
+  // shows appointment when a time slot has been selected by user
   const handleStartTimeSelect = (startTimeEventEmit) => {
     setSelectedTimeslot(startTimeEventEmit); // Update the selected timeslot state
     setShowAppointmentPanel(true);
   };
 
+  // hides appointment when the user deselects a time slot
   const cancelSelectedSlot = () => {
     selectedTimeslot.resetSelectedTimeState();
     setShowAppointmentPanel(false);
     setAppointmentNotes("");
   };
 
+  // resets all popup UI and select variables when user clicks on the X in the Appointment.js screen
   const resetBooking = () => {
     setBookingConfirmed(false);
     setSelectedProgramId("");
@@ -167,7 +226,6 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     setAppointmentNotes("");
   };
 
-  // main webpage load function
   // called when user clicks to change selected course
   const handleCourseChange = (e) => {
     if (!e.target.value) {
@@ -176,12 +234,12 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
       return;
     }
 
-    // reload courseIds with all courses
+    // reload allCourseData with the appointment-based programs
     fetchCourseList();
 
     const selectedCourse = parseInt(e.target.value);
 
-    // change selectedCourseId
+    // set the selected course ID
     setSelectedCourseId(selectedCourse);
 
     // update course info displayed on page to selectedCourseId
@@ -196,6 +254,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     }
   };
 
+  // called when user clicks to change selected program in a course
   const handleProgramChange = (e) => {
     if (!e) {
       return;
@@ -203,12 +262,14 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
 
     let selectedProgram = parseInt(e.target.value);
 
+    // if no program selected, set to default
     if (!selectedProgram) {
       selectedProgram = -1;
     }
 
-    // change selectedCourseId
+    // set the selected program ID
     setSelectedProgramId(selectedProgram);
+
     if (e.target.value === "") {
       setSelectedProgramId("");
       setPopupGrown(false);
@@ -217,6 +278,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
       setPopupGrown(true);
       setShowCalendar(true);
     }
+
     setSelectedTimeslot(null); // Reset the selected timeslot when changing type
     setShowAppointmentPanel(false);
   };
@@ -228,12 +290,14 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
       return;
     }
 
+    // look for course in allCourseData
     const selectedCourse = allCourseData.find(
       (course) => course.id === courseId
     );
 
+    // if course found:
     if (selectedCourse) {
-      // Update selectedClassData with selectedCourse.id
+      // update selectedClassData with selectedCourse
       setSelectedClassData(selectedCourse);
     }
   };
@@ -242,44 +306,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  useEffect(() => {
-    if (selectedProgramId && selectedCourseId !== "") {
-      fetch(
-        `/student/appointments-available/${encodeURIComponent(
-          selectedProgramId
-        )}/${encodeURIComponent(selectedCourseId)}`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.available_appointments.length > 0) {
-            const timeslots = data.available_appointments
-              .filter((appointment) => appointment.status === "posted")
-              .map((appointment) => ({
-                startTime: new Date(
-                  `${appointment.date}T${appointment.start_time}`
-                ),
-                endTime: new Date(
-                  `${appointment.date}T${appointment.end_time}`
-                ),
-                id: appointment.appointment_id,
-              }));
-            setAvailableTimeslots(timeslots);
-
-            if (timeslots) {
-              const startDate = new Date(timeslots[0].startTime);
-              const endDate = new Date(timeslots[0].endTime);
-              const timeDifference = endDate - startDate;
-              const minutes = Math.floor(timeDifference / (1000 * 60));
-              setSelectedTimeDuration(minutes);
-            }
-          } else {
-            window.alert("No available appointments at this time.");
-          }
-        })
-        .catch((error) => console.error("Error:", error));
-    }
-  }, [selectedProgramId, selectedCourseId]);
-
+  // on initial page load, fetchCourseList()
   useEffect(() => {
     if (!isPageLoaded) {
       fetchCourseList();
@@ -288,6 +315,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
 
+  // when selectedCourseId changes, set it and fetchProgramTypeDetails() if a real value
   useEffect(() => {
     setSelectedCourseId(selectedCourseId);
     if (selectedCourseId !== "" && selectedCourseId) {
@@ -314,6 +342,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     );
   }
 
+  // HTML for webpage
   return (
     <div
       className={

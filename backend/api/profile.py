@@ -42,9 +42,9 @@ def get_user_profile():
     else:
         return jsonify({'error': 'User does not exist'}), 404
     
-@profile.route('/profile/instructor/<instructor_id>', methods=['GET'])
-def get_instructor_info(instructor_id):
-    user = User.query.get(instructor_id)
+@profile.route('/profile/instructor/<user_id>', methods=['GET'])
+def get_instructor_info(user_id):
+    user = User.query.get(user_id)
     
 
     if user:

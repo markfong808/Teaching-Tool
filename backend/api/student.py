@@ -847,5 +847,4 @@ def get_global_programs(instructor_id):
         else:
             return None
     except Exception as e:
-        print(e)
         return None

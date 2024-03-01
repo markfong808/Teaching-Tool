@@ -48,7 +48,7 @@ export default function WeeklyCalendar({
   });
 
   ////////////////////////////////////////////////////////
-  //               Local Data Functions                 //
+  //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
   // handle onClick for each weekday header
