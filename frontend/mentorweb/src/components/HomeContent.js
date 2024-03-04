@@ -1,6 +1,22 @@
+/* HomeContent.js
+ * Last Edited: 3/1/24
+ * 
+ * Home Tab that Displays information about website when user
+ * enters webpage for the first time or tabs over from
+ * Login or Register Tabs
+ * 
+ * Known bugs:
+ * - None found
+*/
+
 import React from "react";
 
 export default function HomeContent() {
+    ////////////////////////////////////////////////////////
+    //                 Render Functions                   //
+    ////////////////////////////////////////////////////////
+    
+    // HTML for webpage
     return (
         <div className="w-2/3 m-auto mt-8">
             <h1 className="text-purple text-center text-4xl font-headlines">Welcome to UWTechPrep!</h1>

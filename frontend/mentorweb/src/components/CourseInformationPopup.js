@@ -1,6 +1,23 @@
+/* CourseInformationPopup.js
+ * Last Edited: 3/1/24
+ *
+ * UI Popup shown when student clicks on one of the class details buttons
+ * inside the "Courses" tab. Allows student to see information about
+ * a course they're registered in
+ *
+ * Known Bugs:
+ * - Padding issue for the information depending on class times and office hours times
+ * - Need to decide if last_name will be pulled from db or if we're sticking with name that holds first and last name
+ *
+*/
 import React, { useEffect, useState } from 'react';
 
 const CourseInformationPopup = ({onClose, courseData, instructorData}) => {
+    ////////////////////////////////////////////////////////
+    //                 Render Functions                   //
+    ////////////////////////////////////////////////////////
+    
+    // HTML for webpage
     return (
         <div className="fixed top-1/2 left-1/2 w-5/12 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative">
             <button className="absolute top-1 right-1 cursor-pointer fas fa-times" onClick={onClose}></button>

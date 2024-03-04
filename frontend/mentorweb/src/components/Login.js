@@ -1,15 +1,39 @@
+/* Login.js
+ * Last Edited: 3/1/24
+ *
+ * Login Tab for students, mentors, admins, (later just student and instructors)
+ * to enter email and password for login,
+ * or reset password, or create account
+ * 
+ * Known Bugs:
+ * - None found
+ * - NOTE: may have to change backend get_user_profile function in profile.py
+ * -       based on the user account type, i.e. students dont have option for meeeting_url
+*/
+
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
 export default function Login() {
+  // General Variables
+  const { setUser } = useContext(UserContext);
+
+  // Login Data Variables
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const { setUser } = useContext(UserContext);
+
+  // Webpage Navigate Variable
   const navigate = useNavigate();
 
+  ////////////////////////////////////////////////////////
+  //               Fetch Get Functions                  //
+  ////////////////////////////////////////////////////////
+
+  // called when attempting login into the website
   const login = async (userData) => {
+    // validate if the user's email and password exist in the database
     try {
       const response = await fetch('/login', {
         method: 'POST',
@@ -22,9 +46,10 @@ export default function Login() {
 
       if (!response.ok) {
         const errorResponse = await response.json();
-        setLoginError(errorResponse.error);
+        setLoginError(errorResponse.error); 
       }
 
+      // fetch profile information associated with user
       const profileResponse = await fetch('/profile', {
         credentials: 'include', // include the HTTP-only cookies
       });
@@ -34,18 +59,31 @@ export default function Login() {
       }
 
       const userProfile = await profileResponse.json();
+
+      // set user based on user profile
       setUser(userProfile);
-      navigate(`/${userProfile.account_type}`);
+      navigate(`/${userProfile.account_type}`); // navigate to appropriate webpage view based on account type
     } catch (error) {
 
     }
   };
 
+  ////////////////////////////////////////////////////////
+  //                 Handler Functions                  //
+  ////////////////////////////////////////////////////////
+
+  // handle login data once user clicks submit button 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    // prevent submit event from happening if email, password, or both are invalid
+    e.preventDefault(); 
     login({ email, password });
   };
 
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
   return (
     <div className="flex flex-col m-auto w-1/4 p-5 border shadow-lg border-light-gray rounded-md mt-8">
       <h1 className="text-xl text-center pb-5">Login</h1>

@@ -1,3 +1,19 @@
+/* Program.js
+ * Last Edited: 3/3/24
+ * 
+ * Class Availability tab for Instructor Role.
+ * Instructor can choose if they're creating, updating, or deleting
+ * program types, availability, description, 
+ * meeting duration, location, and virtual meeting links
+ * for a class or globally that applies to all classes.
+ * 
+ * Known Bugs:
+ * - Comment on line 623 in showBox -> need to make work with save/cancel changes button
+ * - ToolTip UI Box next to Create Program Type button needs adjusting
+ * - Not a bug, but line 197 setAllTimesData(fetchedProgramTimes) is commented out
+ * 
+*/
+
 import React, { useState, useContext, useEffect, useCallback } from "react";
 import { UserContext } from "../context/UserContext.js";
 import { getCookie } from "../utils/GetCookie.js";
@@ -70,11 +86,10 @@ export default function Program() {
   const [selectedProgramTimesData, setSelectedProgramTimesData] = useState({});
 
   ////////////////////////////////////////////////////////
-  //               Fetch Data Functions                 //
+  //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
-  // fetch from database: all courses the user is associated with
-  // can make a new backend function to only get courseIds
+  // fetch all courses the instructor is associated with
   const fetchCourseList = async () => {
     if (user.account_type !== "mentor") return;
 
@@ -84,17 +99,18 @@ export default function Program() {
       });
 
       const fetchedCourseList = await response.json();
-
       setAllCourseData(fetchedCourseList);
 
       if (!hasLoaded) {
+        // check for a global program in fetched course list with unique id -2 
         const containsGlobalPrograms = fetchedCourseList.find(
           (course) => course.id === -2
         );
 
+        // if there is a global program
         if (containsGlobalPrograms) {
-          setSelectedCourseId(containsGlobalPrograms.id);
-          updateCourseInfo(containsGlobalPrograms.id);
+          setSelectedCourseId(containsGlobalPrograms.id); // set selectedCourseId to containsGlobalPrograms.id
+          updateCourseInfo(containsGlobalPrograms.id); // update the courseInfo with the containsGlobalPrograms.id
         }
         setHasLoaded(true);
       }
@@ -103,7 +119,7 @@ export default function Program() {
     }
   };
 
-  // fetch from database: all times the a courseId is associated with
+  // fetch all times the courseId is associated with
   const fetchTimesData = async (courseId) => {
     if (!courseId) {
       return;
@@ -123,17 +139,21 @@ export default function Program() {
       }
 
       const fetchedCourseTimes = await response.json();
-
+  
       if (fetchedCourseTimes !== null) {
+        // create a tempData object and loop through fetchedCourseTimes
         const tempData = fetchedCourseTimes
-          .filter((item) => item.type !== "Class Times")
+          .filter((item) => item.type !== "Class Times") // filter out fetchedCoursesTimes by "class times" type
           .reduce((acc, item) => {
             const programId = item.program_id;
 
+            // check if the programId exists in the accumulator object, 
+            // if it doesn't, initialize accumulator as an empty object with programId
             if (!acc[programId]) {
               acc[programId] = {};
             }
 
+            // add start_time and end_time to the accumulator object based on the program id and day
             acc[programId][item.day] = {
               start_time: item.start_time,
               end_time: item.end_time,
@@ -142,6 +162,7 @@ export default function Program() {
             return acc;
           }, {});
 
+        // set allTimesData to tempData
         setAllTimesData(tempData);
       } else {
         setAllTimesData({});
@@ -151,6 +172,7 @@ export default function Program() {
     }
   };
 
+ // fetch selectedProgramTimes associated with the programId
   const fetchSelectedProgramTimesData = async (programId) => {
     if (!programId || programId === "-1") {
       setSelectedProgramTimesData({});
@@ -176,6 +198,7 @@ export default function Program() {
         //setAllTimesData(fetchedProgramTimes);
 
         const tempData = fetchedProgramTimes.reduce((acc, item) => {
+          // add start_time and end_time to the accumulator object based on the day
           acc[item.day] = {
             start_time: item.start_time,
             end_time: item.end_time,
@@ -183,6 +206,7 @@ export default function Program() {
           return acc;
         }, {});
 
+        // set selectedProgramTimesData to tempData
         setSelectedProgramTimesData(tempData);
       } else {
         setSelectedProgramTimesData({});
@@ -193,7 +217,7 @@ export default function Program() {
   };
 
   ////////////////////////////////////////////////////////
-  //               Post Data Functions                  //
+  //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
   // called when user clicks save changes button
@@ -211,35 +235,7 @@ export default function Program() {
     }
   };
 
-  useEffect(() => {
-    if (post) {
-      postClassDetailsToDatabase();
-    }
-  }, [post]);
-
-  // handleSaveChanges helper: update ClassTimes or
-  // ClassInformation table in database for attached course
-  const postClassDetailsToDatabase = async () => {
-    try {
-      await fetch(
-        `/course/setTime/${encodeURIComponent(selectedClassData.id)}`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": csrfToken,
-          },
-          body: JSON.stringify(allTimesData),
-        }
-      );
-
-      setChangesMade(false); // Hide Save/Cancel Buttons
-    } catch (error) {
-      console.error("Error saving class details:", error);
-    }
-  };
-
+  // posts updated program data for a class to the ProgramType table
   const postProgramToDatabase = async () => {
     try {
       // Set default values for max_daily_meetings, max_weekly_meetings, and max_monthly_meetings if they are empty or null
@@ -283,12 +279,62 @@ export default function Program() {
     }
   };
 
+  // handleSaveChanges helper: update ClassTimes table in database for attached course
+  // called in a UseEffect below
+  const postClassDetailsToDatabase = async () => {
+    try {
+      await fetch(
+        `/course/setTime/${encodeURIComponent(selectedClassData.id)}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrfToken,
+          },
+          body: JSON.stringify(allTimesData),
+        }
+      );
+
+      setChangesMade(false); // Hide Save/Cancel Buttons
+    } catch (error) {
+      console.error("Error saving class details:", error);
+    }
+  };
+
+  // posts deletion of program to the ProgramType table
+  const handleDeleteProgramType = async () => {
+    if (window.confirm("Are your sure you want to delete this program type?")) {
+      try {
+        const response = await fetch(`/program/delete/${selectedProgramId}`, {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken,
+          },
+        });
+
+        if (response.ok) {
+          // If the cancellation was successful, update the state to reflect that
+          alert("Program Type deleted successfully!");
+          // reload webpage details (like program switch)
+          await fetchCourseList();
+          handleProgramChange({ target: { value: "-1" } });
+        } else {
+          throw new Error("Failed to delete program type");
+        }
+      } catch (error) {
+        console.error("Error deleting program type:", error);
+      }
+    }
+  };
+
+
   ////////////////////////////////////////////////////////
-  //                  Load Functions                    //
+  //                  Handler Functions                 //
   ////////////////////////////////////////////////////////
 
-  // main webpage load function
-  // called when user clicks to change selected course
+  // called when instructor clicks to change selected course
   const handleCourseChange = (e) => {
     if (!e) {
       return;
@@ -305,20 +351,25 @@ export default function Program() {
     // update course info displayed on page to selectedCourseId
     updateCourseInfo(selectedCourse);
 
+    // reset program information 
     setSelectedProgramId(-1);
     updateProgramInfo(-1);
-
     setSelectedProgramTimesData({});
 
-    // update timesData to selectedCourseId
+    // update timesData to selectedCourse
     fetchTimesData(selectedCourse);
-
-    // flag to child objects to reload their information
-    // with times data or selectedClassData
+   
     reloadChildInfo();
     setChangesMade(false);
   };
 
+  // helper function called when information on the webpage needs to be reloaded
+  // will flag to child objects to reload their information
+  const reloadChildInfo = () => {
+    setLoadProgramTable(!loadProgramTable);
+  };
+
+  // called when the instructor changes the program 
   const handleProgramChange = (e) => {
     if (!e) {
       return;
@@ -330,20 +381,19 @@ export default function Program() {
       selectedProgram = -1;
     }
 
-    // change selectedCourseId
+    // change selectedProgramid to selectedProgram 
     setSelectedProgramId(selectedProgram);
 
-    // update course info displayed on page to selectedCourseId
+    // update programinfo displayed on page to selectedProgram
     updateProgramInfo(selectedProgram);
 
-    // update timesData to selectedCourseId
+    // update programTimesData to selectedProgram
     fetchSelectedProgramTimesData(selectedProgram);
     setSelectedProgramTimesData(selectedProgramTimesData[selectedProgram]);
 
-    // flag to child objects to reload their information
-    // with times data or selectedClassData
     setChangesMade(false);
   };
+
 
   // update the selectedClassData based on a courseId
   const updateCourseInfo = (courseId) => {
@@ -368,6 +418,7 @@ export default function Program() {
     }
   };
 
+  // update the selectedProgramData based on a programId
   const updateProgramInfo = (programId) => {
     if (!programId || programId === -1) {
       setSelectedProgramData({
@@ -397,7 +448,7 @@ export default function Program() {
     }
 
     if (selectedProgram) {
-      // Update selectedClassData with selectedCourse.id
+      // Update selectedProgramData with selectedProgram.id
       setSelectedProgramData(selectedProgram);
     }
 
@@ -406,37 +457,33 @@ export default function Program() {
     }
   };
 
-  // called when information on the webpage needs to be reloaded
-  // will flag to child objects to reload their information
-  const reloadChildInfo = () => {
-    setLoadProgramTable(!loadProgramTable);
-  };
-
-  ////////////////////////////////////////////////////////
-  //               Local Data Functions                 //
-  ////////////////////////////////////////////////////////
-
-  // update classData with user input
+  // update classData with instructor input
   const handleInputChange = (e) => {
     if (!e || (e.target.name === "duration" && e.target.value.includes("a"))) {
       return;
     }
 
+    // if name is duration check the duration provided by instructor
     if (e.target.name === "duration") {
       if (Number(e.target.value) > 0) {
         let maxRecommendedTimeSplit = 1440;
 
+        // iterate through selectedProgramTimesData 
         for (const data of Object.entries(selectedProgramTimesData)) {
           const startDate = new Date(`1970-01-01T${data[1].start_time}`);
           const endDate = new Date(`1970-01-01T${data[1].end_time}`);
-
+          
+          // calculate timeDifference into minutes
           const timeDifference = endDate - startDate;
           const minutes = Math.floor(timeDifference / (1000 * 60));
+
+          // if maxsplit larger than minutes, set maxsplit to minutes
           if (minutes < maxRecommendedTimeSplit) {
             maxRecommendedTimeSplit = minutes;
           }
         }
 
+        // inform instructor that timesplit is too long
         if (e.target.value > maxRecommendedTimeSplit) {
           setTimeout(() => {
             window.alert(
@@ -459,6 +506,7 @@ export default function Program() {
       [e.target.name]: newValue,
     });
 
+    // update selectedClassData.programs to the selectedProgramData
     const selectedCourse = selectedClassData.programs.find(
       (program) => program.id === selectedProgramData.id
     );
@@ -470,7 +518,7 @@ export default function Program() {
     }));
   };
 
-  // update timesData based on user entries
+  // update timesData based on instructor entries
   const handleTimesChange = (e) => {
     if (!e) {
       return;
@@ -480,7 +528,7 @@ export default function Program() {
     const tempDay = e.name;
     const tempValue = e.value;
 
-    // Create a new object to store the modified data
+    // Create a new times data object to store the selectedProgramTimesData 
     let updatedTimesData = { ...selectedProgramTimesData };
 
     // Check if the day already exists in selectedProgramTimesData
@@ -504,6 +552,7 @@ export default function Program() {
     setSelectedProgramTimesData(updatedTimesData);
   };
 
+  // update selectedProgramData meeting limit's based on instructor entries
   const handleLimitInputChange = (e) => {
     const { name, value } = e.target;
     let newLimitData = {
@@ -545,6 +594,7 @@ export default function Program() {
       }
     }
 
+    // update selectedProgramData with new max daily, weekly, and montly meeting numbers
     setSelectedProgramData({
       ...selectedProgramData,
       max_daily_meetings: newLimitData.max_daily_meetings,
@@ -553,47 +603,23 @@ export default function Program() {
     });
   };
 
-  // handle to cancel webpage changes when user is done editing details
+  // handle to cancel webpage changes when instructor is done editing details
   const handleCancelChanges = () => {
-    // Reset form data to initial meeting data
+    // Reset courseinfo, program info, adn officeHoursTable to initial data
     updateCourseInfo(selectedClassData.id);
     updateProgramInfo(selectedProgramId);
     setResetOfficeHoursTable(true);
     reloadChildInfo();
     if (allTimesData[selectedProgramId]) {
-      setSelectedProgramTimesData(allTimesData[selectedProgramId]);
+      setSelectedProgramTimesData(allTimesData[selectedProgramId]); // resetSelectedProgramTimesData to selectedProgramId
     } else {
       setSelectedProgramTimesData({});
     }
     setChangesMade(false); // Reset changes made
   };
 
-  const handleDeleteProgramType = async () => {
-    if (window.confirm("Are your sure you want to delete this program type?")) {
-      try {
-        const response = await fetch(`/program/delete/${selectedProgramId}`, {
-          method: "DELETE",
-          credentials: "include",
-          headers: {
-            "X-CSRF-TOKEN": csrfToken,
-          },
-        });
-
-        if (response.ok) {
-          // If the cancellation was successful, update the state to reflect that
-          alert("Program Type deleted successfully!");
-          // reload webpage details (like program switch)
-          await fetchCourseList();
-          handleProgramChange({ target: { value: "-1" } });
-        } else {
-          throw new Error("Failed to delete program type");
-        }
-      } catch (error) {
-        console.error("Error deleting program type:", error);
-      }
-    }
-  };
-
+  
+  // updates setBoxShown when instructor clicks on checkbox
   const showBox = () => {
     if (boxShown) {
       // need to make work with save/cancel changes button
@@ -604,12 +630,13 @@ export default function Program() {
     }
   };
 
+  // based on what tab selected, handle course details accordingly
   const tabSelect = (boolean) => {
     setIsAllCoursesSelected(boolean);
     if (boolean) {
-      handleCourseChange({ target: { value: "-2" } });
+      handleCourseChange({ target: { value: "-2" } }); // -2 associated with all course programs having global type
     } else {
-      handleCourseChange({ target: { value: "-1" } });
+      handleCourseChange({ target: { value: "-1" } }); // no global type with single course 
     }
   };
 
@@ -617,6 +644,14 @@ export default function Program() {
   //               UseEffects Functions                 //
   ////////////////////////////////////////////////////////
 
+  // post to database once changes save
+  useEffect(() => {
+    if (post) {
+      postClassDetailsToDatabase();
+    }
+  }, [post]);
+
+  // on initial page load, fetchCourseList()
   useEffect(() => {
     if (!isPageLoaded) {
       fetchCourseList();
@@ -625,6 +660,7 @@ export default function Program() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
 
+  // reload the child info when SelectedProgramTimesData updates
   useEffect(() => {
     reloadChildInfo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -637,11 +673,12 @@ export default function Program() {
     );
   }, [showSaveCancelButtons]);
 
+  // update boxShown if duration is greater than 0
+  // and update setIsDropinsLayout when selectedProgramData updates 
   useEffect(() => {
     if (Number(selectedProgramData.duration) > 0) {
       setBoxShown(true);
     }
-
     if (
       selectedProgramData.isDropins !== "" &&
       selectedProgramData.isDropins === false
@@ -652,6 +689,7 @@ export default function Program() {
     }
   }, [selectedProgramData]);
 
+  // update courseInfo when selectedCourseId is updated
   useEffect(() => {
     if (selectedCourseId && selectedCourseId !== "-1") {
       updateCourseInfo(selectedCourseId);
@@ -659,25 +697,28 @@ export default function Program() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourseId, allCourseData]);
 
+  // update isCourseSelected when selectedCourseId is updated
   useEffect(() => {
     if (
       (selectedCourseId !== "" && selectedCourseId !== -1) ||
       selectedCourseId === -2
     ) {
-      setIsCourseSelected(true);
+      setIsCourseSelected(true); // if course id valid set to true
     } else {
       setIsCourseSelected(false);
     }
   }, [selectedCourseId]);
 
+  // update isProgramSelected when selectedProgramId is updated
   useEffect(() => {
     if (selectedProgramId !== "" && selectedProgramId !== -1) {
-      setIsProgramSelected(true);
+      setIsProgramSelected(true); // if, programid valid set to true
     } else {
       setIsProgramSelected(false);
     }
   }, [selectedProgramId]);
 
+  // set timechecker flag to true if a selectedprogramtimes exists, and data length is > 0
   useEffect(() => {
     if (
       selectedProgramTimesData &&
@@ -689,6 +730,7 @@ export default function Program() {
     }
   }, [selectedProgramTimesData]);
 
+  // update setLocationChecker when selectedProgramData physical location or virtual link is
   useEffect(() => {
     if (
       (selectedProgramData.physical_location &&
@@ -696,39 +738,24 @@ export default function Program() {
       (selectedProgramData.virtual_link &&
         selectedProgramData.virtual_link !== "")
     ) {
-      setLocationChecker(true);
+      setLocationChecker(true); // if physical_location or virtual link valid, set to true
     } else {
       setLocationChecker(false);
     }
   }, [selectedProgramData.physical_location, selectedProgramData.virtual_link]);
 
+  // update setEnableDurationAndDates when locationChecker and timeChecker are updated
   useEffect(() => {
     if (locationChecker && timeChecker) {
-      setEnableDurationAndDates(true);
+      setEnableDurationAndDates(true); 
     } else {
       setEnableDurationAndDates(false);
     }
   }, [locationChecker, timeChecker]);
 
-  useEffect(() => {
-    //console.log(isCourseSelected);
-    //console.log(isProgramSelected);
-    //console.log(isDropinsLayout);
-  }, [isProgramSelected, isCourseSelected, isDropinsLayout]);
-
-  useEffect(() => {
-    //console.log(selectedClassData);
-    //console.log(allTimesData);
-    console.log(allCourseData);
-    //console.log(selectedProgramData);
-    //console.log(selectedProgramTimesData);
-  }, [
-    selectedClassData,
-    allTimesData,
-    allCourseData,
-    selectedProgramData,
-    selectedProgramTimesData,
-  ]);
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
 
   if (!user) {
     return <div>Loading user data...</div>;

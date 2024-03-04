@@ -1,13 +1,35 @@
+/* CreateProgramTypePopup.js
+ * Last Edited: 3/3/24
+ *
+ * UI popup shown when instructor clicks on the create program type button
+ * in the "Class Availability" tab. Allows teacher to enter name of program,
+ * and whether it's drop-in or appointment based
+ * 
+ * Known Bugs:
+ * - 
+ * 
+*/
+
 import React, { useState, useContext, useEffect } from 'react';
 import { getCookie } from '../utils/GetCookie.js';
 
 const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
+    // General Variables
     const csrfToken = getCookie('csrf_access_token');
+
+    // Load Variables
+    const [readyToCreate, setReadyToCreate] = useState(false);
+
+    // Program Type Data Variables 
     const [isDropIns, setIsDropIns] = useState(false);
     const [isAppointments, setIsAppointments] = useState(false);
     const [programTitle, setProgramTitle] = useState('');
-    const [readyToCreate, setReadyToCreate] = useState(false);
+    
+    ////////////////////////////////////////////////////////
+    //               Fetch Post Functions                 //
+    ////////////////////////////////////////////////////////
 
+    // posts the programtype to the ProgramType table
     const createProgramType = async () => {
         try {
             const payload = {
@@ -37,6 +59,11 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         }
     };
 
+    ////////////////////////////////////////////////////////
+    //                 Handler Functions                  //
+    ////////////////////////////////////////////////////////
+
+    // set program type meeting option to drop-in
     const handleDropInChange = () => {
         if (isAppointments === true) {
             setIsAppointments(false);
@@ -44,6 +71,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         setIsDropIns(!isDropIns);
     };
 
+    // set program type meeting option to appointment
     const handleAppointmentChange = () => {
         if (isDropIns === true) {
             setIsDropIns(false);
@@ -51,6 +79,12 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         setIsAppointments(!isAppointments);
     };
 
+    ////////////////////////////////////////////////////////
+    //               UseEffect Functions                  //
+    ////////////////////////////////////////////////////////
+
+    // show create button if instructor picks drop-in or apppointment
+    // and program title isn't empty 
     useEffect(() => {
         if ((isDropIns === true || isAppointments === true) && programTitle !== '') {
             setReadyToCreate(true);
@@ -59,6 +93,11 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         }
     }, [isDropIns, isAppointments, programTitle]);
 
+    ////////////////////////////////////////////////////////
+    //                 Render Functions                   //
+    ////////////////////////////////////////////////////////
+
+    // HTML for webpage
     return (
         <div className="fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-7 relative">
             <button className="absolute top-1 right-1 cursor-pointer fas fa-times" onClick={onClose}></button>

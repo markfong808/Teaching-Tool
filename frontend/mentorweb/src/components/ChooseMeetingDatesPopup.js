@@ -1,3 +1,14 @@
+/* ChooseMeetingDatesPopup.js
+ * Last Edited: 3/3/24
+ *
+ * UI popup shown when Instructor clicks on choose meeting dates button
+ * in the "Class Availability" tab. Allows teacher to set availabilities
+ * based on what days times they have scheduled for program type already
+ * 
+ * Known Bugs:
+ *  - None
+ * 
+*/
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { getCookie } from '../utils/GetCookie';
@@ -7,18 +18,22 @@ import '@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css';
 import { addDays } from 'date-fns';
 
 const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_location, virtual_link, program_id , program_type, isDropins }) => {
+    // Calendar Data Variables
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
-    const [showTimePicker, setShowTimePicker] = useState(false);
     const [weeklyTimes, setWeeklyTimes] = useState([]);
+
+    // Load Variables
+    const [showTimePicker, setShowTimePicker] = useState(false);
+
+    // Class Variables
     const [class_id, setClassId] = useState('');
 
-    const handleCalendarChange = (event) => {
-        setStartDate(event[0]);
-        setEndDate(event[1]);
-        setShowTimePicker(true);
-    };
+    ////////////////////////////////////////////////////////
+    //               Fetch Post Functions                 //
+    ////////////////////////////////////////////////////////
 
+    // posts added availbility data to the Availability table
     const createTimeSlot = async () => {
         if (class_id === null) {
             return;
@@ -28,13 +43,19 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_locatio
             const csrfToken = getCookie('csrf_access_token');
             let convertedAvailability = [];
 
+            // iterate from the start date till the end date 
             for (let date = new Date(startDate); date <= endDate; date = addDays(date, 1)) {
+               
+                // obtain day of week based on date
                 const dayOfWeek = format(date, 'EEEE');
     
+
+                // if days of week in weekly times,
+                // push available time into converted availability list
                 if (weeklyTimes[dayOfWeek]) {
                     const { start_time, end_time } = weeklyTimes[dayOfWeek];
                     const formattedDate = format(date, 'yyyy-MM-dd');
-    
+               
                     convertedAvailability.push({
                         id: program_id,
                         type: program_type,
@@ -45,13 +66,14 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_locatio
                 }
             }
 
-            console.log(typeof duration);
+            // if no duration set to 0
             if (!duration || duration === '') {
                 duration = 0;
             } else {
-                duration = Number(duration);
+                duration = Number(duration); // set duration based on passed in duration
             }
 
+            // create convertedAvailability object and pass to backend call
             convertedAvailability = {
                 availabilities: convertedAvailability,
                 duration: duration,
@@ -77,14 +99,39 @@ const ChooseMeetingDatesPopup = ({ onClose, data, id, duration, physical_locatio
         }
     };
 
+    ////////////////////////////////////////////////////////
+    //                 Handler Functions                  //
+    ////////////////////////////////////////////////////////
+
+    // change start and end date to what instructor selects
+    const handleCalendarChange = (event) => {
+        // start end date could be one date, or range
+        setStartDate(event[0]);
+        setEndDate(event[1]);
+        
+        // once start and end date are set, show button to create availability
+        setShowTimePicker(true);
+    };
+
+    ////////////////////////////////////////////////////////
+    //               UseEffect Functions                  //
+    ////////////////////////////////////////////////////////
+
+    // on page load, set weekly times that instructor has chosen
     useEffect(() => {
         setWeeklyTimes(data);
     }, [data]);
 
+    // on page load, set course id
     useEffect(() => {
         setClassId(id);
     }, [id]);
 
+    ////////////////////////////////////////////////////////
+    //                 Render Functions                   //
+    ////////////////////////////////////////////////////////
+
+    // HTML for webpage
     return (
         <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-calendar-popup-gray border border-gray-300 shadow-md pb-7 relative">
             <button className="absolute top-1 right-1 cursor-pointer fas fa-times" onClick={onClose}></button>

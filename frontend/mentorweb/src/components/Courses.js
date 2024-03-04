@@ -1,3 +1,16 @@
+/* Courses.js
+ * Last Edited: 3/2/24
+ *
+ * Courses Tab for students's view of courses they're registered in,
+ * details of each course, drop in times for all and specific courses,
+ * upcoming, pending, and past appointments, as well as the option to
+ * schedule new meetings
+ * 
+ * Known Bugs:
+ * -
+ * 
+*/
+
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { getCookie } from "../utils/GetCookie";
@@ -11,14 +24,13 @@ export default function Courses() {
   const csrfToken = getCookie("csrf_access_token");
   const { user, setUser } = useContext(UserContext);
   const [isPopUpVisible, setPopUpVisible] = useState(false);
-  const [isClassInformationPopupVisible, setClassInformationPopupVisible] =
-    useState(false);
+  const [isClassInformationPopupVisible, setClassInformationPopupVisible] = useState(false);
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
 
-  // Local Variables
+  // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState("-1");
   const [allCourseData, setAllCourseData] = useState([]);
   const [instructorData, setInstructorData] = useState({
@@ -29,11 +41,10 @@ export default function Courses() {
     pronouns: "",
   });
 
-  // Class Data Variables
   const [classData, setClassData] = useState({});
 
   ////////////////////////////////////////////////////////
-  //               Fetch Data Functions                 //
+  //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
   // fetch all courses the student is associated with from database
@@ -74,8 +85,40 @@ export default function Courses() {
   };
 
   ////////////////////////////////////////////////////////
-  //                 Update Function                    //
+  //               Handler Functions                    //
   ////////////////////////////////////////////////////////
+
+  // called when a student clicks on one of the courses they're registered in
+  const handleButtonClick = (course) => {
+    updateCourseInfo(course.id);
+    setTimeout(() => {
+      setClassInformationPopupVisible(true);
+    }, 10);
+  };
+
+ 
+  // called when student clicks to change selected course
+  const handleCourseChange = (e) => {
+    if (!e) {
+      return;
+    }
+
+    // reload courseIds with all courses
+    fetchCourseList();
+
+    const selectedCourse = parseInt(e.target.value);
+
+    // change selectedCourseId
+    setSelectedCourseId(selectedCourse);
+
+    // update course info displayed on page to selectedCourseId
+    updateCourseInfo(selectedCourse);
+  };
+
+  // reload appointments table
+  const reloadAppointments = () => {
+    setReloadAppointmentsTable(true);
+  };
 
   // update the course information being displayed on the webpage
   const updateCourseInfo = (courseId) => {
@@ -97,44 +140,10 @@ export default function Courses() {
   };
 
   ////////////////////////////////////////////////////////
-  //               Local Data Function                  //
-  ////////////////////////////////////////////////////////
-
-  // called when a student clicks on one of the courses they're registered in
-  const handleButtonClick = (course) => {
-    updateCourseInfo(course.id);
-    setTimeout(() => {
-      setClassInformationPopupVisible(true);
-    }, 10);
-  };
-
-  // main webpage load function
-  // called when user clicks to change selected course
-  const handleCourseChange = (e) => {
-    if (!e) {
-      return;
-    }
-
-    // reload courseIds with all courses
-    fetchCourseList();
-
-    const selectedCourse = parseInt(e.target.value);
-
-    // change selectedCourseId
-    setSelectedCourseId(selectedCourse);
-
-    // update course info displayed on page to selectedCourseId
-    updateCourseInfo(selectedCourse);
-  };
-
-  const reloadAppointments = () => {
-    setReloadAppointmentsTable(true);
-  };
-
-  ////////////////////////////////////////////////////////
   //               UseEffect Function                   //
   ////////////////////////////////////////////////////////
 
+  // on initial page load, fetchCourseList()
   useEffect(() => {
     if (!isPageLoaded) {
       fetchCourseList();
@@ -142,6 +151,11 @@ export default function Courses() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
+
+
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
 
   // HTML for webpage
   return (
@@ -197,7 +211,6 @@ export default function Courses() {
             className="bg-purple p-2 rounded-md text-white hover:text-gold"
             onClick={() => setPopUpVisible(!isPopUpVisible)}
           >
-            {" "}
             Schedule New Meeting
           </button>
         </div>

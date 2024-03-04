@@ -1,15 +1,36 @@
+/* DropinsTable.js
+ * Last Edited: 3/2/24
+ *
+ * Table that shows student Drop-In times that instructors 
+ * have created for their class inside "Courses" tab
+ *  
+ * Known Bugs:
+ * - When All Courses is selected as option in "Courses" tab, 
+ *   then Drop-In times for global and 1 specific class show up
+ *   but the other classes dont show up i.e. not grabbing all courses student is in initial load
+ *   
+*/
+
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../context/UserContext';
 import { formatTime, formatDate, getDayFromDate, capitalizeFirstLetter } from '../utils/FormatDatetime';
 import { getCookie } from '../utils/GetCookie';
 
 export default function DropinsTable({ courseId }) {
+    // General Variables 
     const { user } = useContext(UserContext);
+
+    // Drop-In Table Variables
     const [data, setData] = useState([]);
     const [showTable, setShowTable] = useState(true);
     const [sortedBy, sortBy] = useState('Type');
     const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
 
+    ////////////////////////////////////////////////////////
+    //               Fetch Get Functions                  //
+    ////////////////////////////////////////////////////////
+
+    // fetch drop ins' data for a student
     const fetchDropins = async () => {
         if (!user) return;
 
@@ -20,9 +41,12 @@ export default function DropinsTable({ courseId }) {
 
             const apiData = await response.json();
 
+            // drop-ins more than 1, sort array of drop ins
             if (apiData.length > 1) {
+                // sort based on Date
                 const sortedData = (apiData || []).sort((a, b) => {
                     const dateComparison = new Date(a.date) - new Date(b.date);
+                    // if the date is the same, sort based on start time
                     if (dateComparison === 0) {
                         return (
                             new Date(`${a.date}T${a.start_time}`) -
@@ -31,38 +55,36 @@ export default function DropinsTable({ courseId }) {
                     }
                     return dateComparison;
                 });
+                // set data based on sorted dates for drop-ins
                 setData(sortedData);
             } else {
+                // set data based on 1 drop-in
                 setData(apiData);
             }
-
 
         } catch (error) {
             console.error("Error fetching data:", error);
         }
     }
 
-    useEffect(() => {
-        fetchDropins();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    ////////////////////////////////////////////////////////
+    //               Handler Functions                    //
+    ////////////////////////////////////////////////////////
 
-    useEffect(() => {
-        if (courseId !== null || courseId !== '') {
-            fetchDropins();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [courseId]);
-
+    // sort drop ins 
     const sortTable = (sort) => {
         const daysOfWeekOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
+        // iterate through data array and sort 
         const sortedData = [...data].sort((a, b) => {
             switch (sort) {
-                case 'Type':
+                // sort based on type
+                case 'Type':                               
                     return a.type.localeCompare(b.type);
+                // sort based on day
                 case 'Day':
                     return daysOfWeekOrder.indexOf(getDayFromDate(a.date)) - daysOfWeekOrder.indexOf(getDayFromDate(b.date));
+                // sort based on Date
                 case 'Date':
                     const dateComparison = new Date(a.date) - new Date(b.date);
                     if (dateComparison === 0) {
@@ -72,23 +94,48 @@ export default function DropinsTable({ courseId }) {
                         );
                     }
                     return dateComparison;
+                // sort based on status
                 case 'Status':
                     return a.status.localeCompare(b.status);
+                // sort doesn't match any of the case statements above
                 default:
                     return 0;
             }
         });
-      
+
+        // set data to the sortedData
         setData(sortedData);
     };
 
+    ////////////////////////////////////////////////////////
+    //               UseEffect Functions                  //
+    ////////////////////////////////////////////////////////
+
+    // fetch drop ins on initial render
+    useEffect(() => {
+        fetchDropins();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // fetch drop ins when the course id is updated and valid
+    useEffect(() => {
+        if (courseId !== null || courseId !== '') {
+            fetchDropins();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [courseId]);
+
+    // sortTable function called when sortedBy is updated 
     useEffect(() => {
         sortTable(sortedBy);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sortedBy]);
 
-    
+    ////////////////////////////////////////////////////////
+    //                 Render Functions                   //
+    ////////////////////////////////////////////////////////
 
+    // HTML for webpage 
     return (
         <div className="w-full m-auto">
             <div className='text-center font-bold text-2xl pb-5'>
@@ -98,30 +145,30 @@ export default function DropinsTable({ courseId }) {
                 className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2"
                 onClick={() => setShowTable(!showTable)}
             >
-            {showTable ? 'Hide Table' : 'Show Table'}
+                {showTable ? 'Hide Table' : 'Show Table'}
             </button>
-      
-          <div className="border w-3/8 m-auto text-center">
-            <table className='w-full'>
-              <thead className='border-b border-light-gray bg-purple text-white'>
-                <th className='border-r border-light-gray w-14% cursor-pointer hover:bg-gold' onClick={() => sortBy("Type")}>Type</th>
-                <th className='border-r border-light-gray w-8% cursor-pointer hover:bg-gold' onClick={() => sortBy("Day")}>Day</th>
-                <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : '' }`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Date</th>
-                <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : '' }`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Time (PST)</th>
-              </thead>
-              <tbody>
-                {showTable && data.map((availability) => (
-                  <tr className='border' key={availability.id}>
-                        <td className='border-r'>{availability.type}</td>
-                        <td className='border-r'>{getDayFromDate(availability.date)}</td>
-                        <td className='border-r'>{formatDate(availability.date)}</td>
-                        <td className='border-r'>{formatTime(availability.start_time)} - {formatTime(availability.end_time)} </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+            <div className="border w-3/8 m-auto text-center">
+                <table className='w-full'>
+                    <thead className='border-b border-light-gray bg-purple text-white'>
+                        <th className='border-r border-light-gray w-14% cursor-pointer hover:bg-gold' onClick={() => sortBy("Type")}>Type</th>
+                        <th className='border-r border-light-gray w-8% cursor-pointer hover:bg-gold' onClick={() => sortBy("Day")}>Day</th>
+                        <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : ''}`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Date</th>
+                        <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : ''}`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Time (PST)</th>
+                    </thead>
+                    <tbody>
+                        {showTable && data.map((availability) => (
+                            <tr className='border' key={availability.id}>
+                                <td className='border-r'>{availability.type}</td>
+                                <td className='border-r'>{getDayFromDate(availability.date)}</td>
+                                <td className='border-r'>{formatDate(availability.date)}</td>
+                                <td className='border-r'>{formatTime(availability.start_time)} - {formatTime(availability.end_time)} </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-      )
-      
+    )
+
 }

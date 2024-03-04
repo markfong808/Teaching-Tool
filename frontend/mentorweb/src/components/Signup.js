@@ -1,6 +1,19 @@
+/* Signup.js
+ * Last Edited: 3/1/24
+ *
+ * Register Tab for students, mentors to enter 
+ * name, email, password, password verification, and usertype
+ * to use the website
+ * 
+ * Known Bugs:
+ * - None found
+ * 
+*/
+
 import React, { useState } from 'react';
 
 export default function Signup() {
+    // Registration Data Variables
     const [userType, setUserType] = useState('student');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -8,8 +21,16 @@ export default function Signup() {
     const [verifyPassword, setVerifyPassword] = useState('');
     const [registrationError, setRegistrationError] = useState('');
 
+    ////////////////////////////////////////////////////////
+    //               Fetch Post Functions                 //
+    ////////////////////////////////////////////////////////
+
+    // called when user clicks on register button
+    // redirects user to the login page once registered
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        // prevent submit event from happening if name, email, userType
+        // password, verifyPassword, and registrationError are invalid values
+        e.preventDefault(); 
 
         const formData = {
             name,
@@ -42,8 +63,13 @@ export default function Signup() {
         }
     };
 
+    ////////////////////////////////////////////////////////
+    //                 Render Functions                   //
+    ////////////////////////////////////////////////////////
+
+    // HTML for webpage
     return (
-        <div className="m-auto w-1/4 p-5 shadow-lg border border-light-gray rounded-md">
+        <div className="m-auto w-1/4 p-5 shadow-lg border border-light-gray rounded-md mt-8">
             <div className="text-center pb-5">
                 <h1 className="text-xl">Register</h1>
             </div>

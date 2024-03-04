@@ -1,3 +1,17 @@
+/* ManageTimes.js
+ * Last Edited: 3/2/24
+ * 
+ * Manage Times tab for the Instructor role.
+ * Allows teacher to see availibility table and 
+ * Manage Availability for global and per class program types.
+ * In addition, the Teacher can see a table of Upcoming, Pending, and Past meetings and
+ * cancel any meetings that are upcoming.
+ * 
+ * Known Bugs:
+ * -
+ *
+*/
+
 import React, { useEffect, useState, useContext } from "react";
 import MeetingInformation from './MeetingInformation.js'
 import ManageAvailability from './ManageAvailability.js'
@@ -13,47 +27,41 @@ export default function ManageTimes() {
     const [isPageLoaded, setIsPageLoaded] = useState(false);
     const [loadAppointments, setLoadAppointments] = useState(false);
 
-    // Class Data Variables
+    // Course Data Variables
     const [selectedCourseId, setSelectedCourseId] = useState(-1);
     const [allCourseData, setAllCourseData] = useState([]);
 
-
-
-
-
-
     ////////////////////////////////////////////////////////
-    //               Fetch Data Functions                 //
+    //               Fetch Get Functions                  //
     ////////////////////////////////////////////////////////
 
-    // fetch from database: all courses the user is associated with
+    // fetch all courses the instructor is associated with
     const fetchCourseList = async () => {
         if (user.account_type !== "mentor") return;
-    
+
         try {
-        const response = await fetch(`/student/courses`, {
-            credentials: 'include',
-        });
-    
-        const fetchedCourseList = await response.json();
-    
-        setAllCourseData(fetchedCourseList);
+            const response = await fetch(`/student/courses`, {
+                credentials: 'include',
+            });
+
+            const fetchedCourseList = await response.json();
+
+            // set all the course data to the instructor's fetched course list
+            setAllCourseData(fetchedCourseList);
         } catch (error) {
-        console.error("Error fetching course list:", error);
+            console.error("Error fetching course list:", error);
         }
     };
 
 
-
     ////////////////////////////////////////////////////////
-    //                  Load Functions                    //
+    //                 Handler Functions                  //
     ////////////////////////////////////////////////////////
 
-    // main webpage load function
-    // called when user clicks to change selected course
+    // called when instructor clicks to change selected course
     const handleCourseChange = (e) => {
         if (!e) {
-        return;
+            return;
         }
 
         // reload courseIds with all courses
@@ -61,29 +69,39 @@ export default function ManageTimes() {
 
         const selectedCourse = parseInt(e.target.value);
 
-        // change selectedCourseId
+        // set selectedCourseId to the selectedCourse from instructor option choice
         setSelectedCourseId(selectedCourse);
 
-        // flag to child objects to reload their information
-        // with times data or selectedClassData
         reloadChildInfo();
     };
 
-    // called when information on the webpage needs to be reloaded
+    // helper function called when information on the webpage needs to be reloaded
     // will flag to child objects to reload their information
     const reloadChildInfo = () => {
         setLoadAppointments(!loadAppointments);
     };
 
+    
+
+    ////////////////////////////////////////////////////////
+    //               UseEffect Functions                  //
+    ////////////////////////////////////////////////////////
+
+    // on initial page load, fetchCourseList()
     useEffect(() => {
         if (!isPageLoaded) {
-          fetchCourseList();
-          setIsPageLoaded(!isPageLoaded);
+            fetchCourseList();
+            setIsPageLoaded(!isPageLoaded);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPageLoaded, user]);
 
-    // Display meeting list
+
+    ////////////////////////////////////////////////////////
+    //               Render Functions                     //
+    ////////////////////////////////////////////////////////
+
+    // HTML for webpage
     return (
         <div className="flex flex-col m-auto mt-8">
             <div className="w-3/4 p-5 m-auto items-center">
@@ -96,15 +114,15 @@ export default function ManageTimes() {
                 >
                     <option key={-1} value='-1'>All Courses</option>
                     {allCourseData.map((course) => (
-                    <option key={course.id} value={course.id}>{course.class_name}</option>
+                        <option key={course.id} value={course.id}>{course.class_name}</option>
                     ))}
                 </select>
             </div>
             <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md">
-                    <ManageAvailability courseId={selectedCourseId}/>
+                <ManageAvailability courseId={selectedCourseId} />
             </div>
             <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-                    <MeetingInformation loadPage={loadAppointments} courseId={selectedCourseId}/>
+                <MeetingInformation loadPage={loadAppointments} courseId={selectedCourseId} />
             </div>
             {/* Empty Space at bottom of webpage */}
             <div className="p-10"></div>
