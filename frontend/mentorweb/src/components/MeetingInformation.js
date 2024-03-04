@@ -1,10 +1,13 @@
 /* MeetingInformation.js
- * Last Edited: 2/29/24
+ * Last Edited: 3/3/24
  *
- * Table UI to show appointment history for Students and Instructors
+ * Table UI to show appointment history for Students and Instructors.
+ * Students and Instructors can sort, edit, and cancel appointments.
+ * Students and Instructors can view meeting details and Instructors
+ * can edit meeting details.
  *
  * Known bugs:
- * -
+ * - Save and Discard Changes shows up twice after providing feedback.
  *
  */
 
@@ -23,19 +26,19 @@ import Comment from "../components/Comment.js";
 export default function MeetingInformation({ courseId, reloadTable }) {
   // General Variables
   const { user } = useContext(UserContext);
-
-  // Load Variables
-  const [activeTab, setActiveTab] = useState("upcoming");
   const [changesMade, setChangesMade] = useState(false);
+
+  // Appointment Table Variables
+  const [activeTab, setActiveTab] = useState("upcoming");
   const [showTable, setShowTable] = useState(true);
   const [sortedBy, sortBy] = useState("Type");
   const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
-  const [feedbackPresent, setFeedbackPresent] = useState(false);
-  const [isProvidingFeedback, setIsProvidingFeedback] = useState(false);
-
-  // Data Variables
+  
+  // Meeting Data Variables
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [typeDescriptions, setTypeDescriptions] = useState({}); // [type: string]: string
+  const [feedbackPresent, setFeedbackPresent] = useState(false);
+  const [isProvidingFeedback, setIsProvidingFeedback] = useState(false);
   const [data, setData] = useState([]);
   const [formData, setFormData] = useState({
     notes: "",
@@ -71,7 +74,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           ? "mentor_appointments"
           : "student_appointments";
 
-      // Sort the appointment type
+      // sort the appointment type
       const sortedData = (apiData[key] || []).sort((a, b) => {
         const dateComparison = new Date(a.date) - new Date(b.date);
         if (dateComparison === 0) {
@@ -83,12 +86,14 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         return dateComparison;
       });
 
+      // set data to sorted data
       setData(sortedData);
     } catch (error) {
       console.error("Error fetching data2:", error);
     }
   };
 
+  // fetch program type details 
   const fetchProgramTypeDetails = async () => {
     if (!user) return; // If there's no user, we can't fetch meetings
     const apiEndpoint =
@@ -101,17 +106,21 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         credentials: "include",
       });
       const apiData = await response.json();
+      // create program details array 
+      // store id, program, and description into an object 
+      // store object into array
       const programDetails = apiData.map((program) => ({
         id: program.id,
         type: program.type,
         description: program.description,
       }));
-      setTypeDescriptions(programDetails);
+      setTypeDescriptions(programDetails); // set type descriptions to program details
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
+  // fetch feedback associated with appointment id
   const fetchFeedback = async () => {
     if (!selectedMeeting) return;
 
@@ -125,12 +134,15 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       const apiData = await response.json();
 
       let feedbackExists = false;
+      // if the account type is student, store the student rating or notes in to feedbackExists
       if (user.account_type === "student") {
         feedbackExists = apiData.student_rating || apiData.student_notes;
       } else if (user.account_type === "mentor") {
-        feedbackExists = apiData.mentor_rating || apiData.mentor_notes;
+        //else if the account type is instructor, store the instructor rating or notes in to feedbackExists
+        feedbackExists = apiData.mentor_rating || apiData.mentor_notes; 
       }
 
+      // set feedbackPresent to feedbackExists 
       setFeedbackPresent(feedbackExists);
     } catch (error) {
       console.error("Error fetching feedback:", error);
@@ -141,6 +153,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
+  // called when instructor clicks on save changes button after providing feedback
+  // posts meeting notes, meeting url, or both to the Appointment table
   const handleSaveChanges = async () => {
     if (!selectedMeeting) return;
 
@@ -162,11 +176,11 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       });
 
       if (response.ok) {
-        // Update the selected meeting with the new formData
+        // update the selected meeting with the new formData
         setSelectedMeeting({ ...selectedMeeting, ...formData });
         setChangesMade(false);
         alert("Meeting updated successfully!");
-        fetchMeetings(); // Re-fetch meetings to update the list
+        fetchMeetings(); // re-fetch meetings 
       } else {
         throw new Error("Failed to update the meeting");
       }
@@ -175,6 +189,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     }
   };
 
+  // called when the instructor Approve Meeting, Attended, Missing button
+  // posts new status of appointment to the Appointment table
   const handleStatusUpdate = async (appointmentId, newStatus) => {
     // Get CSRF token from the cookie.
     const csrfToken = getCookie("csrf_access_token");
@@ -194,10 +210,10 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       });
 
       if (response.ok) {
-        // Update the selected meeting with the new formData
+        // update the selected meeting with the new formData
         setSelectedMeeting({ ...selectedMeeting, status: newStatus });
         alert("Meeting status updated successfully!");
-        fetchMeetings(); // Re-fetch meetings to update
+        fetchMeetings(); // re-fetch meetings
       } else {
         throw new Error("Failed to update the meeting status");
       }
@@ -206,6 +222,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     }
   };
 
+  // called when instructor or student clicks on save changes button after providing feedback
+  // posts feedback data to Feedback table 
   const handleProvideFeedback = async (event) => {
     event.preventDefault();
 
@@ -227,6 +245,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
 
       if (response.ok) {
         alert("Thank you for your feedback!");
+        // reset feedback data
         setIsProvidingFeedback(false);
         setChangesMade(false);
         setFeedbackData({
@@ -234,7 +253,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           additional_comments: "",
           appointment_id: null,
         });
-        fetchMeetings();
+        fetchMeetings(); // re-fetch meetings
       } else {
         throw new Error("Failed to provide feedback");
       }
@@ -243,6 +262,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     }
   };
 
+  // called when instructor or student wants to cancel meeting
+  // posts cancel status for instructor and posted for student to Appointment table
   const handleCancelMeeting = async (appointmentId) => {
     if (window.confirm("Are your sure you want to cancel this meeting?")) {
       // Construct the endpoint based on account type
@@ -282,6 +303,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
+  // called when instructor wants to enter meeting URL Link or Meeting notes
   const handleInputChange = (e) => {
     if (user.account_type !== "mentor") return;
 
@@ -290,23 +312,28 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     setChangesMade(true);
   };
 
+  // called when instructor or student clicks on upcoming, pending, or past tab
   const handleTabClick = (tabName) => {
     setActiveTab(tabName); // Update the active tab state
     setSelectedMeeting(null); // Reset the selected meeting details
   };
 
+  // called when instructor or student clicks on a meeting
   const handleMeetingClick = (meeting) => {
-    setSelectedMeeting(meeting);
+    setSelectedMeeting(meeting); // update selected meeting state
     fetchFeedback();
   };
 
+  // called when instructor or student rates satisfaction or enters explanation
   const handleFeedbackInputChange = (e) => {
     const { name, value } = e.target;
-    setFeedbackData({ ...feedbackData, [name]: value });
+    setFeedbackData({ ...feedbackData, [name]: value }); // update feedbackData with comments/satisfaction rating
     setChangesMade(true);
   };
 
+  // called when instrucor or student clicks on cancel changes button
   const handleCancelFeedbackChanges = () => {
+    // reset feedback data
     setFeedbackData({
       satisfaction: "",
       additional_comments: "",
@@ -314,6 +341,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     setChangesMade(false);
   };
 
+  // called when instructor or student clicks on provide feedback button
   const handleFeedbackClick = () => {
     setIsProvidingFeedback(true);
     // Set the initial state for feedbackData including the appointment_id from the selected meeting
@@ -325,6 +353,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     setChangesMade(false);
   };
 
+  // called when instructor wanted to cancel changes made
   const handleCancelChanges = () => {
     // Reset form data to initial meeting data
     setFormData({
@@ -335,10 +364,63 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     setChangesMade(false); // Reset changes made
   };
 
+  // sort appointments
+  const sortTable = (sort) => {
+    const daysOfWeekOrder = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+    ];
+
+    // iterate through data array and sort
+    const sortedData = [...data].sort((a, b) => {
+      switch (sort) {
+        // sort based on name
+        case "Name":
+          return a.type.localeCompare(b.type);
+        // sort based on class name
+        case "class_name":
+          return a.class_name.localeCompare(b.class_name);
+        // sort based on day
+        case "Day":
+          return (
+            daysOfWeekOrder.indexOf(getDayFromDate(a.date)) -
+            daysOfWeekOrder.indexOf(getDayFromDate(b.date))
+          );
+        // sort based on Date
+        case "Date":
+          const dateComparison = new Date(a.date) - new Date(b.date);
+          if (dateComparison === 0) {
+            return (
+              new Date(`${a.date}T${a.start_time}`) -
+              new Date(`${b.date}T${b.start_time}`)
+            );
+          }
+          return dateComparison;
+        // sort based on location
+        case "Location":
+          return a.physical_location.localeCompare(b.physical_location);
+        // sort based on status
+        case "Status":
+          return a.status.localeCompare(b.status);
+        // sort doesn't match any of the case statements above
+        default:
+          return 0;
+      }
+    });
+
+    // set data to the sortedData
+    setData(sortedData);
+  };
+
+
   ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
+  // reset selected meeting when selectedMeeting updates
   useEffect(() => {
     if (selectedMeeting) {
       setFormData({
@@ -350,12 +432,14 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     }
   }, [selectedMeeting]);
 
+  // fetch meetings and program type details when use, activeTab, or reloadTable updates
   useEffect(() => {
     fetchMeetings();
     fetchProgramTypeDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab, reloadTable]);
 
+  // fetch meetings when the course id is updated and valid
   useEffect(() => {
     if (courseId !== null || courseId !== "") {
       fetchMeetings();
@@ -363,11 +447,13 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
+  // fetch dfedback when the selectedMeeting is updated 
   useEffect(() => {
     fetchFeedback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMeeting]);
 
+  // sortTable function called when sortedBy is updated 
   useEffect(() => {
     sortTable(sortedBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -377,6 +463,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
 
+  // render the provide feedback form if user clicks on provide feedback button  
   const renderProvideFeedbackForm = () => {
     if (!isProvidingFeedback) {
       return null;
@@ -392,6 +479,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     ];
     const statements = ["How satisfied are you with the meeting?"];
 
+    // HTML for webpage
     return (
       <div id="feedback-form">
         <div className="flex flex-row justify-between mt-5">
@@ -457,12 +545,13 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     );
   };
 
-  // Render the meeting details if a meeting is selected
+  // render the meeting details if a meeting is selected
   const renderMeetingDetails = () => {
     if (!selectedMeeting) {
       return null;
     }
 
+    // HTML for webpage
     return (
       <div
         id="details-panel"
@@ -487,15 +576,15 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           <div className="flex">
             {((user.account_type === "student" && activeTab !== "past") ||
               (user.account_type === "mentor" && activeTab === "upcoming")) && (
-              <button
-                className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                onClick={() =>
-                  handleCancelMeeting(selectedMeeting.appointment_id)
-                }
-              >
-                Cancel Meeting
-              </button>
-            )}
+                <button
+                  className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
+                  onClick={() =>
+                    handleCancelMeeting(selectedMeeting.appointment_id)
+                  }
+                >
+                  Cancel Meeting
+                </button>
+              )}
             {user.account_type === "mentor" && activeTab === "pending" && (
               <div>
                 <button
@@ -688,48 +777,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     );
   };
 
-  const sortTable = (sort) => {
-    const daysOfWeekOrder = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-    ];
 
-    const sortedData = [...data].sort((a, b) => {
-      switch (sort) {
-        case "Name":
-          return a.type.localeCompare(b.type);
-        case "class_name":
-          return a.class_name.localeCompare(b.class_name);
-        case "Day":
-          return (
-            daysOfWeekOrder.indexOf(getDayFromDate(a.date)) -
-            daysOfWeekOrder.indexOf(getDayFromDate(b.date))
-          );
-        case "Date":
-          const dateComparison = new Date(a.date) - new Date(b.date);
-          if (dateComparison === 0) {
-            return (
-              new Date(`${a.date}T${a.start_time}`) -
-              new Date(`${b.date}T${b.start_time}`)
-            );
-          }
-          return dateComparison;
-        case "Location":
-          return a.physical_location.localeCompare(b.physical_location);
-        case "Status":
-          return a.status.localeCompare(b.status);
-        default:
-          return 0;
-      }
-    });
-
-    setData(sortedData);
-  };
-
-  // Display meeting list
+  // HTML for webpage, Display meeting list
   return (
     <div
       id="content-container"
@@ -794,9 +843,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                       Day
                     </th>
                     <th
-                      className={`border-r w-12% hover:bg-gold ${
-                        hoveringDateOrTime ? "bg-gold" : ""
-                      }`}
+                      className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? "bg-gold" : ""
+                        }`}
                       onClick={() => sortBy("Date")}
                       onMouseEnter={() => setHoveringDateOrTime(true)}
                       onMouseLeave={() => setHoveringDateOrTime(false)}
@@ -804,9 +852,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                       Date
                     </th>
                     <th
-                      className={`border-r w-12% hover:bg-gold ${
-                        hoveringDateOrTime ? "bg-gold" : ""
-                      }`}
+                      className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? "bg-gold" : ""
+                        }`}
                       onClick={() => sortBy("Date")}
                       onMouseEnter={() => setHoveringDateOrTime(true)}
                       onMouseLeave={() => setHoveringDateOrTime(false)}
@@ -851,8 +898,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                         <td className="border-r">
                           {meeting.start_time && meeting.end_time
                             ? `${formatTime(meeting.start_time)} - ${formatTime(
-                                meeting.end_time
-                              )}`
+                              meeting.end_time
+                            )}`
                             : "-------"}
                         </td>
                         <td className="border-r">
