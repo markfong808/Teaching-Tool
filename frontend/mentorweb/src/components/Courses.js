@@ -1,5 +1,5 @@
 /* Courses.js
- * Last Edited: 3/2/24
+ * Last Edited: 3/3/24
  *
  * Courses Tab for students's view of courses they're registered in,
  * details of each course, drop in times for all and specific courses,
@@ -31,7 +31,7 @@ export default function Courses() {
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
 
   // Course Data Variables
-  const [selectedCourseId, setSelectedCourseId] = useState("-1");
+  const [selectedCourseId, setSelectedCourseId] = useState();
   const [allCourseData, setAllCourseData] = useState([]);
   const [instructorData, setInstructorData] = useState({
     id: "",
@@ -183,8 +183,8 @@ export default function Courses() {
             value={selectedCourseId}
             onChange={(e) => handleCourseChange(e)}
           >
-            <option key={-1} value="-1">
-              All Courses
+            <option key={-1} value="">
+              Select...
             </option>
             {allCourseData.map((course) => (
               <option key={course.id} value={course.id}>

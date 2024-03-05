@@ -668,7 +668,7 @@ def get_student_dropins(course_id):
             if course_id != '-1':
                 courses = courses.filter(CourseMembers.class_id==course_id).all()
             else: 
-                courses = courses.all()
+                courses = None
 
             if courses:
 
@@ -702,7 +702,6 @@ def get_student_dropins(course_id):
                     dropin_times = []
 
                     for program in all_formatted_programs:
-                        #print(program)
                         availabilities = Availability.query.filter_by(type=program.get('id')).all()
 
                         for availability in availabilities:
@@ -716,14 +715,12 @@ def get_student_dropins(course_id):
                                 'end_time': availability.end_time,
                             }
                             dropin_times.append(availability_info)
-
-                    return jsonify(dropin_times), 200
+                return jsonify(dropin_times), 200
             else:
-                return jsonify({"error": "courses not found"}), 404
+                return jsonify(None), 200
         else:
             return jsonify({"error": "student not found"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
     
 

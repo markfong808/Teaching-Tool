@@ -1,12 +1,12 @@
 /* ManageAvailability.js
- * Last Edited: 3/2/24
+ * Last Edited: 3/3/24
  *
  * Table that shows instructor their global program type availabilities
  * and class specific program type availabilities in the "Manage Times" tab.
  * 
  * Known Bugs: 
- * - Can switch from active to inactive status for availability,
- *   but not the inactive to active, error 500
+ * - 
+ * 
 */
 
 
@@ -194,19 +194,19 @@ export default function ManageAvailability({ courseId }) {
 
     // HTML for webpage 
     return (
-        <div className="w-full m-auto">
+        <div className="flex flex-col w-full m-auto items-center">
             <div className='text-center font-bold text-2xl pb-5'>
                 <h1>Manage Availability</h1>
             </div>
             <button
-                className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2"
+                className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-end"
                 onClick={() => setShowTable(!showTable)}
             >
                 {showTable ? 'Hide Table' : 'Show Table'}
             </button>
 
-            <div className="border w-3/8 m-auto text-center">
-                <table className='w-full'>
+            <div className="w-11/12">
+                <table className='w-full border text-center'>
                     <thead className='border-b border-light-gray bg-purple text-white'>
                         <th className='border-r border-light-gray w-14% cursor-pointer hover:bg-gold' onClick={() => sortBy("Type")}>Type</th>
                         <th className='border-r border-light-gray w-14%'>Class Name</th>

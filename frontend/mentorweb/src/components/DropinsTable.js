@@ -1,20 +1,17 @@
 /* DropinsTable.js
- * Last Edited: 3/2/24
+ * Last Edited: 3/3/24
  *
  * Table that shows student Drop-In times that instructors 
  * have created for their class inside "Courses" tab
  *  
  * Known Bugs:
- * - When All Courses is selected as option in "Courses" tab, 
- *   then Drop-In times for global and 1 specific class show up
- *   but the other classes dont show up i.e. not grabbing all courses student is in initial load
+ * - 
  *   
 */
 
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../context/UserContext';
-import { formatTime, formatDate, getDayFromDate, capitalizeFirstLetter } from '../utils/FormatDatetime';
-import { getCookie } from '../utils/GetCookie';
+import { formatTime, formatDate, getDayFromDate } from '../utils/FormatDatetime';
 
 export default function DropinsTable({ courseId }) {
     // General Variables 
@@ -111,16 +108,12 @@ export default function DropinsTable({ courseId }) {
     //               UseEffect Functions                  //
     ////////////////////////////////////////////////////////
 
-    // fetch drop ins on initial render
-    useEffect(() => {
-        fetchDropins();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     // fetch drop ins when the course id is updated and valid
     useEffect(() => {
-        if (courseId !== null || courseId !== '') {
+        if (courseId && courseId !== '') {
             fetchDropins();
+        } else {
+            setData([]);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseId]);
@@ -137,35 +130,56 @@ export default function DropinsTable({ courseId }) {
 
     // HTML for webpage 
     return (
-        <div className="w-full m-auto">
+        <div className="flex flex-col w-full m-auto items-center">
             <div className='text-center font-bold text-2xl pb-5'>
                 <h1>Drop Ins Times</h1>
             </div>
             <button
-                className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2"
+                className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-end"
                 onClick={() => setShowTable(!showTable)}
             >
                 {showTable ? 'Hide Table' : 'Show Table'}
             </button>
-
-            <div className="border w-3/8 m-auto text-center">
-                <table className='w-full'>
-                    <thead className='border-b border-light-gray bg-purple text-white'>
-                        <th className='border-r border-light-gray w-14% cursor-pointer hover:bg-gold' onClick={() => sortBy("Type")}>Type</th>
-                        <th className='border-r border-light-gray w-8% cursor-pointer hover:bg-gold' onClick={() => sortBy("Day")}>Day</th>
-                        <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : ''}`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Date</th>
-                        <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : ''}`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Time (PST)</th>
-                    </thead>
-                    <tbody>
-                        {showTable && data.map((availability) => (
-                            <tr className='border' key={availability.id}>
-                                <td className='border-r'>{availability.type}</td>
-                                <td className='border-r'>{getDayFromDate(availability.date)}</td>
-                                <td className='border-r'>{formatDate(availability.date)}</td>
-                                <td className='border-r'>{formatTime(availability.start_time)} - {formatTime(availability.end_time)} </td>
+    
+            <div id='table' className="w-11/12">
+                <table className='w-full border text-center'>
+                    {data.length > 0 ? (
+                        <>
+                            <thead className='border-b border-light-gray bg-purple text-white'>
+                                <th className='border-r border-light-gray w-14% cursor-pointer hover:bg-gold' onClick={() => sortBy("Type")}>Type</th>
+                                <th className='border-r border-light-gray w-8% cursor-pointer hover:bg-gold' onClick={() => sortBy("Day")}>Day</th>
+                                <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : ''}`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Date</th>
+                                <th className={`border-r border-light-gray w-12% cursor-pointer ${hoveringDateOrTime ? 'bg-gold' : ''}`} onClick={() => sortBy("Date")} onMouseEnter={() => setHoveringDateOrTime(true)} onMouseLeave={() => setHoveringDateOrTime(false)}>Time (PST)</th>
+                            </thead>
+                            <tbody>
+                                {showTable && data.map((availability) => (
+                                    <tr className='border' key={availability.id}>
+                                        <td className='border-r'>{availability.type}</td>
+                                        <td className='border-r'>{getDayFromDate(availability.date)}</td>
+                                        <td className='border-r'>{formatDate(availability.date)}</td>
+                                        <td className='border-r'>{formatTime(availability.start_time)} - {formatTime(availability.end_time)} </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </>
+                    ) : (
+                        <tbody>
+                            <tr>
+                                <td colSpan="5">
+                                <div>
+                                    <img
+                                    src="https://assets.calendly.com/assets/frontend/media/no-events-2ed89b6c6379caebda4e.svg"
+                                    alt="No appointments"
+                                    className="m-auto"
+                                    />
+                                    <h2 className="text-center">
+                                    No drop in times
+                                    </h2>
+                                </div>
+                                </td>
                             </tr>
-                        ))}
-                    </tbody>
+                        </tbody>
+                    )}
                 </table>
             </div>
         </div>

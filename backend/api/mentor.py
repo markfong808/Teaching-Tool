@@ -456,7 +456,6 @@ def add_mentor_single_availability(class_id, mentor_id, data, physical_location,
         
         # Validate the data
         validation_result = validate_availability_data_and_class(mentor_id, class_id, program_id, date, start_time, end_time, isDropins)
-        print(validation_result)
         if validation_result:
             return validation_result
         
@@ -697,14 +696,14 @@ def update_availability_status():
                     Appointment.status.in_(['reserved', 'pending'])
                 ).count()
 
-                program = ProgramType.query.filter(id=availability.type).first()
+                program = ProgramType.query.filter_by(id=availability.type).first()
 
                 error_message = "Meeting limit reached"
-                if monthly_count >= program.max_monthly_meetings:
+                if program.max_monthly_meetings is not None and monthly_count >= program.max_monthly_meetings:
                     error_message = "Monthly meeting limit reached"
-                elif weekly_count >= program.max_weekly_meetings:
+                elif program.max_weekly_meetings is not None and weekly_count >= program.max_weekly_meetings:
                     error_message = "Weekly meeting limit reached"
-                elif daily_count >= program.max_daily_meetings:
+                elif program.max_daily_meetings is not None and daily_count >= program.max_daily_meetings:
                     error_message = "Daily meeting limit reached"
 
                 if error_message != "Meeting limit reached":
@@ -854,7 +853,6 @@ def get_courses():
         else:
             return jsonify({"error": "mentor not found"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
     
 
@@ -899,7 +897,6 @@ def get_global_programs():
         else:
             return None
     except Exception as e:
-        print(e)
         return None
     
 
