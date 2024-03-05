@@ -55,7 +55,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
 
   // fetch the appointments for upcoming, pending, past tabs
   const fetchMeetings = async () => {
-    if (!user) return; // If there's no user, we can't fetch appointments
+    if (!user || courseId === "") return; // If there's no user, we can't fetch appointments
     const apiEndpoint =
       user.account_type === "mentor"
         ? `/mentor/appointments`
@@ -809,13 +809,13 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       </div>
 
       <button
-        className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-start"
+        className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-end"
         onClick={() => setShowTable(!showTable)}
       >
         {showTable ? "Hide Table" : "Show Table"}
       </button>
 
-      <div id="table" className="w-full">
+      <div id="table" className="w-11/12">
         {selectedMeeting ? (
           renderMeetingDetails()
         ) : (

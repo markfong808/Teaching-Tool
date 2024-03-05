@@ -6,7 +6,7 @@
  * their courses and respective programs
  *
  * Known bugs:
- * - Appointment Reserved Screen is transparent
+ * - Appointment Reserved Screen is transparent FIXED
  * - the Popup is not fully closed out of when an appointment has been booked
  * - Sizing bugs when cancelling appointments and other actions
  *
@@ -37,6 +37,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showAppointmentPanel, setShowAppointmentPanel] = useState(false);
+  const [showPopup, setShowPopup] = useState(true);
 
   // Class Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState("");
@@ -142,6 +143,8 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   // called when a student clicks to reserve an appointment
   // after fetch, will update page based on backend response
   const bookAppointment = () => {
+    setShowPopup(false);
+
     if (selectedTimeslot) {
       const appointmentID = selectedTimeslot.availableTimeslot.id;
       const appointmentData = {
@@ -423,7 +426,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
                 </div>
               )}
               {showAppointmentPanel && selectedTimeslot && (
-                <div className="rounded-lg shadow-2xl w-1/3 m-4">
+                <div className="rounded shadow-2xl w-1/3 m-4">
                   <div className="m-5">
                     <h3 className="text-center pb-5 font-bold">
                       Appointment Details
@@ -477,7 +480,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
         )}
       </div>
     </div>
-  );
+  ) 
 };
 
 export default ScheduleMeetingPopup;
