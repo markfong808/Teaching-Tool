@@ -1,15 +1,5 @@
 # Introduction 
-Welcome to UWTechPrep, a unique initiative designed to equip software engineering students with the necessary skills and knowledge to excel in 
-technical interviews. The goal is to give students a curated practice plan and the ability to practice interviewing without pressure.
-
-The motivation behind UWTechPrep stems from wanting to assist our fellow students to prepare for technical interviews. With this in mind, we 
-decided to develop a platform where students can schedule one-on-one mentor sessions and mock-interviews with industry professionals in order 
-to practice interviewing and gain confidence for job interviews.  
-
-The scheduling tool serves as the main interface for interaction between industry mentors and students, facilitating the scheduling of mock 
-interviews and mentoring sessions. Mentors can indicate time block availabilities, which are broken down into 30 minute appointments for precise 
-scheduling. Students are then able to select and book appointments. When an appointment is booked, an automated email is sent to both the mentor 
-and student of that booking.
+Welcome to the UWB Canvas Scheduling Tool. This is a project that is currently still in development and will be launched near mid-March 2024.
 
 The user interface is crafted using ReactJS, ensuring a responsive and intuitive design. The backend API is powered by Python Flask. 
 This framework processes mentor availability, student reservations, and triggers the automated email system. MySQL serves as the project's database 
@@ -17,7 +7,7 @@ engine, maintaining user accounts, records of mentor availability, student booki
 
 
 # Getting Started
-Welcome to UWTechPrep! This guide will help you get started with running the code locally and setting up any necessary API keys.
+Welcome to the UWB Canvas Scheduling Tool! This guide will help you get started with running the code locally and setting up any necessary API keys.
 
 ## Installation process
 
