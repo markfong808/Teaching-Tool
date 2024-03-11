@@ -1,18 +1,18 @@
 /* Program.js
- * Last Edited: 3/3/24
- * 
+ * Last Edited: 3/9/24
+ *
  * Class Availability tab for Instructor Role.
  * Instructor can choose if they're creating, updating, or deleting
- * program types, availability, description, 
+ * program types, availability, description,
  * meeting duration, location, and virtual meeting links
  * for a class or globally that applies to all classes.
- * 
+ *
  * Known Bugs:
  * - Comment on line 623 in showBox -> need to make work with save/cancel changes button
  * - ToolTip UI Box next to Create Program Type button needs adjusting
  * - Not a bug, but line 197 setAllTimesData(fetchedProgramTimes) is commented out
- * 
-*/
+ *
+ */
 
 import React, { useState, useContext, useEffect, useCallback } from "react";
 import { UserContext } from "../context/UserContext.js";
@@ -23,6 +23,7 @@ import { ClassContext } from "../context/ClassContext.js";
 import ChooseMeetingDatesPopup from "./ChooseMeetingDatesPopup.js";
 import MeetingLocation from "./MeetingLocation.js";
 import CreateProgramTypePopup from "./CreateProgramTypePopup.js";
+import CreateAvailability from "./CreateAvailability.js";
 
 export default function Program() {
   // General Variables
@@ -31,6 +32,8 @@ export default function Program() {
   const [changesMade, setChangesMade] = useState(false);
   const [boxShown, setBoxShown] = useState(false);
   const [isPopUpVisible, setPopUpVisible] = useState(false);
+  const [isCreateAvailabilityPopUpVisible, setCreateAvailabilityPopUpVisible] =
+    useState(false);
   const [isCreateProgramTypePopup, setCreateProgramTypePopup] = useState(false);
 
   // Load Variables
@@ -42,11 +45,11 @@ export default function Program() {
   const [isCourseSelected, setIsCourseSelected] = useState(true);
   const [isProgramSelected, setIsProgramSelected] = useState(false);
   const [locationChecker, setLocationChecker] = useState(false);
-  const [timeChecker, setTimeChecker] = useState(false);
-  const [enableDurationAndDates, setEnableDurationAndDates] = useState(false);
   const [isAllCoursesSelected, setIsAllCoursesSelected] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isDropinsLayout, setIsDropinsLayout] = useState(true);
+  const [isRangedBasedLayout, setIsRangedBasedLayout] = useState(true);
+  const [showDuration, setShowDuration] = useState(false);
 
   // Class Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState("-2");
@@ -70,6 +73,7 @@ export default function Program() {
     max_weekly_meetings: "",
     max_monthly_meetings: "",
     isDropins: "",
+    isRangeBased: "",
   });
 
   const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
@@ -102,7 +106,7 @@ export default function Program() {
       setAllCourseData(fetchedCourseList);
 
       if (!hasLoaded) {
-        // check for a global program in fetched course list with unique id -2 
+        // check for a global program in fetched course list with unique id -2
         const containsGlobalPrograms = fetchedCourseList.find(
           (course) => course.id === -2
         );
@@ -139,7 +143,7 @@ export default function Program() {
       }
 
       const fetchedCourseTimes = await response.json();
-  
+
       if (fetchedCourseTimes !== null) {
         // create a tempData object and loop through fetchedCourseTimes
         const tempData = fetchedCourseTimes
@@ -147,7 +151,7 @@ export default function Program() {
           .reduce((acc, item) => {
             const programId = item.program_id;
 
-            // check if the programId exists in the accumulator object, 
+            // check if the programId exists in the accumulator object,
             // if it doesn't, initialize accumulator as an empty object with programId
             if (!acc[programId]) {
               acc[programId] = {};
@@ -172,7 +176,7 @@ export default function Program() {
     }
   };
 
- // fetch selectedProgramTimes associated with the programId
+  // fetch selectedProgramTimes associated with the programId
   const fetchSelectedProgramTimesData = async (programId) => {
     if (!programId || programId === "-1") {
       setSelectedProgramTimesData({});
@@ -329,7 +333,6 @@ export default function Program() {
     }
   };
 
-
   ////////////////////////////////////////////////////////
   //                  Handler Functions                 //
   ////////////////////////////////////////////////////////
@@ -351,14 +354,14 @@ export default function Program() {
     // update course info displayed on page to selectedCourseId
     updateCourseInfo(selectedCourse);
 
-    // reset program information 
+    // reset program information
     setSelectedProgramId(-1);
     updateProgramInfo(-1);
     setSelectedProgramTimesData({});
 
     // update timesData to selectedCourse
     fetchTimesData(selectedCourse);
-   
+
     reloadChildInfo();
     setChangesMade(false);
   };
@@ -369,7 +372,7 @@ export default function Program() {
     setLoadProgramTable(!loadProgramTable);
   };
 
-  // called when the instructor changes the program 
+  // called when the instructor changes the program
   const handleProgramChange = (e) => {
     if (!e) {
       return;
@@ -381,7 +384,7 @@ export default function Program() {
       selectedProgram = -1;
     }
 
-    // change selectedProgramid to selectedProgram 
+    // change selectedProgramid to selectedProgram
     setSelectedProgramId(selectedProgram);
 
     // update programinfo displayed on page to selectedProgram
@@ -393,7 +396,6 @@ export default function Program() {
 
     setChangesMade(false);
   };
-
 
   // update the selectedClassData based on a courseId
   const updateCourseInfo = (courseId) => {
@@ -433,6 +435,7 @@ export default function Program() {
         max_weekly_meetings: "",
         max_monthly_meetings: "",
         isDropins: "",
+        isRangeBased: "",
       });
 
       setBoxShown(false);
@@ -468,11 +471,11 @@ export default function Program() {
       if (Number(e.target.value) > 0) {
         let maxRecommendedTimeSplit = 1440;
 
-        // iterate through selectedProgramTimesData 
+        // iterate through selectedProgramTimesData
         for (const data of Object.entries(selectedProgramTimesData)) {
           const startDate = new Date(`1970-01-01T${data[1].start_time}`);
           const endDate = new Date(`1970-01-01T${data[1].end_time}`);
-          
+
           // calculate timeDifference into minutes
           const timeDifference = endDate - startDate;
           const minutes = Math.floor(timeDifference / (1000 * 60));
@@ -528,7 +531,7 @@ export default function Program() {
     const tempDay = e.name;
     const tempValue = e.value;
 
-    // Create a new times data object to store the selectedProgramTimesData 
+    // Create a new times data object to store the selectedProgramTimesData
     let updatedTimesData = { ...selectedProgramTimesData };
 
     // Check if the day already exists in selectedProgramTimesData
@@ -618,7 +621,6 @@ export default function Program() {
     setChangesMade(false); // Reset changes made
   };
 
-  
   // updates setBoxShown when instructor clicks on checkbox
   const showBox = () => {
     if (boxShown) {
@@ -636,7 +638,7 @@ export default function Program() {
     if (boolean) {
       handleCourseChange({ target: { value: "-2" } }); // -2 associated with all course programs having global type
     } else {
-      handleCourseChange({ target: { value: "-1" } }); // no global type with single course 
+      handleCourseChange({ target: { value: "-1" } }); // no global type with single course
     }
   };
 
@@ -674,7 +676,7 @@ export default function Program() {
   }, [showSaveCancelButtons]);
 
   // update boxShown if duration is greater than 0
-  // and update setIsDropinsLayout when selectedProgramData updates 
+  // and update setIsDropinsLayout when selectedProgramData updates
   useEffect(() => {
     if (Number(selectedProgramData.duration) > 0) {
       setBoxShown(true);
@@ -686,6 +688,14 @@ export default function Program() {
       setIsDropinsLayout(false);
     } else {
       setIsDropinsLayout(true);
+    }
+    if (
+      selectedProgramData.isRangeBased !== "" &&
+      selectedProgramData.isRangeBased === false
+    ) {
+      setIsRangedBasedLayout(false);
+    } else {
+      setIsRangedBasedLayout(true);
     }
   }, [selectedProgramData]);
 
@@ -718,18 +728,6 @@ export default function Program() {
     }
   }, [selectedProgramId]);
 
-  // set timechecker flag to true if a selectedprogramtimes exists, and data length is > 0
-  useEffect(() => {
-    if (
-      selectedProgramTimesData &&
-      Object.keys(selectedProgramTimesData).length > 0
-    ) {
-      setTimeChecker(true);
-    } else {
-      setTimeChecker(false);
-    }
-  }, [selectedProgramTimesData]);
-
   // update setLocationChecker when selectedProgramData physical location or virtual link is
   useEffect(() => {
     if (
@@ -743,15 +741,6 @@ export default function Program() {
       setLocationChecker(false);
     }
   }, [selectedProgramData.physical_location, selectedProgramData.virtual_link]);
-
-  // update setEnableDurationAndDates when locationChecker and timeChecker are updated
-  useEffect(() => {
-    if (locationChecker && timeChecker) {
-      setEnableDurationAndDates(true); 
-    } else {
-      setEnableDurationAndDates(false);
-    }
-  }, [locationChecker, timeChecker]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -767,16 +756,16 @@ export default function Program() {
       <div className="flex flex-col m-auto">
         <div className=" flex w-full cursor-pointer justify-center">
           <div
-            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${
-              isAllCoursesSelected ? "bg-gold" : "bg-metallic-gold"
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
+              isAllCoursesSelected ? "bg-gold border-gold" : "bg-metallic-gold border-metallic-gold"
             }`}
             onClick={() => tabSelect(true)}
           >
             All Course Programs
           </div>
           <div
-            className={`w-1/2 text-center text-white text-lg font-bold p-1 ${
-              isAllCoursesSelected ? "bg-metallic-gold" : "bg-gold"
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
+              isAllCoursesSelected ? "bg-metallic-gold border-metallic-gold" : "bg-gold border-gold"
             }`}
             onClick={() => tabSelect(false)}
           >
@@ -788,23 +777,33 @@ export default function Program() {
           <div className="flex justify-between">
             <div className="ml-10">
               {!isAllCoursesSelected && (
-                <div className="flex">
+                <div
+                  className={`flex ${
+                    !isCourseSelected
+                      ? "animate-blink flex border-4 border-white p-4 rounded-3xl"
+                      : "p-5"
+                  }`}
+                >
                   <h1>
                     <strong>Select Course:</strong>
                   </h1>
                   <select
-                    className="border border-light-gray rounded ml-2"
+                    className="border border-light-gray rounded ml-2 hover:bg-gray"
                     id="course-dropdown"
                     value={selectedCourseId}
                     onChange={(e) => handleCourseChange(e)}
                   >
-                    <option key={-1} value="-1">
+                    <option className="bg-white" key={-1} value="-1">
                       Select...
                     </option>
                     {allCourseData.map(
                       (course) =>
                         course.id !== -2 && (
-                          <option key={course.id} value={course.id}>
+                          <option
+                            className="bg-white"
+                            key={course.id}
+                            value={course.id}
+                          >
                             {course.class_name}
                           </option>
                         )
@@ -814,28 +813,38 @@ export default function Program() {
               )}
             </div>
 
-            <div className="flex items-center mr-10">
+            <div
+              className={`flex items-center mr-10 ${
+                isCourseSelected && !isProgramSelected
+                  ? "animate-blink border-4 border-white p-4 rounded-3xl"
+                  : "p-5"
+              }`}
+            >
               <h1>
-                <strong>Select Program type:</strong>
+                <strong>Select Program:</strong>
               </h1>
               <select
-                className="border border-light-gray rounded ml-2"
+                className="border border-light-gray rounded ml-2 hover:bg-gray"
                 id="course-dropdown"
                 value={selectedProgramId}
                 onChange={(e) => handleProgramChange(e)}
                 disabled={!isCourseSelected}
               >
-                <option key={-1} value="">
+                <option className="bg-white" key={-1} value="">
                   Select...
                 </option>
                 {selectedClassData.programs.map((program) => (
-                  <option key={program.id} value={program.id}>
+                  <option
+                    className="bg-white"
+                    key={program.id}
+                    value={program.id}
+                  >
                     {program.type}
                   </option>
                 ))}
               </select>
               <button
-                className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 ${
+                className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 hover:bg-gray ${
                   !isCourseSelected ? "opacity-50" : ""
                 }`}
                 onClick={() =>
@@ -843,235 +852,321 @@ export default function Program() {
                 }
                 disabled={!isCourseSelected}
               >
-                Create Program Type
+                Create Program
               </button>
-              <Tooltip text='For Class Times and Office Hours programs, please use the title "Class Times" or "Office Hours" respectively'>
+              <Tooltip text='For Class Times and Office Hours programs, please use the title "Class Times" or "Office Hours" respectively' flip={true}>
                 <span>ⓘ</span>
               </Tooltip>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col w-3/4 px-5 m-auto">
-          <div className="py-5 border border-light-gray rounded-md shadow-md">
-            <div className="relative">
-              <button
-                className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 ${
-                  !isProgramSelected ? "opacity-50" : ""
-                }`}
-                disabled={!isProgramSelected}
-              >
-                Auto Generate Details
-              </button>
-              <button
-                className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 ${
-                  !isProgramSelected ? "opacity-50" : ""
-                }`}
-                onClick={handleDeleteProgramType}
-                disabled={!isProgramSelected}
-              >
-                Delete Program
-              </button>
-            </div>
-            <h2 className="pb-10 text-center font-bold text-2xl">
-              Class Availability
-            </h2>
-
-            <div className="flex flex-col">
-              <div className="w-3/4 m-auto">
-                <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-                  <div>
-                    <label className="font-bold">
-                      Program Description &nbsp;
-                    </label>
-                    <Tooltip text="Description of the program type related to meetings for a class.">
-                      <span>ⓘ</span>
-                    </Tooltip>
+        {isCourseSelected ? (
+          <>
+            {isProgramSelected ? (
+              <div className="flex flex-col w-3/4 px-5 m-auto">
+                <div className="py-5 border border-light-gray rounded-md shadow-md">
+                  <div className="relative">
+                    <button
+                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 hover:bg-gray ${
+                        !isProgramSelected ? "opacity-50" : ""
+                      }`}
+                      disabled={!isProgramSelected}
+                    >
+                      Auto Generate Details
+                    </button>
+                    <button
+                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray ${
+                        !isProgramSelected ? "opacity-50" : ""
+                      }`}
+                      onClick={handleDeleteProgramType}
+                      disabled={!isProgramSelected}
+                    >
+                      Delete Program
+                    </button>
                   </div>
-                  <textarea
-                    className="border border-light-gray mt-3"
-                    name="description"
-                    value={selectedProgramData.description || ""}
-                    onChange={(event) => handleInputChange(event)}
-                    disabled={!isProgramSelected}
-                  />
-                </div>
-                {/* Office Hours Times */}
+                  <h2 className="pb-10 text-center font-bold text-2xl">
+                    {selectedProgramData.type}{" "}
+                    {/* let user be able to change program name */}
+                  </h2>
 
-                <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-                  <WeeklyCalendar
-                    isCourseTimes={false}
-                    param={{
-                      functionPassed: handleTimesChange,
-                      loadPageFunction: setLoadProgramTable,
-                      changesMade: setChangesMade,
-                      resetFunction: setResetOfficeHoursTable,
-                    }}
-                    times={selectedProgramTimesData}
-                    loadPage={loadProgramTable}
-                    reset={resetOfficeHoursTable}
-                    program_id={selectedProgramData.id}
-                    program_type={selectedProgramData.type}
-                    disabled={!isProgramSelected}
-                  />
-                </div>
-
-                <div className="flex flex-row items-center mt-4">
-                  <label className="whitespace-nowrap font-bold text-2xl">
-                    Define Meeting Duration?
-                  </label>
-                  <input
-                    type="checkbox"
-                    id="myCheckbox"
-                    class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
-                    checked={boxShown}
-                    onChange={showBox}
-                    disabled={!enableDurationAndDates}
-                  ></input>
-                  {boxShown && (
-                    <input
-                      className="border border-light-gray ml-3 mt-1 w-20"
-                      name="duration"
-                      value={selectedProgramData.duration}
-                      onChange={(event) => {
-                        const inputValue = event.target.value;
-                        const numericValue = inputValue.replace(/[^0-9]/g, "a"); // Remove non-numeric characters
-                        handleInputChange({
-                          target: { name: "duration", value: numericValue },
-                        });
-                      }}
-                    />
-                  )}
-                  <button
-                    className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 ${
-                      !enableDurationAndDates ? "opacity-50" : ""
-                    }`}
-                    onClick={() => setPopUpVisible(!isPopUpVisible)}
-                    disabled={!enableDurationAndDates}
-                  >
-                    Choose Meeting Dates
-                  </button>
-                </div>
-              </div>
-            </div>
-            <MeetingLocation
-              isClassLocation={false}
-              param={{
-                functionPassed: handleInputChange,
-                loadPageFunction: setLocRec,
-                changesMade: setChangesMade,
-              }}
-              data={{
-                physical_location: selectedProgramData.physical_location,
-                virtual_link: selectedProgramData.virtual_link,
-              }}
-              loadPage={loadLocRec}
-              changes={changesMade}
-              disabled={!isProgramSelected}
-            />
-            {!isDropinsLayout && (
-              <div className="w-3/4 flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
-                {user?.account_type === "mentor" && (
-                  <div className="w-1/2">
-                    <label className="font-bold text-lg">
-                      Auto-Accept Meeting Requests?
-                    </label>
-                    <br />
-                    <label className="ml-2">
-                      Yes
-                      <input
-                        className="mb-3 ml-1"
-                        type="radio"
-                        name="auto_approve_appointments"
-                        value="true"
-                        checked={
-                          selectedProgramData.auto_approve_appointments === true
-                        }
-                        onChange={handleInputChange}
-                        disabled={!isProgramSelected}
-                      />
-                    </label>
-                    &nbsp;&nbsp;
-                    <label>
-                      No
-                      <input
-                        className="ml-1"
-                        type="radio"
-                        name="auto_approve_appointments"
-                        value="false"
-                        checked={
-                          selectedProgramData.auto_approve_appointments ===
-                          false
-                        }
-                        onChange={handleInputChange}
-                        disabled={!isProgramSelected}
-                      />
-                    </label>
-                  </div>
-                )}
-                {user?.account_type === "mentor" && (
                   <div className="flex flex-col">
-                    <h2 className="font-bold text-lg">Set Meeting Limits</h2>
-                    <div className="flex flex-row justify-between">
-                      <div className="flex flex-col mr-5">
-                        <label>Daily Max</label>
-                        <input
-                          className="border border-light-gray w-28"
-                          type="number"
-                          name="max_daily_meetings"
-                          min="1"
-                          value={selectedProgramData.max_daily_meetings}
-                          onChange={handleLimitInputChange}
+                    <div className="w-3/4 m-auto">
+                      <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+                        <div>
+                          <label className="font-bold">
+                            Program Description &nbsp;
+                          </label>
+                          <Tooltip text="Description of the program type related to meetings for a class.">
+                            <span>ⓘ</span>
+                          </Tooltip>
+                        </div>
+                        <textarea
+                          className="border border-light-gray mt-3 hover:bg-gray"
+                          name="description"
+                          value={selectedProgramData.description || ""}
+                          onChange={(event) => handleInputChange(event)}
                           disabled={!isProgramSelected}
                         />
                       </div>
-                      <div className="flex flex-col mr-5">
-                        <label>Weekly Max</label>
-                        <input
-                          className="border border-light-gray w-28"
-                          type="number"
-                          name="max_weekly_meetings"
-                          min="1"
-                          value={selectedProgramData.max_weekly_meetings}
-                          onChange={handleLimitInputChange}
-                          disabled={!isProgramSelected}
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <label>Total Max</label>
-                        <input
-                          className="border border-light-gray w-28"
-                          type="number"
-                          name="max_monthly_meetings"
-                          min="1"
-                          value={selectedProgramData.max_monthly_meetings}
-                          onChange={handleLimitInputChange}
-                          disabled={!isProgramSelected}
-                        />
-                      </div>
+
+                      <MeetingLocation
+                        isClassLocation={false}
+                        param={{
+                          functionPassed: handleInputChange,
+                          loadPageFunction: setLocRec,
+                          changesMade: setChangesMade,
+                        }}
+                        data={{
+                          physical_location:
+                            selectedProgramData.physical_location,
+                          virtual_link: selectedProgramData.virtual_link,
+                        }}
+                        loadPage={loadLocRec}
+                        changes={changesMade}
+                        disabled={!isProgramSelected}
+                      />
+
+                      {!locationChecker ? (
+                        <div className="flex flex-row p-5 m-auto mt-5 justify-center">
+                          <label className="font-bold text-xl">
+                            *Enter A Location And/Or Virtual Meeting Link To
+                            Create Times*
+                          </label>
+                        </div>
+                      ) : (
+                        !isRangedBasedLayout && (
+                          <button
+                            className="flex flex-row p-5 m-auto mt-5 justify-center font-bold border border-light-gray rounded-md shadow-md text-xl px-5 py-3 hover:bg-gray"
+                            onClick={() =>
+                              setCreateAvailabilityPopUpVisible(
+                                !isCreateAvailabilityPopUpVisible
+                              )
+                            }
+                          >
+                            Create Meeting Block
+                          </button>
+                        )
+                      )}
+
+                      {!isDropinsLayout && (
+                        <div className="flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
+                          {user?.account_type === "mentor" && (
+                            <div className="w-1/2">
+                              <label className="font-bold text-lg">
+                                Auto-Accept Meeting Requests?
+                              </label>
+                              <br />
+                              <label className="ml-2">
+                                Yes
+                                <input
+                                  className="mb-3 ml-1"
+                                  type="radio"
+                                  name="auto_approve_appointments"
+                                  value="true"
+                                  checked={
+                                    selectedProgramData.auto_approve_appointments ===
+                                    true
+                                  }
+                                  onChange={handleInputChange}
+                                  disabled={!isProgramSelected}
+                                />
+                              </label>
+                              &nbsp;&nbsp;
+                              <label>
+                                No
+                                <input
+                                  className="ml-1"
+                                  type="radio"
+                                  name="auto_approve_appointments"
+                                  value="false"
+                                  checked={
+                                    selectedProgramData.auto_approve_appointments ===
+                                    false
+                                  }
+                                  onChange={handleInputChange}
+                                  disabled={!isProgramSelected}
+                                />
+                              </label>
+                            </div>
+                          )}
+                          {user?.account_type === "mentor" && (
+                            <div className="flex flex-col">
+                              <h2 className="font-bold text-lg">
+                                Set Meeting Limits
+                              </h2>
+                              <div className="flex flex-row justify-between">
+                                <div className="flex flex-col mr-5">
+                                  <label>Daily Max</label>
+                                  <input
+                                    className="border border-light-gray w-28"
+                                    type="number"
+                                    name="max_daily_meetings"
+                                    min="1"
+                                    value={
+                                      selectedProgramData.max_daily_meetings
+                                    }
+                                    onChange={handleLimitInputChange}
+                                    disabled={!isProgramSelected}
+                                  />
+                                </div>
+                                <div className="flex flex-col mr-5">
+                                  <label>Weekly Max</label>
+                                  <input
+                                    className="border border-light-gray w-28"
+                                    type="number"
+                                    name="max_weekly_meetings"
+                                    min="1"
+                                    value={
+                                      selectedProgramData.max_weekly_meetings
+                                    }
+                                    onChange={handleLimitInputChange}
+                                    disabled={!isProgramSelected}
+                                  />
+                                </div>
+                                <div className="flex flex-col">
+                                  <label>Total Max</label>
+                                  <input
+                                    className="border border-light-gray w-28"
+                                    type="number"
+                                    name="max_monthly_meetings"
+                                    min="1"
+                                    value={
+                                      selectedProgramData.max_monthly_meetings
+                                    }
+                                    onChange={handleLimitInputChange}
+                                    disabled={!isProgramSelected}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {locationChecker === true &&
+                        (isRangedBasedLayout ? (
+                          <>
+                            <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+                              <WeeklyCalendar
+                                isCourseTimes={false}
+                                param={{
+                                  functionPassed: handleTimesChange,
+                                  loadPageFunction: setLoadProgramTable,
+                                  changesMade: setChangesMade,
+                                  resetFunction: setResetOfficeHoursTable,
+                                  showDuration: setShowDuration,
+                                }}
+                                times={selectedProgramTimesData}
+                                loadPage={loadProgramTable}
+                                reset={resetOfficeHoursTable}
+                                program_id={selectedProgramData.id}
+                                program_type={selectedProgramData.type}
+                                disabled={!isProgramSelected}
+                              />
+                            </div>
+                            {showDuration && (
+                              <div className="flex flex-row items-center mt-4">
+                                <label className="whitespace-nowrap font-bold text-2xl">
+                                  Define Meeting Duration?
+                                </label>
+                                <input
+                                  type="checkbox"
+                                  class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
+                                  checked={boxShown}
+                                  onChange={showBox}
+                                ></input>
+
+                                {boxShown && (
+                                  <div className="flex items-end">
+                                    <input
+                                      className="border border-light-gray ml-3 mt-1 w-20 hover:bg-gray"
+                                      name="duration"
+                                      value={selectedProgramData.duration}
+                                      onChange={(event) => {
+                                        const inputValue = event.target.value;
+                                        const numericValue = inputValue.replace(
+                                          /[^0-9]/g, // Remove non-numeric characters
+                                          "a"
+                                        );
+                                        handleInputChange({
+                                          target: {
+                                            name: "duration",
+                                            value: numericValue,
+                                          },
+                                        });
+                                      }}
+                                    />
+                                    <label className="whitespace-nowrap font-bold text-sm ml-1">
+                                      minutes
+                                    </label>
+                                  </div>
+                                )}
+                                <button
+                                  className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 hover:bg-gray`}
+                                  onClick={() =>
+                                    setPopUpVisible(!isPopUpVisible)
+                                  }
+                                >
+                                  Choose Meeting Dates
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          isCreateAvailabilityPopUpVisible && (
+                            <div className="fixed inset-0 z-10">
+                              <CreateAvailability
+                                id={selectedCourseId}
+                                program_id={selectedProgramData.id}
+                                program_name={selectedProgramData.type}
+                                duration={selectedProgramData.duration}
+                                physical_location={
+                                  selectedProgramData.physical_location
+                                }
+                                virtual_link={selectedProgramData.virtual_link}
+                                isDropins={selectedProgramData.isDropins}
+                                onClose={() =>
+                                  setCreateAvailabilityPopUpVisible(false)
+                                }
+                              />
+                            </div>
+                          )
+                        ))}
                     </div>
                   </div>
-                )}
+
+                  {changesMade && (
+                    <div className="flex flex-row justify-end my-5 mr-6">
+                      <button
+                        className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
+                        onClick={handleSaveChanges}
+                      >
+                        Save Class Changes
+                      </button>
+                      <button
+                        className="bg-purple text-white rounded-md p-2 hover:text-gold"
+                        onClick={handleCancelChanges}
+                      >
+                        Discard Class Changes
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="m-auto mt-40 py-10 px-16 border border-light-gray rounded-3xl shadow-md">
+                <label className="font-bold text-3xl">
+                  Please Select A Program
+                </label>
               </div>
             )}
-            {changesMade && (
-              <div className="flex flex-row justify-end my-5 mr-6">
-                <button
-                  className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-                  onClick={handleSaveChanges}
-                >
-                  Save Class Changes
-                </button>
-                <button
-                  className="bg-purple text-white rounded-md p-2 hover:text-gold"
-                  onClick={handleCancelChanges}
-                >
-                  Discard Class Changes
-                </button>
-              </div>
-            )}
+          </>
+        ) : (
+          <div className="m-auto mt-40 py-10 px-16 border border-light-gray rounded-3xl shadow-md">
+            <label className="font-bold text-3xl">Please Select A Course</label>
           </div>
-        </div>
+        )}
       </div>
 
       {isPopUpVisible && (

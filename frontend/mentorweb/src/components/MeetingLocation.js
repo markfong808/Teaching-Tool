@@ -1,5 +1,5 @@
 /* MeetingLocation.js
- * Last Edited: 2/29/24
+ * Last Edited: 3/9/24
  *
  * Entry Field UI for the physical_location, virtual_link,
  * and class_recordings_link for programs
@@ -43,12 +43,12 @@ export default function MeetingLocation({
         className={
           isClassLocation
             ? "flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5"
-            : "w-3/4 flex flex-row p-5 border border-light-gray rounded-md shadow-md m-auto mt-5 justify-between"
+            : "flex flex-row p-5 border border-light-gray rounded-md shadow-md m-auto mt-5 justify-between"
         }
       >
         <div className="flex">
           <label className="whitespace-nowrap font-bold text-2xl mb-2">
-            {isClassLocation ? "Set Class Location:" : "Set Office Location:"}
+            Set Program Location:
           </label>
         </div>
         <div
@@ -63,10 +63,10 @@ export default function MeetingLocation({
               isClassLocation ? "whitespace-nowrap" : "whitespace-nowrap ml-2"
             }
           >
-            Location:
+            In-Person Location:
           </label>
           <input
-            className="border border-light-gray ml-2 w-40"
+            className="border border-light-gray ml-2 w-40 hover:bg-gray"
             name={isClassLocation ? "physical_location" : "physical_location"}
             value={
               isClassLocation
@@ -92,7 +92,7 @@ export default function MeetingLocation({
             Virtual Meeting Link:
           </label>
           <input
-            className="border border-light-gray ml-2 w-40"
+            className="border border-light-gray ml-2 w-40 hover:bg-gray"
             name={isClassLocation ? "virtual_link" : "virtual_link"}
             value={
               isClassLocation
@@ -108,7 +108,7 @@ export default function MeetingLocation({
           <div>
             <label className="whitespace-nowrap">Class Recordings Link:</label>
             <input
-              className="border border-light-gray ml-2 w-40"
+              className="border border-light-gray ml-2 w-40 hover:bg-gray"
               name="class_recordings_link"
               value={data.class_recordings_link ?? ""}
               onChange={handleInputChange}

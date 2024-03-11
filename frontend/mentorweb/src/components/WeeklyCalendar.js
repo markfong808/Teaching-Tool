@@ -100,7 +100,7 @@ export default function WeeklyCalendar({
   // create button to push time block to parent function
   const handleCreateChange = (day, newTimeRange) => {
     if (isValidTimeBlock(newTimeRange)) {
-      setWeekdaysList({ ...weekdaysList, day: newTimeRange });
+      setWeekdaysList({ ...weekdaysList, [day]: newTimeRange });
       param.functionPassed({
         type: `${isCourseTimes ? "class_times" : program_id}`,
         name: day,
@@ -150,7 +150,6 @@ export default function WeeklyCalendar({
           updatedWeekdaysList[day] = { start_time: start, end_time: end };
         }
       }
-
       setWeekdaysList(updatedWeekdaysList);
 
       //reload data
@@ -187,7 +186,6 @@ export default function WeeklyCalendar({
           updatedWeekdaysList[day] = { start_time: start, end_time: end };
         }
       }
-
       setWeekdaysList(updatedWeekdaysList);
 
       // reload data
@@ -196,6 +194,16 @@ export default function WeeklyCalendar({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reset]);
+
+  useEffect(() => {
+    const anyDayHasData = Object.values(weekdaysList).some(
+      (dayData) => dayData.length > 0 || Object.keys(dayData).length > 0
+    );
+
+    // Call param.showDuration based on the condition
+    param.showDuration(anyDayHasData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekdaysList]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //

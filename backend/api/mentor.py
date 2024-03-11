@@ -831,6 +831,7 @@ def get_courses():
                             'max_weekly_meetings': program.max_weekly_meetings,
                             'max_monthly_meetings': program.max_monthly_meetings,
                             'isDropins': program.isDropins,
+                            'isRangeBased': program.isRangeBased,
                         }
                         course_with_programs.append(program_info)
 
@@ -882,6 +883,7 @@ def get_global_programs():
                         'max_weekly_meetings': program.max_weekly_meetings,
                         'max_monthly_meetings': program.max_monthly_meetings,
                         'isDropins': program.isDropins,
+                        'isRangeBased': program.isRangeBased,
                     }
                     all_formatted_programs.append(program_info)
 

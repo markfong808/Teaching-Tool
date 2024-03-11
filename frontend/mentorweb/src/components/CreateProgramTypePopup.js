@@ -23,6 +23,8 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
     // Program Type Data Variables 
     const [isDropIns, setIsDropIns] = useState(false);
     const [isAppointments, setIsAppointments] = useState(false);
+    const [isRangeBased, setIsRangeBased] = useState(false);
+    const [isSpecificDates, setIsSpecificDates] = useState(false);
     const [programTitle, setProgramTitle] = useState('');
     
     ////////////////////////////////////////////////////////
@@ -35,7 +37,8 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
             const payload = {
                 name: programTitle,
                 course_id: courseId,
-                isDropins: isDropIns
+                isDropins: isDropIns,
+                isRangeBased: isRangeBased
             };
 
             const response = await fetch(`/course/add-program`, {
@@ -79,6 +82,22 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         setIsAppointments(!isAppointments);
     };
 
+    // set program type meeting option to drop-in
+    const handleRangeBasedChange = () => {
+        if (isSpecificDates === true) {
+            setIsSpecificDates(false);
+        }
+        setIsRangeBased(!isRangeBased);
+    };
+
+    // set program type meeting option to appointment
+    const handleSpecificDatesChange = () => {
+        if (isRangeBased === true) {
+            setIsRangeBased(false);
+        }
+        setIsSpecificDates(!isSpecificDates);
+    };
+
     ////////////////////////////////////////////////////////
     //               UseEffect Functions                  //
     ////////////////////////////////////////////////////////
@@ -86,12 +105,12 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
     // show create button if instructor picks drop-in or apppointment
     // and program title isn't empty 
     useEffect(() => {
-        if ((isDropIns === true || isAppointments === true) && programTitle !== '') {
+        if ((isDropIns === true || isAppointments === true) && (isRangeBased === true || isSpecificDates === true) && programTitle !== '') {
             setReadyToCreate(true);
         } else {
             setReadyToCreate(false);
         }
-    }, [isDropIns, isAppointments, programTitle]);
+    }, [isDropIns, isAppointments, isRangeBased, isSpecificDates, programTitle]);
 
     ////////////////////////////////////////////////////////
     //                 Render Functions                   //
@@ -107,7 +126,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
                 </div>
                 <div className='flex items-center'>
                     <input
-                        className="border border-light-gray"
+                        className="border border-light-gray hover:bg-gray"
                         value={programTitle}
                         onChange={(e) => setProgramTitle(e.target.value)}
                     />
@@ -116,8 +135,13 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
 
 
             <div className='mt-4 flex justify-center'>
-                <button className={`w-36 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl mr-2 ${isDropIns ? "bg-gold" : "bg-white"}`} onClick={handleDropInChange}>Drop-Ins</button>
-                <button className={`w-40 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl ml-2 p-1 ${isAppointments ? "bg-gold" : "bg-white"}`} onClick={handleAppointmentChange}>Appointment Based</button>
+                <button className={`w-36 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl mr-2 hover:bg-gray ${isDropIns ? "bg-gold" : "bg-white"}`} onClick={handleDropInChange}>Drop-Ins</button>
+                <button className={`w-40 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl ml-2 p-1 hover:bg-gray ${isAppointments ? "bg-gold" : "bg-white"}`} onClick={handleAppointmentChange}>Appointment Based</button>
+            </div>
+
+            <div className='mt-4 flex justify-center'>
+                <button className={`w-36 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl mr-2 hover:bg-gray ${isRangeBased ? "bg-gold" : "bg-white"}`} onClick={handleRangeBasedChange}>Range Based</button>
+                <button className={`w-40 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl ml-2 p-1 hover:bg-gray ${isSpecificDates ? "bg-gold" : "bg-white"}`} onClick={handleSpecificDatesChange}>Specific Dates</button>
             </div>
 
             {readyToCreate && (

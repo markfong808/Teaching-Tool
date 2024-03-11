@@ -44,6 +44,7 @@ class ProgramType(db.Model):
     max_weekly_meetings = db.Column(db.Integer)
     max_monthly_meetings = db.Column(db.Integer)
     isDropins = db.Column(db.Boolean)
+    isRangeBased = db.Column(db.Boolean)
 
 
 class Availability(db.Model):

@@ -16,13 +16,22 @@ module.exports = {
       'dark-gray': '#4f4f4f',
       'popup-gray': '#f0f0f0',
       'calendar-popup-gray': '#f5f5f5',
-      'blue': '#0081E3'
+      'blue': '#0081E3',
+      'green': '#39ff14',
     },
     fontFamily: {
       'headlines': ["Encode Sans", "sans-serif"],
       'body': ["Open Sans", "sans-serif"],
     },
     extend: {
+      keyframes: {
+        blink: {
+          '50%': { 'border-color': '#39ff14' },
+        },
+      },
+      animation: {
+        blink: 'blink 1.5s infinite',
+      },
       width: {
         '14%': '14%',
         '12%': '12%',

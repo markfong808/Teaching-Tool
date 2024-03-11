@@ -254,6 +254,7 @@ def add_new_program():
                 name = data.get('name')
                 course_id = data.get('course_id')
                 isDropins = data.get('isDropins')
+                isRangeBased = data.get('isRangeBased')
 
                 program = ProgramType.query.filter(and_(ProgramType.type == name, ProgramType.class_id == course_id)).first()
 
@@ -264,7 +265,8 @@ def add_new_program():
                         type=name,
                         class_id=course_id,
                         instructor_id=user_id,
-                        isDropins=isDropins
+                        isDropins=isDropins,
+                        isRangeBased=isRangeBased
                     )
                     db.session.add(new_details)
                     db.session.commit()
