@@ -23,7 +23,7 @@ def is_mentor(user_id):
 @programs.route('/programs/<course_id>', methods=['GET'])
 def get_programs(course_id):
     try: 
-        course = ClassInformation.query.filter_by(class_id=course_id).first()
+        course = ClassInformation.query.filter_by(id=course_id).first()
 
         if course:
             programs = ProgramType.query.filter(and_(or_(ProgramType.class_id==course_id, ProgramType.class_id==-2), ProgramType.instructor_id==course.teacher_id)).all()

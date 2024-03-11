@@ -7,7 +7,7 @@
  *
  * Known bugs:
  * - Appointment Reserved Screen is transparent FIXED
- * - the Popup is not fully closed out of when an appointment has been booked
+ * - the Popup is not fully closed out of when an appointment has been booked FIXED
  * - Sizing bugs when cancelling appointments and other actions
  *
  */
@@ -62,7 +62,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
       });
 
       const fetchedCourseList = await response.json();
-
+      console.log(fetchedCourseList);
       setAllCourseData(fetchedCourseList);
     } catch (error) {
       console.error("Error fetching course list:", error);
@@ -80,7 +80,6 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
         }
       );
       const apiData = await response.json();
-
       const programDetails = apiData.map((program) => ({
         id: program.id,
         description: program.description,
@@ -143,8 +142,6 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   // called when a student clicks to reserve an appointment
   // after fetch, will update page based on backend response
   const bookAppointment = () => {
-    setShowPopup(false);
-
     if (selectedTimeslot) {
       const appointmentID = selectedTimeslot.availableTimeslot.id;
       const appointmentData = {
@@ -227,6 +224,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     setShowAppointmentPanel(false);
     setSelectedTimeslot(null);
     setAppointmentNotes("");
+    setShowPopup(false);
   };
 
   // called when user clicks to change selected course
@@ -272,6 +270,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
 
     // set the selected program ID
     setSelectedProgramId(selectedProgram);
+
 
     if (e.target.value === "") {
       setSelectedProgramId("");
@@ -327,6 +326,14 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourseId]);
 
+  // when the booking is confirmed and showPopup is set to false
+  // close out of schedule meeting popup
+  useEffect(() => {
+    if (!showPopup) {
+      onClose();
+    }
+  }, [showPopup]);
+
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
@@ -335,10 +342,14 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   if (bookingConfirmed) {
     return (
       <Appointment
-        mentorshipType={selectedProgramId}
+        mentorshipType={selectedClassData.programs.find(
+          (type) => type.id === selectedProgramId)?.type || ""}
         selectedTimeslot={selectedTimeslot}
         notes={appointmentNotes}
-        meetingURL={user.meeting_url}
+        meetingURL={selectedClassData.programs.find(
+          (meeting_url) => meeting_url.id === selectedProgramId)?.virtual_link || "No virtual link for this meeting."}
+        location={selectedClassData.programs.find(
+          (location) => location.id === selectedProgramId)?.physical_location || "No physical location for this meeting."}
         resetBooking={resetBooking}
         status={appointmentStatus}
       />
@@ -432,7 +443,8 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
                       Appointment Details
                     </h3>
                     <p className="pb-2">
-                      <b>Type</b>: {selectedProgramId}
+                      <b>Type</b>: {selectedClassData.programs.find(
+                        (type) => type.id === selectedProgramId)?.type || ""}
                     </p>
                     <p className="pb-2">
                       <b>Date</b>: {format(selectedTimeslot.startTime, "PPPP")}
@@ -480,7 +492,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
         )}
       </div>
     </div>
-  ) 
+  )
 };
 
 export default ScheduleMeetingPopup;
