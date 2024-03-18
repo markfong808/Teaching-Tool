@@ -44,9 +44,8 @@ export default function Navbar() {
                                 )}
                                 {user.account_type === "mentor" && (
                                     <>
-                                        <CustomLink to="/mentor/manage-times" className="hover:text-gold font-headlines">MANAGE TIMES</CustomLink>
-                                        <CustomLink to="/mentor/edit-class-availability" className="hover:text-gold font-headlines">CLASS AVAILABILITY</CustomLink>
-                                        <CustomLink to="/mentor/edit-class-details" className="hover:text-gold font-headlines">CLASS DETAILS</CustomLink>
+                                        <CustomLink to="/instructor/manage-times" className="hover:text-gold font-headlines">MANAGE TIMES</CustomLink>
+                                        <CustomLink to="/instructor/edit-class-availability" className="hover:text-gold font-headlines">CLASS AVAILABILITY</CustomLink>
                                     </>
                                 )}
                             </>
