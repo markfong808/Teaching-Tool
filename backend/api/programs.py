@@ -101,7 +101,6 @@ def get_student_programs():
         else:
             return jsonify({"error": "student not found"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
     
 def get_global_programs(instructor_id):
@@ -255,7 +254,6 @@ def set_program_details():
         else:
             return jsonify({"error": "Program type doesn't exist"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
     
 

@@ -1,5 +1,5 @@
 /* WeeklyCalendar.js
- * Last Edited: 2/28/24
+ * Last Edited: 3/11/24
  *
  * Sets the general weekdays time blocks used
  * to populate the ProgramTimes table
@@ -17,20 +17,18 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SingleInputTimeRangeField } from "@mui/x-date-pickers-pro/SingleInputTimeRangeField";
 
 export default function WeeklyCalendar({
-  isCourseTimes,
-  param,
+  functions,
   times,
   loadPage,
   reset,
   program_id,
-  program_type,
   disabled,
 }) {
   // temp time range used for each SingleInputTimeRangeField
   const [timeRange, setTimeRange] = useState(["12:00", "12:30"]);
 
   // Store times for each weekday
-  const [weekdaysList, setWeekdaysList] = useState({
+  const [localTimes, setLocalTimes] = useState({
     Monday: [],
     Tuesday: [],
     Wednesday: [],
@@ -39,7 +37,7 @@ export default function WeeklyCalendar({
   });
 
   // Show SingleInputTimeRangeField UI
-  const [timePickersList, setTimePickers] = useState({
+  const [showTimeEntryField, setShowTimeEntryField] = useState({
     Monday: false,
     Tuesday: false,
     Wednesday: false,
@@ -54,68 +52,70 @@ export default function WeeklyCalendar({
   // handle onClick for each weekday header
   const handleWeekdayClick = (day) => {
     // detect remove click
-    if (timePickersList[day]) {
-      handleRemoveTimeBlock(day);
+    if (showTimeEntryField[day]) {
+      handleRemoveLocalTime(day);
     }
 
     // flip boolean state for the weekday in timePickersList
-    setTimePickers((prevState) => ({
+    setShowTimeEntryField((prevState) => ({
       ...prevState,
       [day]: !prevState[day],
     }));
   };
 
   // edit timeRange onChange for SingleInputTimeRangeField
-  const handleTimeChange = (event, day) => {
+  const handleInputChange = (event, day) => {
     // format to military time
-    const tempTimeRange = [
+    const militaryTimeTimeRange = [
       event[0] && event[0].format("HH:mm"),
       event[1] && event[1].format("HH:mm"),
     ];
 
     // set temp time range variable
-    setTimeRange(tempTimeRange);
+    setTimeRange(militaryTimeTimeRange);
 
-    const newValue = { start_time: event[0], end_time: event[1] };
+    const convertedTimeRangeObj = { start_time: event[0], end_time: event[1] };
 
-    setWeekdaysList({ ...weekdaysList, [day]: newValue });
+    setLocalTimes({ ...localTimes, [day]: convertedTimeRangeObj });
   };
 
   // remove time block that user allotted
-  const handleRemoveTimeBlock = (day) => {
-    setWeekdaysList((prevState) => ({
+  const handleRemoveLocalTime = (day) => {
+    // clear times for day
+    setLocalTimes((prevState) => ({
       ...prevState,
       [day]: [],
     }));
 
-    param.functionPassed({
-      type: `${isCourseTimes ? "class_times" : program_id}`,
+    // push changes to parent object
+    functions.timesChangeFunction({
+      type: program_id,
       name: day,
       value: [],
     });
 
-    param.changesMade(true);
+    functions.setChangesMade(true);
   };
 
   // create button to push time block to parent function
-  const handleCreateChange = (day, newTimeRange) => {
-    if (isValidTimeBlock(newTimeRange)) {
-      setWeekdaysList({ ...weekdaysList, [day]: newTimeRange });
-      param.functionPassed({
-        type: `${isCourseTimes ? "class_times" : program_id}`,
+  const handleCreateTimeBlock = (day, newTimeBlock) => {
+    if (isValidTimeBlock(newTimeBlock)) {
+      setLocalTimes({ ...localTimes, [day]: newTimeBlock });
+      functions.timesChangeFunction({
+        type: program_id,
         name: day,
-        value: newTimeRange,
+        value: newTimeBlock,
       });
 
-      param.changesMade(true);
+      functions.setChangesMade(true);
     } else {
       console.error("Invalid time block entered.");
     }
   };
 
   // handleCreateChange helper: check if time block chosen is a valid range
-  const isValidTimeBlock = (timeRange) => {
-    return timeRange[0] < timeRange[1];
+  const isValidTimeBlock = (timeBlock) => {
+    return timeBlock[0] < timeBlock[1];
   };
 
   ////////////////////////////////////////////////////////
@@ -124,18 +124,18 @@ export default function WeeklyCalendar({
 
   useEffect(() => {
     // load the weekday values on page load
-    if (loadPage) {
+    if (loadPage || reset) {
       // set the headers based on incoming data
-      const updatedTimePickersList = {};
+      const updatedShowTimeEntries = {};
       for (const day in times) {
         if (times.hasOwnProperty(day)) {
-          updatedTimePickersList[day] = true;
+          updatedShowTimeEntries[day] = true;
         }
       }
-      setTimePickers(updatedTimePickersList);
+      setShowTimeEntryField(updatedShowTimeEntries);
 
       // set the times
-      const updatedWeekdaysList = {
+      const updatedLocalTimes = {
         Monday: [],
         Tuesday: [],
         Wednesday: [],
@@ -145,65 +145,32 @@ export default function WeeklyCalendar({
 
       for (const day in times) {
         if (times.hasOwnProperty(day)) {
+          // append random date to satisfy x-date-pickers library
           const start = dayjs(`2022-04-17T${times[day].start_time}`);
           const end = dayjs(`2022-04-17T${times[day].end_time}`);
-          updatedWeekdaysList[day] = { start_time: start, end_time: end };
+          updatedLocalTimes[day] = { start_time: start, end_time: end };
         }
       }
-      setWeekdaysList(updatedWeekdaysList);
+      setLocalTimes(updatedLocalTimes);
 
       //reload data
-      param.loadPageFunction(!loadPage);
+      if (reset) {
+        functions.setReset(!reset);
+      }
+      functions.loadPageFunction(!loadPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timePickersList, times, weekdaysList, loadPage]);
+  }, [showTimeEntryField, times, localTimes, loadPage, reset]);
 
   useEffect(() => {
-    // reset the weekday values when cancel button is pressed
-    if (reset) {
-      // set the headers based on incoming data
-      const updatedTimePickersList = {};
-      for (const day in times) {
-        if (times.hasOwnProperty(day)) {
-          updatedTimePickersList[day] = true;
-        }
-      }
-      setTimePickers(updatedTimePickersList);
-
-      // set the times
-      const updatedWeekdaysList = {
-        Monday: [],
-        Tuesday: [],
-        Wednesday: [],
-        Thursday: [],
-        Friday: [],
-      };
-
-      for (const day in times) {
-        if (times.hasOwnProperty(day)) {
-          const start = dayjs(`2022-04-17T${times[day].start_time}`);
-          const end = dayjs(`2022-04-17T${times[day].end_time}`);
-          updatedWeekdaysList[day] = { start_time: start, end_time: end };
-        }
-      }
-      setWeekdaysList(updatedWeekdaysList);
-
-      // reload data
-      param.resetFunction(!reset);
-      param.loadPageFunction(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reset]);
-
-  useEffect(() => {
-    const anyDayHasData = Object.values(weekdaysList).some(
+    const anyDayHasData = Object.values(localTimes).some(
       (dayData) => dayData.length > 0 || Object.keys(dayData).length > 0
     );
 
     // Call param.showDuration based on the condition
-    param.showDuration(anyDayHasData);
+    functions.setShowDuration(anyDayHasData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weekdaysList]);
+  }, [localTimes]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -214,7 +181,7 @@ export default function WeeklyCalendar({
     return (
       <th
         className={`border-r w-1/5 ${
-          timePickersList[day] ? "bg-light-gray" : "bg-white"
+          showTimeEntryField[day] ? "bg-light-gray" : "bg-white"
         } ${disabled ? "pointer-events-none opacity-50" : ""}`}
         name={day}
         onClick={() => handleWeekdayClick(day)}
@@ -228,17 +195,14 @@ export default function WeeklyCalendar({
   const renderWeekdayBody = (day) => {
     return (
       <td>
-        {timePickersList[day] && (
+        {showTimeEntryField[day] && (
           <div className={`flex flex-col items-center`}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <SingleInputTimeRangeField
                 label="Set Time"
-                value={[
-                  weekdaysList[day].start_time,
-                  weekdaysList[day].end_time,
-                ]}
-                onChange={(e) => handleTimeChange(e, day)}
-                onBlur={() => handleCreateChange(day, timeRange)}
+                value={[localTimes[day].start_time, localTimes[day].end_time]}
+                onChange={(e) => handleInputChange(e, day)}
+                onBlur={() => handleCreateTimeBlock(day, timeRange)}
               />
             </LocalizationProvider>
           </div>
@@ -251,11 +215,7 @@ export default function WeeklyCalendar({
   return (
     <div>
       <div className="font-bold text-2xl mb-4">
-        <label className="whitespace-nowrap">
-          {isCourseTimes
-            ? "Set Class Time:"
-            : `Set ${program_type || ""} Times:`}
-        </label>
+        <label className="whitespace-nowrap">Set Program Times:</label>
       </div>
 
       <div>

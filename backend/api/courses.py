@@ -26,7 +26,7 @@ def refresh_expiring_jwts(response):
         return response
     
 
-# Get all courses a user is registered in
+# Get all times for a course
 @courses.route('/course/times/<course_id>', methods=['GET'])
 @jwt_required()
 def get_times(course_id):
@@ -60,29 +60,6 @@ def get_program_type(program_id):
 
         if program:
             return program.type
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# Get all program times for a program
-@courses.route('/program/times/<program_id>', methods=['GET'])
-@jwt_required()
-def get_program_times(program_id):
-    try:
-        programTimes = ClassTimes.query.filter_by(program_id=program_id).all()
-        
-        if programTimes:
-            program_times_list = []
-            for programTime in programTimes:
-                program_time_info = {
-                    'day': programTime.day,
-                    'start_time': programTime.start_time,
-                    'end_time': programTime.end_time,
-                }
-                program_times_list.append(program_time_info)
-            return jsonify(program_times_list), 200
-        else:
-            return jsonify(None), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     

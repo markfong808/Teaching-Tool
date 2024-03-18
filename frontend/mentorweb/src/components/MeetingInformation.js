@@ -1,13 +1,14 @@
 /* MeetingInformation.js
- * Last Edited: 3/3/24
+ * Last Edited: 3/11/24
  *
  * Table UI to show appointment history for Students and Instructors.
  * Students and Instructors can sort, edit, and cancel appointments.
- * Students and Instructors can view meeting details and Instructors
- * can edit meeting details.
+ * Students and Instructors can view appointment details and Instructors
+ * can edit appointment details.
  *
  * Known bugs:
  * - Save and Discard Changes shows up twice after providing feedback.
+ * - Redo feeback UI
  *
  */
 
@@ -26,6 +27,7 @@ import Comment from "../components/Comment.js";
 export default function MeetingInformation({ courseId, reloadTable }) {
   // General Variables
   const { user } = useContext(UserContext);
+  const csrfToken = getCookie("csrf_access_token");
   const [changesMade, setChangesMade] = useState(false);
 
   // Appointment Table Variables
@@ -33,16 +35,16 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   const [showTable, setShowTable] = useState(true);
   const [sortedBy, sortBy] = useState("Type");
   const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
-  
-  // Meeting Data Variables
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
-  const [typeDescriptions, setTypeDescriptions] = useState({}); // [type: string]: string
+
+  // Appointment Data Variables
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [programDescriptions, setProgramDescriptions] = useState({}); // [type: string]: string
   const [feedbackPresent, setFeedbackPresent] = useState(false);
   const [isProvidingFeedback, setIsProvidingFeedback] = useState(false);
   const [data, setData] = useState([]);
   const [formData, setFormData] = useState({
     notes: "",
-    meeting_url: "",
+    appointment_url: "",
   });
   const [feedbackData, setFeedbackData] = useState({
     satisfaction: "",
@@ -54,8 +56,10 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   ////////////////////////////////////////////////////////
 
   // fetch the appointments for upcoming, pending, past tabs
-  const fetchMeetings = async () => {
-    if (!user || courseId === "") return; // If there's no user, we can't fetch appointments
+  const fetchAppointments = async () => {
+    // If there's no user or course, we can't fetch appointments
+    if (!user || courseId === "") return;
+
     const apiEndpoint =
       user.account_type === "mentor"
         ? `/mentor/appointments`
@@ -68,14 +72,16 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           credentials: "include",
         }
       );
-      const apiData = await response.json();
+
+      const fetchedData = await response.json();
+
       const key =
         user.account_type === "mentor"
           ? "mentor_appointments"
           : "student_appointments";
 
-      // sort the appointment type
-      const sortedData = (apiData[key] || []).sort((a, b) => {
+      // sort the appointment
+      const sortedData = (fetchedData[key] || []).sort((a, b) => {
         const dateComparison = new Date(a.date) - new Date(b.date);
         if (dateComparison === 0) {
           return (
@@ -89,13 +95,14 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       // set data to sorted data
       setData(sortedData);
     } catch (error) {
-      console.error("Error fetching data2:", error);
+      console.error("Error fetching appointment data for user:", error);
     }
   };
 
-  // fetch program type details 
-  const fetchProgramTypeDetails = async () => {
-    if (!user) return; // If there's no user, we can't fetch meetings
+  // fetch program details
+  const fetchProgramDetails = async () => {
+    // If there's no user, we can't fetch program details
+    if (!user) return;
     const apiEndpoint =
       user.account_type === "mentor"
         ? `/instructor/programs`
@@ -105,28 +112,31 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       const response = await fetch(apiEndpoint, {
         credentials: "include",
       });
-      const apiData = await response.json();
-      // create program details array 
-      // store id, program, and description into an object 
+
+      const fetchedData = await response.json();
+      // create program details array
+      // store id, program, and description into an object
       // store object into array
-      const programDetails = apiData.map((program) => ({
+      const programDetails = fetchedData.map((program) => ({
         id: program.id,
         type: program.type,
         description: program.description,
       }));
-      setTypeDescriptions(programDetails); // set type descriptions to program details
+
+      // set type descriptions to program details
+      setProgramDescriptions(programDetails);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching program descriptions:", error);
     }
   };
 
   // fetch feedback associated with appointment id
   const fetchFeedback = async () => {
-    if (!selectedMeeting) return;
+    if (!selectedAppointment) return;
 
     try {
       const response = await fetch(
-        `/feedback/${selectedMeeting.appointment_id}`,
+        `/feedback/${selectedAppointment.appointment_id}`,
         {
           credentials: "include",
         }
@@ -138,11 +148,11 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       if (user.account_type === "student") {
         feedbackExists = apiData.student_rating || apiData.student_notes;
       } else if (user.account_type === "mentor") {
-        //else if the account type is instructor, store the instructor rating or notes in to feedbackExists
-        feedbackExists = apiData.mentor_rating || apiData.mentor_notes; 
+        // else if the account type is instructor, store the instructor rating or notes in to feedbackExists
+        feedbackExists = apiData.mentor_rating || apiData.mentor_notes;
       }
 
-      // set feedbackPresent to feedbackExists 
+      // set feedbackPresent to feedbackExists
       setFeedbackPresent(feedbackExists);
     } catch (error) {
       console.error("Error fetching feedback:", error);
@@ -154,16 +164,15 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   ////////////////////////////////////////////////////////
 
   // called when instructor clicks on save changes button after providing feedback
-  // posts meeting notes, meeting url, or both to the Appointment table
+  // posts appointment notes, appointment url, or both to the Appointment table
   const handleSaveChanges = async () => {
-    if (!selectedMeeting) return;
+    if (!selectedAppointment) return;
 
-    // Get CSRF token from the cookie.
-    const csrfToken = getCookie("csrf_access_token");
-    const payload = {
+    const appendAppointmentId = {
       ...formData,
-      appointment_id: selectedMeeting.appointment_id,
+      appointment_id: selectedAppointment.appointment_id,
     };
+
     try {
       const response = await fetch(`/meetings/update`, {
         method: "POST",
@@ -172,28 +181,27 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           "Content-Type": "application/json",
           "X-CSRF-TOKEN": csrfToken,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(appendAppointmentId),
       });
 
       if (response.ok) {
-        // update the selected meeting with the new formData
-        setSelectedMeeting({ ...selectedMeeting, ...formData });
+        // update the selected appointment with the new formData
+        setSelectedAppointment({ ...selectedAppointment, ...formData });
         setChangesMade(false);
-        alert("Meeting updated successfully!");
-        fetchMeetings(); // re-fetch meetings 
+        alert("Appointment updated successfully!");
+        fetchAppointments(); // re-fetch appointments
       } else {
-        throw new Error("Failed to update the meeting");
+        throw new Error("Failed to update the appointment");
       }
     } catch (error) {
-      console.error("Error updating meeting:", error);
+      console.error("Error updating appointment:", error);
     }
   };
 
-  // called when the instructor Approve Meeting, Attended, Missing button
+  // called when the instructor Approve Appointment, Attended, Missing button
   // posts new status of appointment to the Appointment table
   const handleStatusUpdate = async (appointmentId, newStatus) => {
     // Get CSRF token from the cookie.
-    const csrfToken = getCookie("csrf_access_token");
     const payload = {
       appointment_id: appointmentId,
       status: newStatus,
@@ -210,24 +218,23 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       });
 
       if (response.ok) {
-        // update the selected meeting with the new formData
-        setSelectedMeeting({ ...selectedMeeting, status: newStatus });
-        alert("Meeting status updated successfully!");
-        fetchMeetings(); // re-fetch meetings
+        // update the selected appointment with the new formData
+        setSelectedAppointment({ ...selectedAppointment, status: newStatus });
+        alert("Appointment status updated successfully!");
+        fetchAppointments(); // re-fetch appointments
       } else {
-        throw new Error("Failed to update the meeting status");
+        throw new Error("Failed to update the appointment status");
       }
     } catch (error) {
-      console.error("Error updating meeting status:", error);
+      console.error("Error updating appointment status:", error);
     }
   };
 
   // called when instructor or student clicks on save changes button after providing feedback
-  // posts feedback data to Feedback table 
+  // posts feedback data to Feedback table
   const handleProvideFeedback = async (event) => {
     event.preventDefault();
 
-    const csrfToken = getCookie("csrf_access_token");
     const payload = {
       ...feedbackData,
     };
@@ -253,7 +260,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           additional_comments: "",
           appointment_id: null,
         });
-        fetchMeetings(); // re-fetch meetings
+        fetchAppointments(); // re-fetch appointments
       } else {
         throw new Error("Failed to provide feedback");
       }
@@ -262,39 +269,36 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     }
   };
 
-  // called when instructor or student wants to cancel meeting
+  // called when instructor or student wants to cancel appointment
   // posts cancel status for instructor and posted for student to Appointment table
-  const handleCancelMeeting = async (appointmentId) => {
-    if (window.confirm("Are your sure you want to cancel this meeting?")) {
+  const handleCancelAppointment = async (appointmentId) => {
+    if (window.confirm("Are your sure you want to cancel this appointment?")) {
       // Construct the endpoint based on account type
       const cancelEndpoint =
         user.account_type === "mentor"
           ? `/mentor/appointments/cancel/${appointmentId}`
           : `/student/appointments/cancel/${appointmentId}`;
 
-      // Get CSRF token from the cookie. You might need a utility function to parse cookies.
-      const csrfToken = getCookie("csrf_access_token");
-
       try {
         const response = await fetch(cancelEndpoint, {
           method: "POST",
           credentials: "include",
           headers: {
-            "X-CSRF-TOKEN": csrfToken, // Include the CSRF token in the request header
+            "X-CSRF-TOKEN": csrfToken,
           },
         });
 
         if (response.ok) {
           // If the cancellation was successful, update the state to reflect that
-          alert("Meeting canceled successfully!");
+          alert("Appointment canceled successfully!");
           setActiveTab("upcoming");
-          setSelectedMeeting(null); // Deselect the meeting as it is now cancelled
-          fetchMeetings(); // Re-fetch meetings to update the list
+          setSelectedAppointment(null); // Deselect the appointment as it is now cancelled
+          fetchAppointments(); // Re-fetch appointments to update the list
         } else {
-          throw new Error("Failed to cancel the meeting");
+          throw new Error("Failed to cancel the appointment");
         }
       } catch (error) {
-        console.error("Error cancelling meeting:", error);
+        console.error("Error cancelling appointment:", error);
       }
     }
   };
@@ -303,7 +307,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  // called when instructor wants to enter meeting URL Link or Meeting notes
+  // called when instructor wants to enter appointment URL Link or appointment notes
   const handleInputChange = (e) => {
     if (user.account_type !== "mentor") return;
 
@@ -315,12 +319,12 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   // called when instructor or student clicks on upcoming, pending, or past tab
   const handleTabClick = (tabName) => {
     setActiveTab(tabName); // Update the active tab state
-    setSelectedMeeting(null); // Reset the selected meeting details
+    setSelectedAppointment(null); // Reset the selected appointment details
   };
 
-  // called when instructor or student clicks on a meeting
-  const handleMeetingClick = (meeting) => {
-    setSelectedMeeting(meeting); // update selected meeting state
+  // called when instructor or student clicks on a appointment
+  const handleAppointmentClick = (appointment) => {
+    setSelectedAppointment(appointment); // update selected appointment state
     fetchFeedback();
   };
 
@@ -344,22 +348,24 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   // called when instructor or student clicks on provide feedback button
   const handleFeedbackClick = () => {
     setIsProvidingFeedback(true);
-    // Set the initial state for feedbackData including the appointment_id from the selected meeting
+    // Set the initial state for feedbackData including the appointment_id from the selected appointment
     setFeedbackData({
       satisfaction: "",
       additional_comments: "",
-      appointment_id: selectedMeeting ? selectedMeeting.appointment_id : null,
+      appointment_id: selectedAppointment
+        ? selectedAppointment.appointment_id
+        : null,
     });
     setChangesMade(false);
   };
 
   // called when instructor wanted to cancel changes made
   const handleCancelChanges = () => {
-    // Reset form data to initial meeting data
+    // Reset form data to initial appointment data
     setFormData({
-      notes: selectedMeeting.notes || "",
-      meeting_url: selectedMeeting.meeting_url || "",
-      status: selectedMeeting.status || "",
+      notes: selectedAppointment.notes || "",
+      appointment_url: selectedAppointment.appointment_url || "",
+      status: selectedAppointment.status || "",
     });
     setChangesMade(false); // Reset changes made
   };
@@ -377,7 +383,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     // iterate through data array and sort
     const sortedData = [...data].sort((a, b) => {
       switch (sort) {
-        // sort based on name
+        // sort based on appointment name
         case "Name":
           return a.type.localeCompare(b.type);
         // sort based on class name
@@ -415,45 +421,44 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     setData(sortedData);
   };
 
-
   ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  // reset selected meeting when selectedMeeting updates
+  // reset selected appointment when selectedAppointment updates
   useEffect(() => {
-    if (selectedMeeting) {
+    if (selectedAppointment) {
       setFormData({
-        notes: selectedMeeting.notes || "",
-        meeting_url: selectedMeeting.meeting_url || "",
-        status: selectedMeeting.status || "",
+        notes: selectedAppointment.notes || "",
+        appointment_url: selectedAppointment.appointment_url || "",
+        status: selectedAppointment.status || "",
       });
       setChangesMade(false);
     }
-  }, [selectedMeeting]);
+  }, [selectedAppointment]);
 
-  // fetch meetings and program type details when use, activeTab, or reloadTable updates
+  // fetch appointments and program type details when use, activeTab, or reloadTable updates
   useEffect(() => {
-    fetchMeetings();
-    fetchProgramTypeDetails();
+    fetchAppointments();
+    fetchProgramDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab, reloadTable]);
 
-  // fetch meetings when the course id is updated and valid
+  // fetch appointments when the course id is updated and valid
   useEffect(() => {
     if (courseId !== null || courseId !== "") {
-      fetchMeetings();
+      fetchAppointments();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
-  // fetch dfedback when the selectedMeeting is updated 
+  // fetch dfedback when the selectedAppointment is updated
   useEffect(() => {
     fetchFeedback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMeeting]);
+  }, [selectedAppointment]);
 
-  // sortTable function called when sortedBy is updated 
+  // sortTable function called when sortedBy is updated
   useEffect(() => {
     sortTable(sortedBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -463,7 +468,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
 
-  // render the provide feedback form if user clicks on provide feedback button  
+  // render the provide feedback form if user clicks on provide feedback button
   const renderProvideFeedbackForm = () => {
     if (!isProvidingFeedback) {
       return null;
@@ -477,7 +482,6 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       "Satisfied",
       "Highly Satisfied",
     ];
-    const statements = ["How satisfied are you with the meeting?"];
 
     // HTML for webpage
     return (
@@ -494,7 +498,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         <div>
           <div className="flex flex-col">
             <label htmlFor="rating" className="font-bold pt-5">
-              How satisfied are you with the meeting?
+              How satisfied are you with the appointment?
             </label>
             <div className="flex flex-row justify-between">
               {satisfactionLevels.map((level) => (
@@ -545,9 +549,9 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     );
   };
 
-  // render the meeting details if a meeting is selected
-  const renderMeetingDetails = () => {
-    if (!selectedMeeting) {
+  // render the appointment details if a appointment is selected
+  const renderAppointmentDetails = () => {
+    if (!selectedAppointment) {
       return null;
     }
 
@@ -559,12 +563,12 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       >
         <div className="flex flex-row ">
           <h2 className="m-auto text-2xl font-body font-bold">
-            Meeting Details
+            Appointment Details
           </h2>
           <div
             className="cursor-pointer"
             onClick={() => {
-              setSelectedMeeting(null);
+              setSelectedAppointment(null);
               setIsProvidingFeedback(false);
             }}
           >
@@ -576,15 +580,15 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           <div className="flex">
             {((user.account_type === "student" && activeTab !== "past") ||
               (user.account_type === "mentor" && activeTab === "upcoming")) && (
-                <button
-                  className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
-                  onClick={() =>
-                    handleCancelMeeting(selectedMeeting.appointment_id)
-                  }
-                >
-                  Cancel Meeting
-                </button>
-              )}
+              <button
+                className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
+                onClick={() =>
+                  handleCancelAppointment(selectedAppointment.appointment_id)
+                }
+              >
+                Cancel Appointment
+              </button>
+            )}
             {user.account_type === "mentor" && activeTab === "pending" && (
               <div>
                 <button
@@ -592,21 +596,21 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                   type="button"
                   onClick={() =>
                     handleStatusUpdate(
-                      selectedMeeting.appointment_id,
+                      selectedAppointment.appointment_id,
                       "reserved"
                     )
                   }
                 >
-                  Approve Meeting
+                  Approve Appointment
                 </button>
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
                   onClick={() =>
-                    handleCancelMeeting(selectedMeeting.appointment_id)
+                    handleCancelAppointment(selectedAppointment.appointment_id)
                   }
                 >
-                  Cancel Meeting
+                  Cancel Appointment
                 </button>
               </div>
             )}
@@ -617,7 +621,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                   type="button"
                   onClick={() =>
                     handleStatusUpdate(
-                      selectedMeeting.appointment_id,
+                      selectedAppointment.appointment_id,
                       "completed"
                     )
                   }
@@ -628,7 +632,10 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
                   onClick={() =>
-                    handleStatusUpdate(selectedMeeting.appointment_id, "missed")
+                    handleStatusUpdate(
+                      selectedAppointment.appointment_id,
+                      "missed"
+                    )
                   }
                 >
                   Missed
@@ -651,15 +658,15 @@ export default function MeetingInformation({ courseId, reloadTable }) {
 
         {isProvidingFeedback && renderProvideFeedbackForm()}
         <br />
-        <div id="meeting-info" className="flex flex-col">
+        <div className="flex flex-col">
           <div className="flex flex-row">
             <label htmlFor="type" className="font-bold">
               Program&nbsp;
             </label>
             <Tooltip
               text={
-                typeDescriptions.find(
-                  (desc) => desc.id === Number(selectedMeeting.program_id)
+                programDescriptions.find(
+                  (desc) => desc.id === Number(selectedAppointment.program_id)
                 )?.description || "No description for this program :("
               }
             >
@@ -667,35 +674,35 @@ export default function MeetingInformation({ courseId, reloadTable }) {
             </Tooltip>
           </div>
           <label htmlFor="type">
-            {typeDescriptions.find(
-              (desc) => desc.id === Number(selectedMeeting.program_id)
+            {programDescriptions.find(
+              (desc) => desc.id === Number(selectedAppointment.program_id)
             )?.type || "No name for this program"}
           </label>
 
           <label className="font-bold pt-2">Class</label>
-          {selectedMeeting.class_name}
+          {selectedAppointment.class_name}
 
           <label htmlFor="date" className="font-bold pt-2">
             Date
           </label>
-          {getDayFromDate(selectedMeeting.date) +
+          {getDayFromDate(selectedAppointment.date) +
             ", " +
-            formatDate(selectedMeeting.date)}
+            formatDate(selectedAppointment.date)}
 
           <label htmlFor="time" className="font-bold pt-2">
             Time
           </label>
-          {`${formatTime(selectedMeeting.start_time)} - ${formatTime(
-            selectedMeeting.end_time
+          {`${formatTime(selectedAppointment.start_time)} - ${formatTime(
+            selectedAppointment.end_time
           )} (PST)`}
 
           <label htmlFor="status" className="font-bold pt-2">
             Current Status
           </label>
-          {capitalizeFirstLetter(selectedMeeting.status)}
+          {capitalizeFirstLetter(selectedAppointment.status)}
 
           <label htmlFor="notes" className="font-bold pt-2">
-            Meeting Notes
+            Appointment Notes
           </label>
           <textarea
             className="w-full border border-light-gray h-20"
@@ -704,54 +711,52 @@ export default function MeetingInformation({ courseId, reloadTable }) {
             onChange={handleInputChange}
           />
 
-          {selectedMeeting.physical_location ? (
+          {selectedAppointment.physical_location ? (
             <>
               <label className="font-bold pt-2">Physical Location</label>
-              {selectedMeeting.physical_location}
+              {selectedAppointment.physical_location}
             </>
           ) : null}
 
-          <label htmlFor="meeting_url" className="font-bold pt-2">
-            Your Meeting URL
-          </label>
+          <label className="font-bold pt-2">Your Appointment URL</label>
           <input
             className="w-full border border-light-gray bg-gray"
             type="text"
-            name="meeting_url"
-            value={formData.meeting_url}
+            name="appointment_url"
+            value={formData.appointment_url}
             onChange={handleInputChange}
             disabled={activeTab === "past"}
           />
           {/* display student details if mentor view */}
-          {user.account_type === "mentor" && selectedMeeting.student && (
+          {user.account_type === "mentor" && selectedAppointment.student && (
             <div className="flex flex-col pt-5">
               <h2 className="text-2xl font-bold">Student Info</h2>
               <label htmlFor="name" className="font-bold pt-2">
                 Name
               </label>
-              {selectedMeeting.student.first_name}
+              {selectedAppointment.student.first_name}
 
               <label htmlFor="email" className="font-bold pt-2">
                 Email
               </label>
-              {selectedMeeting.student.email}
+              {selectedAppointment.student.email}
             </div>
           )}
           {/* display mentor details if student view */}
           {user.account_type === "student" &&
-            selectedMeeting.mentor &&
+            selectedAppointment.mentor &&
             activeTab !== "pending" && (
               <div className="flex flex-col pt-5">
                 <h2 className="text-2xl font-bold">Mentor Info</h2>
                 <label htmlFor="name" className="font-bold pt-2">
                   Name
                 </label>
-                {selectedMeeting.mentor.first_name}
+                {selectedAppointment.mentor.first_name}
 
                 <label htmlFor="email" className="font-bold pt-2">
                   Email
                 </label>
-                {selectedMeeting.mentor.email}
+                {selectedAppointment.mentor.email}
               </div>
             )}
         </div>
@@ -772,13 +777,12 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           </div>
         )}
         <br />
-        <Comment appointmentId={selectedMeeting.appointment_id} />
+        <Comment appointmentId={selectedAppointment.appointment_id} />
       </div>
     );
   };
 
-
-  // HTML for webpage, Display meeting list
+  // Global HTML for webpage, Display appointment list
   return (
     <div
       id="content-container"
@@ -816,8 +820,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       </button>
 
       <div id="table" className="w-11/12">
-        {selectedMeeting ? (
-          renderMeetingDetails()
+        {selectedAppointment ? (
+          renderAppointmentDetails()
         ) : (
           <table className="w-full border text-center">
             {data.length > 0 ? (
@@ -828,7 +832,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                       className="border-r w-14% hover:bg-gold"
                       onClick={() => sortBy("Name")}
                     >
-                      Type
+                      Program Name
                     </th>
                     <th
                       className="border-r w-14% cursor-pointer hover:bg-gold"
@@ -843,8 +847,9 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                       Day
                     </th>
                     <th
-                      className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? "bg-gold" : ""
-                        }`}
+                      className={`border-r w-12% hover:bg-gold ${
+                        hoveringDateOrTime ? "bg-gold" : ""
+                      }`}
                       onClick={() => sortBy("Date")}
                       onMouseEnter={() => setHoveringDateOrTime(true)}
                       onMouseLeave={() => setHoveringDateOrTime(false)}
@@ -852,8 +857,9 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                       Date
                     </th>
                     <th
-                      className={`border-r w-12% hover:bg-gold ${hoveringDateOrTime ? "bg-gold" : ""
-                        }`}
+                      className={`border-r w-12% hover:bg-gold ${
+                        hoveringDateOrTime ? "bg-gold" : ""
+                      }`}
                       onClick={() => sortBy("Date")}
                       onMouseEnter={() => setHoveringDateOrTime(true)}
                       onMouseLeave={() => setHoveringDateOrTime(false)}
@@ -866,7 +872,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                     >
                       Physical Location
                     </th>
-                    <th className="border-r w-14%">Meeting URL</th>
+                    <th className="border-r w-14%">Appointment URL</th>
                     <th
                       className="w-6% hover:bg-gold"
                       onClick={() => sortBy("Status")}
@@ -877,39 +883,40 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                 </thead>
                 <tbody>
                   {showTable &&
-                    data.map((meeting) => (
+                    data.map((appointment) => (
                       <tr
-                        key={meeting.appointment_id}
-                        onClick={() => handleMeetingClick(meeting)}
+                        key={appointment.appointment_id}
+                        onClick={() => handleAppointmentClick(appointment)}
                         className="cursor-pointer hover:bg-gray border-b"
                       >
                         <td className="border-r">
-                          {meeting.type || "-------"}
+                          {appointment.type || "-------"}
                         </td>
                         <td className="border-r">
-                          {meeting.class_name || "-------"}
+                          {appointment.class_name || "-------"}
                         </td>
                         <td className="border-r">
-                          {getDayFromDate(meeting.date) || "-------"}
+                          {getDayFromDate(appointment.date) || "-------"}
                         </td>
                         <td className="border-r">
-                          {formatDate(meeting.date) || "-------"}
+                          {formatDate(appointment.date) || "-------"}
                         </td>
                         <td className="border-r">
-                          {meeting.start_time && meeting.end_time
-                            ? `${formatTime(meeting.start_time)} - ${formatTime(
-                              meeting.end_time
-                            )}`
+                          {appointment.start_time && appointment.end_time
+                            ? `${formatTime(
+                                appointment.start_time
+                              )} - ${formatTime(appointment.end_time)}`
                             : "-------"}
                         </td>
                         <td className="border-r">
-                          {meeting.physical_location || "-------"}
+                          {appointment.physical_location || "-------"}
                         </td>
                         <td className="border-r">
-                          {meeting.meeting_url || "-------"}
+                          {appointment.meeting_url || "-------"}
                         </td>
                         <td>
-                          {capitalizeFirstLetter(meeting.status) || "-------"}
+                          {capitalizeFirstLetter(appointment.status) ||
+                            "-------"}
                         </td>
                       </tr>
                     ))}

@@ -5,21 +5,20 @@
  * Instructor can choose if they're creating, updating, or deleting
  * program types, availability, description,
  * meeting duration, location, and virtual meeting links
- * for a class or globally that applies to all classes.
+ * for a course or globally that applies to all courses.
  *
  * Known Bugs:
  * - Comment on line 623 in showBox -> need to make work with save/cancel changes button
  * - ToolTip UI Box next to Create Program Type button needs adjusting
- * - Not a bug, but line 197 setAllTimesData(fetchedProgramTimes) is commented out
+ * - Dont let Course Times be used as a name. dont let repeat names be true
  *
  */
 
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext.js";
 import { getCookie } from "../utils/GetCookie.js";
 import { Tooltip } from "./Tooltip.js";
 import WeeklyCalendar from "./WeeklyCalendar.js";
-import { ClassContext } from "../context/ClassContext.js";
 import ChooseMeetingDatesPopup from "./ChooseMeetingDatesPopup.js";
 import MeetingLocation from "./MeetingLocation.js";
 import CreateProgramTypePopup from "./CreateProgramTypePopup.js";
@@ -29,14 +28,9 @@ export default function Program() {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
   const { user } = useContext(UserContext);
-  const [changesMade, setChangesMade] = useState(false);
-  const [boxShown, setBoxShown] = useState(false);
-  const [isPopUpVisible, setPopUpVisible] = useState(false);
-  const [isCreateAvailabilityPopUpVisible, setCreateAvailabilityPopUpVisible] =
-    useState(false);
-  const [isCreateProgramTypePopup, setCreateProgramTypePopup] = useState(false);
 
   // Load Variables
+  const [changesMade, setChangesMade] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [loadProgramTable, setLoadProgramTable] = useState(false);
   const [resetOfficeHoursTable, setResetOfficeHoursTable] = useState(false);
@@ -49,18 +43,33 @@ export default function Program() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isDropinsLayout, setIsDropinsLayout] = useState(true);
   const [isRangedBasedLayout, setIsRangedBasedLayout] = useState(true);
-  const [showDuration, setShowDuration] = useState(false);
 
-  // Class Data Variables
+  // Popup Load Variables
+  const [boxShown, setBoxShown] = useState(false);
+  const [isChooseMeetingDatesPopUpVisible, setChooseMeetingDatesPopUpVisible] =
+    useState(false);
+  const [isCreateAvailabilityPopUpVisible, setCreateAvailabilityPopUpVisible] =
+    useState(false);
+  const [isCreateProgramTypePopup, setCreateProgramTypePopup] = useState(false);
+  const [showDuration, setShowDuration] = useState(false);
+  const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
+    course_id: true,
+    type: true,
+    description: true,
+    duration: true,
+    physical_location: true,
+    virtual_link: true,
+  });
+
+  // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState("-2");
   const [selectedProgramId, setSelectedProgramId] = useState("");
   const [allCourseData, setAllCourseData] = useState([]);
-  const [selectedClassData, setSelectedClassData] = useState({
+  const [selectedCourseData, setSelectedCourseData] = useState({
     id: "",
-    class_name: "",
+    course_name: "",
     programs: [],
   });
-
   const [selectedProgramData, setSelectedProgramData] = useState({
     id: "",
     type: "",
@@ -76,17 +85,8 @@ export default function Program() {
     isRangeBased: "",
   });
 
-  const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
-    class_id: true,
-    type: true,
-    description: true,
-    duration: true,
-    physical_location: true,
-    virtual_link: true,
-  });
-
   // Times Data Variables
-  const [allTimesData, setAllTimesData] = useState({});
+  const [backupTimesData, setBackupTimesData] = useState({});
   const [selectedProgramTimesData, setSelectedProgramTimesData] = useState({});
 
   ////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ export default function Program() {
   ////////////////////////////////////////////////////////
 
   // fetch all courses the instructor is associated with
-  const fetchCourseList = async () => {
+  const fetchAllInstructorCourses = async () => {
     if (user.account_type !== "mentor") return;
 
     try {
@@ -102,12 +102,12 @@ export default function Program() {
         credentials: "include",
       });
 
-      const fetchedCourseList = await response.json();
-      setAllCourseData(fetchedCourseList);
+      const fetchedCourses = await response.json();
+      setAllCourseData(fetchedCourses);
 
       if (!hasLoaded) {
         // check for a global program in fetched course list with unique id -2
-        const containsGlobalPrograms = fetchedCourseList.find(
+        const containsGlobalPrograms = fetchedCourses.find(
           (course) => course.id === -2
         );
 
@@ -119,7 +119,7 @@ export default function Program() {
         setHasLoaded(true);
       }
     } catch (error) {
-      console.error("Error fetching course list:", error);
+      console.error("Error fetching all instructor courses:", error);
     }
   };
 
@@ -137,17 +137,12 @@ export default function Program() {
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "FetchTimesData failed");
-      }
-
       const fetchedCourseTimes = await response.json();
 
       if (fetchedCourseTimes !== null) {
         // create a tempData object and loop through fetchedCourseTimes
         const tempData = fetchedCourseTimes
-          .filter((item) => item.type !== "Class Times") // filter out fetchedCoursesTimes by "class times" type
+          .filter((item) => item.type !== "Course Times") // filter out fetchedCoursesTimes by "course times" type
           .reduce((acc, item) => {
             const programId = item.program_id;
 
@@ -167,53 +162,9 @@ export default function Program() {
           }, {});
 
         // set allTimesData to tempData
-        setAllTimesData(tempData);
+        setBackupTimesData(tempData);
       } else {
-        setAllTimesData({});
-      }
-    } catch (error) {
-      console.error("Error fetching time info:", error);
-    }
-  };
-
-  // fetch selectedProgramTimes associated with the programId
-  const fetchSelectedProgramTimesData = async (programId) => {
-    if (!programId || programId === "-1") {
-      setSelectedProgramTimesData({});
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `/program/times/${encodeURIComponent(programId)}`,
-        {
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "FetchTimesData failed");
-      }
-
-      const fetchedProgramTimes = await response.json();
-
-      if (fetchedProgramTimes !== null) {
-        //setAllTimesData(fetchedProgramTimes);
-
-        const tempData = fetchedProgramTimes.reduce((acc, item) => {
-          // add start_time and end_time to the accumulator object based on the day
-          acc[item.day] = {
-            start_time: item.start_time,
-            end_time: item.end_time,
-          };
-          return acc;
-        }, {});
-
-        // set selectedProgramTimesData to tempData
-        setSelectedProgramTimesData(tempData);
-      } else {
-        setSelectedProgramTimesData({});
+        setBackupTimesData({});
       }
     } catch (error) {
       console.error("Error fetching time info:", error);
@@ -225,11 +176,16 @@ export default function Program() {
   ////////////////////////////////////////////////////////
 
   // called when user clicks save changes button
-  // saves all class and times details to database
+  // saves all course and times details to database
   const handleSaveChanges = async () => {
+    if (selectedProgramData.type === "" || !selectedProgramData.type) {
+      alert("Program Name cannot be empty.");
+      return;
+    }
+
     if (Object.keys(selectedProgramTimesData).length > 0) {
-      setAllTimesData({
-        ...allTimesData,
+      setBackupTimesData({
+        ...backupTimesData,
         [selectedProgramId]: selectedProgramTimesData,
       });
       setPost(true);
@@ -239,7 +195,7 @@ export default function Program() {
     }
   };
 
-  // posts updated program data for a class to the ProgramType table
+  // posts updated program data for a course to the ProgramType table
   const postProgramToDatabase = async () => {
     try {
       // Set default values for max_daily_meetings, max_weekly_meetings, and max_monthly_meetings if they are empty or null
@@ -277,6 +233,8 @@ export default function Program() {
         }),
       });
 
+      fetchAllInstructorCourses();
+
       setChangesMade(false); // Hide Save/Cancel Buttons
     } catch (error) {
       console.error("Error saving program type details:", error);
@@ -285,10 +243,10 @@ export default function Program() {
 
   // handleSaveChanges helper: update ClassTimes table in database for attached course
   // called in a UseEffect below
-  const postClassDetailsToDatabase = async () => {
+  const postCourseDetailsToDatabase = async () => {
     try {
       await fetch(
-        `/course/setTime/${encodeURIComponent(selectedClassData.id)}`,
+        `/course/setTime/${encodeURIComponent(selectedCourseData.id)}`,
         {
           method: "POST",
           credentials: "include",
@@ -296,13 +254,13 @@ export default function Program() {
             "Content-Type": "application/json",
             "X-CSRF-TOKEN": csrfToken,
           },
-          body: JSON.stringify(allTimesData),
+          body: JSON.stringify(backupTimesData),
         }
       );
 
       setChangesMade(false); // Hide Save/Cancel Buttons
     } catch (error) {
-      console.error("Error saving class details:", error);
+      console.error("Error saving course details:", error);
     }
   };
 
@@ -322,7 +280,7 @@ export default function Program() {
           // If the cancellation was successful, update the state to reflect that
           alert("Program Type deleted successfully!");
           // reload webpage details (like program switch)
-          await fetchCourseList();
+          await fetchAllInstructorCourses();
           handleProgramChange({ target: { value: "-1" } });
         } else {
           throw new Error("Failed to delete program type");
@@ -344,7 +302,7 @@ export default function Program() {
     }
 
     // reload courseIds with all courses
-    fetchCourseList();
+    fetchAllInstructorCourses();
 
     const selectedCourse = parseInt(e.target.value);
 
@@ -391,16 +349,19 @@ export default function Program() {
     updateProgramInfo(selectedProgram);
 
     // update programTimesData to selectedProgram
-    fetchSelectedProgramTimesData(selectedProgram);
-    setSelectedProgramTimesData(selectedProgramTimesData[selectedProgram]);
+    if (backupTimesData.hasOwnProperty(selectedProgram)) {
+      setSelectedProgramTimesData(backupTimesData[selectedProgram]);
+    } else {
+      setSelectedProgramTimesData({});
+    }
 
     setChangesMade(false);
   };
 
-  // update the selectedClassData based on a courseId
+  // update the selectedCourseData based on a courseId
   const updateCourseInfo = (courseId) => {
     if (!courseId) {
-      setSelectedClassData({});
+      setSelectedCourseData({});
       return;
     }
 
@@ -409,12 +370,12 @@ export default function Program() {
     );
 
     if (selectedCourse) {
-      // Update selectedClassData with selectedCourse.id
-      setSelectedClassData(selectedCourse);
+      // Update selectedCourseData with selectedCourse.id
+      setSelectedCourseData(selectedCourse);
     } else {
-      setSelectedClassData({
+      setSelectedCourseData({
         id: "",
-        class_name: "",
+        course_name: "",
         programs: [],
       });
     }
@@ -442,7 +403,7 @@ export default function Program() {
       return;
     }
 
-    const selectedProgram = selectedClassData.programs.find(
+    const selectedProgram = selectedCourseData.programs.find(
       (program) => program.id === programId
     );
 
@@ -460,7 +421,7 @@ export default function Program() {
     }
   };
 
-  // update classData with instructor input
+  // update courseData with instructor input
   const handleInputChange = (e) => {
     if (!e || (e.target.name === "duration" && e.target.value.includes("a"))) {
       return;
@@ -509,8 +470,8 @@ export default function Program() {
       [e.target.name]: newValue,
     });
 
-    // update selectedClassData.programs to the selectedProgramData
-    const selectedCourse = selectedClassData.programs.find(
+    // update selectedCourseData.programs to the selectedProgramData
+    const selectedCourse = selectedCourseData.programs.find(
       (program) => program.id === selectedProgramData.id
     );
 
@@ -527,7 +488,6 @@ export default function Program() {
       return;
     }
 
-    const tempType = e.type;
     const tempDay = e.name;
     const tempValue = e.value;
 
@@ -550,7 +510,6 @@ export default function Program() {
         },
       };
     }
-
     // Set the selectedProgramTimesData variable
     setSelectedProgramTimesData(updatedTimesData);
   };
@@ -609,12 +568,13 @@ export default function Program() {
   // handle to cancel webpage changes when instructor is done editing details
   const handleCancelChanges = () => {
     // Reset courseinfo, program info, adn officeHoursTable to initial data
-    updateCourseInfo(selectedClassData.id);
+    updateCourseInfo(selectedCourseData.id);
     updateProgramInfo(selectedProgramId);
     setResetOfficeHoursTable(true);
     reloadChildInfo();
-    if (allTimesData[selectedProgramId]) {
-      setSelectedProgramTimesData(allTimesData[selectedProgramId]); // resetSelectedProgramTimesData to selectedProgramId
+
+    if (backupTimesData[selectedProgramId]) {
+      setSelectedProgramTimesData(backupTimesData[selectedProgramId]);
     } else {
       setSelectedProgramTimesData({});
     }
@@ -649,14 +609,16 @@ export default function Program() {
   // post to database once changes save
   useEffect(() => {
     if (post) {
-      postClassDetailsToDatabase();
+      postCourseDetailsToDatabase();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [post]);
 
-  // on initial page load, fetchCourseList()
+  // on initial page load, fetchAllInstructorCourses()
   useEffect(() => {
     if (!isPageLoaded) {
-      fetchCourseList();
+      tabSelect(true);
+      fetchAllInstructorCourses();
       setIsPageLoaded(!isPageLoaded);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -757,7 +719,9 @@ export default function Program() {
         <div className=" flex w-full cursor-pointer justify-center">
           <div
             className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
-              isAllCoursesSelected ? "bg-gold border-gold" : "bg-metallic-gold border-metallic-gold"
+              isAllCoursesSelected
+                ? "bg-gold border-gold"
+                : "bg-metallic-gold border-metallic-gold"
             }`}
             onClick={() => tabSelect(true)}
           >
@@ -765,7 +729,9 @@ export default function Program() {
           </div>
           <div
             className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
-              isAllCoursesSelected ? "bg-metallic-gold border-metallic-gold" : "bg-gold border-gold"
+              isAllCoursesSelected
+                ? "bg-metallic-gold border-metallic-gold"
+                : "bg-gold border-gold"
             }`}
             onClick={() => tabSelect(false)}
           >
@@ -785,7 +751,7 @@ export default function Program() {
                   }`}
                 >
                   <h1>
-                    <strong>Select Course:</strong>
+                    <strong>Course:</strong>
                   </h1>
                   <select
                     className="border border-light-gray rounded ml-2 hover:bg-gray"
@@ -804,7 +770,7 @@ export default function Program() {
                             key={course.id}
                             value={course.id}
                           >
-                            {course.class_name}
+                            {course.course_name}
                           </option>
                         )
                     )}
@@ -821,7 +787,7 @@ export default function Program() {
               }`}
             >
               <h1>
-                <strong>Select Program:</strong>
+                <strong>Program:</strong>
               </h1>
               <select
                 className="border border-light-gray rounded ml-2 hover:bg-gray"
@@ -833,7 +799,7 @@ export default function Program() {
                 <option className="bg-white" key={-1} value="">
                   Select...
                 </option>
-                {selectedClassData.programs.map((program) => (
+                {selectedCourseData.programs.map((program) => (
                   <option
                     className="bg-white"
                     key={program.id}
@@ -854,7 +820,10 @@ export default function Program() {
               >
                 Create Program
               </button>
-              <Tooltip text='For Class Times and Office Hours programs, please use the title "Class Times" or "Office Hours" respectively' flip={true}>
+              <Tooltip
+                text='For Course Times and Office Hours programs, please use the title "Course Times" or "Office Hours" respectively'
+                flip={true}
+              >
                 <span>ⓘ</span>
               </Tooltip>
             </div>
@@ -885,10 +854,24 @@ export default function Program() {
                       Delete Program
                     </button>
                   </div>
-                  <h2 className="pb-10 text-center font-bold text-2xl">
-                    {selectedProgramData.type}{" "}
-                    {/* let user be able to change program name */}
-                  </h2>
+
+                  <div className="pb-10 flex justify-center relative">
+                    <input
+                      className="text-center font-bold text-2xl px-2"
+                      name="type"
+                      value={selectedProgramData.type}
+                      onChange={handleInputChange}
+                      style={{
+                        width: `${selectedProgramData.type.length * 16}px`,
+                      }}
+                    />
+                    <Tooltip
+                      text="Click Program Name To Change Value."
+                      position="top"
+                    >
+                      <span className="absolute transform">ⓘ</span>
+                    </Tooltip>
+                  </div>
 
                   <div className="flex flex-col">
                     <div className="w-3/4 m-auto">
@@ -897,7 +880,7 @@ export default function Program() {
                           <label className="font-bold">
                             Program Description &nbsp;
                           </label>
-                          <Tooltip text="Description of the program type related to meetings for a class.">
+                          <Tooltip text="Description of the program type related to meetings for a course.">
                             <span>ⓘ</span>
                           </Tooltip>
                         </div>
@@ -1049,19 +1032,17 @@ export default function Program() {
                           <>
                             <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                               <WeeklyCalendar
-                                isCourseTimes={false}
-                                param={{
-                                  functionPassed: handleTimesChange,
+                                functions={{
+                                  timesChangeFunction: handleTimesChange,
                                   loadPageFunction: setLoadProgramTable,
-                                  changesMade: setChangesMade,
-                                  resetFunction: setResetOfficeHoursTable,
-                                  showDuration: setShowDuration,
+                                  setChangesMade: setChangesMade,
+                                  setReset: setResetOfficeHoursTable,
+                                  setShowDuration: setShowDuration,
                                 }}
                                 times={selectedProgramTimesData}
                                 loadPage={loadProgramTable}
                                 reset={resetOfficeHoursTable}
                                 program_id={selectedProgramData.id}
-                                program_type={selectedProgramData.type}
                                 disabled={!isProgramSelected}
                               />
                             </div>
@@ -1105,7 +1086,9 @@ export default function Program() {
                                 <button
                                   className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 hover:bg-gray`}
                                   onClick={() =>
-                                    setPopUpVisible(!isPopUpVisible)
+                                    setChooseMeetingDatesPopUpVisible(
+                                      !isChooseMeetingDatesPopUpVisible
+                                    )
                                   }
                                 >
                                   Choose Meeting Dates
@@ -1142,13 +1125,13 @@ export default function Program() {
                         className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
                         onClick={handleSaveChanges}
                       >
-                        Save Class Changes
+                        Save Course Changes
                       </button>
                       <button
                         className="bg-purple text-white rounded-md p-2 hover:text-gold"
                         onClick={handleCancelChanges}
                       >
-                        Discard Class Changes
+                        Discard Course Changes
                       </button>
                     </div>
                   )}
@@ -1169,10 +1152,10 @@ export default function Program() {
         )}
       </div>
 
-      {isPopUpVisible && (
+      {isChooseMeetingDatesPopUpVisible && (
         <div className="fixed inset-0 z-10">
           <ChooseMeetingDatesPopup
-            onClose={() => setPopUpVisible(false)}
+            onClose={() => setChooseMeetingDatesPopUpVisible(false)}
             data={selectedProgramTimesData}
             id={selectedCourseId}
             duration={selectedProgramData.duration}

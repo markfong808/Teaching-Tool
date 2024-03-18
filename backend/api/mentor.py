@@ -806,14 +806,14 @@ def get_courses():
         
         if mentor:
             all_mentor_courses = ClassInformation.query.join(CourseMembers, ClassInformation.id == CourseMembers.class_id).filter_by(user_id=user_id).all()
-            class_info = [{'class_id': course.id, 'class_name': course.class_name} for course in all_mentor_courses]
+            class_info = [{'course_id': course.id, 'course_name': course.class_name} for course in all_mentor_courses]
 
             if all_mentor_courses:
 
                 courses_with_programs = []
 
                 for entry in class_info:
-                    class_id = entry['class_id']
+                    class_id = entry['course_id']
 
                     all_programs_in_course = ProgramType.query.filter_by(class_id=class_id).all()
                     course_with_programs = []
@@ -837,7 +837,7 @@ def get_courses():
 
                     formatTuple = {
                         'id': class_id,
-                        'class_name': entry['class_name'],
+                        'course_name': entry['course_name'],
                         'programs': course_with_programs
                     }
 
@@ -943,7 +943,7 @@ def get_mentor_availabilities(class_id):
                     'isDropins': program['isDropins']
                 }
                 availability_list.append(availability_info)
-            return jsonify({"mentor_availability": availability_list}), 200
+            return jsonify({"instructor_availability": availability_list}), 200
         else:
             return jsonify({"error": "class_id undefined for availability"}), 404
     except Exception as e:

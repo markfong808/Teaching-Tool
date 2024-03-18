@@ -1,19 +1,18 @@
 /* Courses.js
- * Last Edited: 3/3/24
+ * Last Edited: 3/11/24
  *
  * Courses Tab for students's view of courses they're registered in,
  * details of each course, drop in times for all and specific courses,
  * upcoming, pending, and past appointments, as well as the option to
  * schedule new meetings
- * 
+ *
  * Known Bugs:
  * -
- * 
-*/
+ *
+ */
 
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
-import { getCookie } from "../utils/GetCookie";
 import ScheduleMeetingPopup from "./ScheduleMeetingPopup.js";
 import MeetingInformation from "./MeetingInformation.js";
 import CourseInformationPopup from "./CourseInformationPopup.js";
@@ -21,18 +20,20 @@ import DropinsTable from "./DropinsTable.js";
 
 export default function Courses() {
   // General Variables
-  const csrfToken = getCookie("csrf_access_token");
-  const { user, setUser } = useContext(UserContext);
-  const [isPopUpVisible, setPopUpVisible] = useState(false);
-  const [isClassInformationPopupVisible, setClassInformationPopupVisible] = useState(false);
+  const { user } = useContext(UserContext);
 
   // Load Variables
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
+  const [isScheduleMeetingPopUpVisible, setScheduleMeetingPopUpVisible] =
+    useState(false);
+  const [isCourseInformationPopupVisible, setCourseInformationPopupVisible] =
+    useState(false);
 
   // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState();
   const [allCourseData, setAllCourseData] = useState([]);
+  const [courseData, setCourseData] = useState({});
   const [instructorData, setInstructorData] = useState({
     id: "",
     email: "",
@@ -41,14 +42,12 @@ export default function Courses() {
     pronouns: "",
   });
 
-  const [classData, setClassData] = useState({});
-
   ////////////////////////////////////////////////////////
   //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
   // fetch all courses the student is associated with from database
-  const fetchCourseList = async () => {
+  const fetchAllStudentCourses = async () => {
     if (user.account_type !== "student") return;
 
     try {
@@ -56,17 +55,17 @@ export default function Courses() {
         credentials: "include",
       });
 
-      const fetchedCourseList = await response.json();
+      const allCourses = await response.json();
 
       // set courses a student is enrolled in with fetched data
-      setAllCourseData(fetchedCourseList);
+      setAllCourseData(allCourses);
     } catch (error) {
-      console.error("Error fetching course list:", error);
+      console.error("Error fetching all student courses:", error);
     }
   };
 
   // fetch instructor information from a user based on their ID
-  const fetchInstructorInfo = async (teacherId) => {
+  const fetchInstructorInformation = async (teacherId) => {
     try {
       const response = await fetch(
         `/profile/instructor/${encodeURIComponent(teacherId)}`,
@@ -75,12 +74,12 @@ export default function Courses() {
         }
       );
 
-      const fetchedInstructorInfo = await response.json();
+      const fetchedInstructorInformation = await response.json();
 
       // set instructor data with fetched data
-      setInstructorData(fetchedInstructorInfo);
+      setInstructorData(fetchedInstructorInformation);
     } catch (error) {
-      console.error("Error fetching course info:", error);
+      console.error("Error fetching instructor information:", error);
     }
   };
 
@@ -90,29 +89,22 @@ export default function Courses() {
 
   // called when a student clicks on one of the courses they're registered in
   const handleButtonClick = (course) => {
-    updateCourseInfo(course.id);
+    setCourseInformation(course.id);
+
+    // QOL delay
     setTimeout(() => {
-      setClassInformationPopupVisible(true);
+      setCourseInformationPopupVisible(true);
     }, 10);
   };
 
- 
   // called when student clicks to change selected course
   const handleCourseChange = (e) => {
     if (!e) {
       return;
     }
 
-    // reload courseIds with all courses
-    fetchCourseList();
-
-    const selectedCourse = parseInt(e.target.value);
-
     // change selectedCourseId
-    setSelectedCourseId(selectedCourse);
-
-    // update course info displayed on page to selectedCourseId
-    updateCourseInfo(selectedCourse);
+    setSelectedCourseId(parseInt(e.target.value));
   };
 
   // reload appointments table
@@ -121,7 +113,7 @@ export default function Courses() {
   };
 
   // update the course information being displayed on the webpage
-  const updateCourseInfo = (courseId) => {
+  const setCourseInformation = (courseId) => {
     if (!courseId) {
       return;
     }
@@ -131,11 +123,11 @@ export default function Courses() {
     );
 
     if (selectedCourse) {
-      // update classData with selectedCourse
-      setClassData(selectedCourse);
+      // update courseData with selectedCourse
+      setCourseData(selectedCourse);
 
       // fetch instructor information from selected course
-      fetchInstructorInfo(selectedCourse.teacher_id);
+      fetchInstructorInformation(selectedCourse.teacher_id);
     }
   };
 
@@ -146,12 +138,11 @@ export default function Courses() {
   // on initial page load, fetchCourseList()
   useEffect(() => {
     if (!isPageLoaded) {
-      fetchCourseList();
+      fetchAllStudentCourses();
       setIsPageLoaded(!isPageLoaded);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
-
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -168,18 +159,17 @@ export default function Courses() {
               className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
               onClick={() => handleButtonClick(course)}
             >
-              {course.class_name}: Class Details
+              {course.class_name}: Course Details
             </button>
           ))}
         </div>
 
-        <div className="w-2/3">
+        <div className="flex w-2/3">
           <h1>
-            <strong>Select Course:</strong>
+            <strong>Course:</strong>
           </h1>
           <select
             className="border border-light-gray rounded ml-2"
-            id="course-dropdown"
             value={selectedCourseId}
             onChange={(e) => handleCourseChange(e)}
           >
@@ -202,35 +192,36 @@ export default function Courses() {
           <MeetingInformation
             courseId={selectedCourseId}
             reloadTable={reloadAppointmentsTable}
-            param={{ resetLoad: setReloadAppointmentsTable }}
           />
         </div>
 
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <button
             className="bg-purple p-2 rounded-md text-white hover:text-gold"
-            onClick={() => setPopUpVisible(!isPopUpVisible)}
+            onClick={() =>
+              setScheduleMeetingPopUpVisible(!isScheduleMeetingPopUpVisible)
+            }
           >
             Schedule New Meeting
           </button>
         </div>
       </div>
 
-      {isClassInformationPopupVisible && (
+      {isCourseInformationPopupVisible && (
         <div className="fixed inset-0">
           <CourseInformationPopup
-            onClose={() => setClassInformationPopupVisible(false)}
-            courseData={classData}
+            onClose={() => setCourseInformationPopupVisible(false)}
+            courseData={courseData}
             instructorData={instructorData}
           />
         </div>
       )}
 
-      {isPopUpVisible && (
+      {isScheduleMeetingPopUpVisible && (
         <div className="fixed inset-0">
           <ScheduleMeetingPopup
-            onClose={() => setPopUpVisible(false)}
-            param={{ reloadAppointments: reloadAppointments }}
+            onClose={() => setScheduleMeetingPopUpVisible(false)}
+            functions={{ reloadAppointments: reloadAppointments }}
           />
         </div>
       )}

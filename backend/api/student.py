@@ -47,7 +47,7 @@ def get_courses():
 
             courses_list = []
             for course in student_courses_info:
-                courseTimes = findStandardTimes(course.id, "Class Times")
+                courseTimes = findStandardTimes(course.id, "Course Times")
                 
                 courseTuple = ClassInformation.query.filter(ClassInformation.id == course.id).first()
 
@@ -88,12 +88,12 @@ def convert_to_standard_time(military_time):
 
     return standard_time
 
-def findStandardTimes(id, type):
+def findStandardTimes(id, name):
     try:
         times = (
             ClassTimes.query
             .join(ProgramType, ClassTimes.program_id == ProgramType.id)
-            .filter(ClassTimes.class_id == id, ProgramType.type == type)
+            .filter(ClassTimes.class_id == id, ProgramType.type == name)
             .all()
         )
 
@@ -105,7 +105,7 @@ def findStandardTimes(id, type):
                 tempString += (obj.day + " " + convert_to_standard_time(obj.start_time) + "-" + convert_to_standard_time(obj.end_time))
             times = tempString
         else:
-            times = "No Known " + type
+            times = "No Known " + name
 
         return times
     except Exception as e:

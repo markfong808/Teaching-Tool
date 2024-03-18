@@ -1,13 +1,11 @@
 /* ScheduleMeetingPopup.js
- * Last Edited: 2/29/24
+ * Last Edited: 3/11/24
  *
  * UI Popup shown when student presses "Schedule New Meeting"
  * in their "Courses" tab. Gives the student access to see
  * their courses and respective programs
  *
  * Known bugs:
- * - Appointment Reserved Screen is transparent FIXED
- * - the Popup is not fully closed out of when an appointment has been booked FIXED
  * - Sizing bugs when cancelling appointments and other actions
  *
  */
@@ -19,14 +17,14 @@ import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Appointment from "./Appointment";
 
-const ScheduleMeetingPopup = ({ onClose, param }) => {
+const ScheduleMeetingPopup = ({ onClose, functions }) => {
   // General Variables
   const { user } = useContext(UserContext);
   const [selectedProgramId, setSelectedProgramId] = useState("");
   const [selectedTimeslot, setSelectedTimeslot] = useState(null);
   const [selectedTimeDuration, setSelectedTimeDuration] = useState(0);
   const [availableTimeslots, setAvailableTimeslots] = useState([]);
-  const [typeDescriptions, setTypeDescriptions] = useState({});
+  const [programDescriptions, setProgramDescriptions] = useState({});
   const [appointmentNotes, setAppointmentNotes] = useState("");
   const [appointmentStatus, setAppointmentStatus] = useState("");
 
@@ -42,7 +40,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   // Class Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [allCourseData, setAllCourseData] = useState([]);
-  const [selectedClassData, setSelectedClassData] = useState({
+  const [selectedCourseData, setSelectedCourseData] = useState({
     id: "",
     class_name: "",
     programs: [],
@@ -53,7 +51,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   ////////////////////////////////////////////////////////
 
   // fetch all appointment-based programs for the student's courses
-  const fetchCourseList = async () => {
+  const fetchAllStudentCourses = async () => {
     if (user.account_type !== "student") return;
 
     try {
@@ -62,15 +60,14 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
       });
 
       const fetchedCourseList = await response.json();
-      console.log(fetchedCourseList);
       setAllCourseData(fetchedCourseList);
     } catch (error) {
-      console.error("Error fetching course list:", error);
+      console.error("Error fetching all student courses:", error);
     }
   };
 
   // fetches all of the descriptions for each program in a course
-  const fetchProgramTypeDetails = async () => {
+  const fetchProgramDetails = async () => {
     if (!user) return;
     try {
       const response = await fetch(
@@ -79,14 +76,14 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
           credentials: "include",
         }
       );
-      const apiData = await response.json();
-      const programDetails = apiData.map((program) => ({
+      const fetchedData = await response.json();
+      const programDetails = fetchedData.map((program) => ({
         id: program.id,
         description: program.description,
       }));
-      setTypeDescriptions(programDetails);
+      setProgramDescriptions(programDetails);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching program details:", error);
     }
   };
 
@@ -168,7 +165,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
           if (!response.ok) {
             if (response.status === 409) {
               alert("Sorry, this appointment is no longer available.");
-              setSelectedProgramId(""); // Reset the mentorship type
+              setSelectedProgramId(""); // Reset the program id
               setShowAppointmentPanel(false);
               setShowCalendar(false);
               isHandledError = true; // Mark this error as handled
@@ -183,7 +180,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
             setAppointmentStatus(data.status);
             setBookingConfirmed(true);
             // reload page
-            param.reloadAppointments();
+            functions.reloadAppointments();
           }
         })
         .catch((error) => {
@@ -191,7 +188,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
             // Check if the error has not been handled
             console.error("Error:", error);
             alert("Failed to book the session. Please try again.");
-            setSelectedProgramId(""); // Reset the mentorship type
+            setSelectedProgramId(""); // Reset the program id
             setShowAppointmentPanel(false);
             setShowCalendar(false);
           }
@@ -235,21 +232,19 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
       return;
     }
 
-    // reload allCourseData with the appointment-based programs
-    fetchCourseList();
-
     const selectedCourse = parseInt(e.target.value);
 
     // set the selected course ID
     setSelectedCourseId(selectedCourse);
 
     // update course info displayed on page to selectedCourseId
-    updateCourseInfo(selectedCourse);
+    updateSelectedCourseData(selectedCourse);
 
     setIsCourseVisible(true);
 
     if (isPopupGrown && showCalendar) {
       setSelectedProgramId("");
+      setAvailableTimeslots([]);
       setShowCalendar(false);
       setPopupGrown(false);
     }
@@ -271,9 +266,9 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     // set the selected program ID
     setSelectedProgramId(selectedProgram);
 
-
     if (e.target.value === "") {
       setSelectedProgramId("");
+      setAvailableTimeslots([]);
       setPopupGrown(false);
       setShowCalendar(false);
     } else {
@@ -285,10 +280,10 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     setShowAppointmentPanel(false);
   };
 
-  // update the selectedClassData based on a courseId
-  const updateCourseInfo = (courseId) => {
+  // update the selectedCourseData based on a courseId
+  const updateSelectedCourseData = (courseId) => {
     if (!courseId) {
-      setSelectedClassData({});
+      setSelectedCourseData({});
       return;
     }
 
@@ -299,8 +294,8 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
 
     // if course found:
     if (selectedCourse) {
-      // update selectedClassData with selectedCourse
-      setSelectedClassData(selectedCourse);
+      // update selectedCourseData with selectedCourse
+      setSelectedCourseData(selectedCourse);
     }
   };
 
@@ -308,20 +303,20 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  // on initial page load, fetchCourseList()
+  // on initial page load, fetchAllStudentCourses()
   useEffect(() => {
     if (!isPageLoaded) {
-      fetchCourseList();
+      fetchAllStudentCourses();
       setIsPageLoaded(!isPageLoaded);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPageLoaded, user]);
 
-  // when selectedCourseId changes, set it and fetchProgramTypeDetails() if a real value
+  // when selectedCourseId changes, set it and fetchProgramDetails() if a real value
   useEffect(() => {
     setSelectedCourseId(selectedCourseId);
     if (selectedCourseId !== "" && selectedCourseId) {
-      fetchProgramTypeDetails();
+      fetchProgramDetails();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourseId]);
@@ -332,6 +327,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
     if (!showPopup) {
       onClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPopup]);
 
   ////////////////////////////////////////////////////////
@@ -342,14 +338,23 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
   if (bookingConfirmed) {
     return (
       <Appointment
-        mentorshipType={selectedClassData.programs.find(
-          (type) => type.id === selectedProgramId)?.type || ""}
+        program_name={
+          selectedCourseData.programs.find(
+            (type) => type.id === selectedProgramId
+          )?.type || ""
+        }
         selectedTimeslot={selectedTimeslot}
         notes={appointmentNotes}
-        meetingURL={selectedClassData.programs.find(
-          (meeting_url) => meeting_url.id === selectedProgramId)?.virtual_link || "No virtual link for this meeting."}
-        location={selectedClassData.programs.find(
-          (location) => location.id === selectedProgramId)?.physical_location || "No physical location for this meeting."}
+        meetingURL={
+          selectedCourseData.programs.find(
+            (meeting_url) => meeting_url.id === selectedProgramId
+          )?.virtual_link || "No URL for this meeting."
+        }
+        location={
+          selectedCourseData.programs.find(
+            (location) => location.id === selectedProgramId
+          )?.physical_location || "No in-person location for this meeting."
+        }
         resetBooking={resetBooking}
         status={appointmentStatus}
       />
@@ -372,7 +377,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
       <div className="flex flex-col p-5 m-auto">
         <div className="flex items-center">
           <h1 className="whitespace-nowrap">
-            <strong>Select Course:</strong>
+            <strong>Course:</strong>
           </h1>
           <select
             className="border border-light-gray rounded ml-2 mt-1"
@@ -394,7 +399,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
           <div className="flex flex-col mt-3">
             <div id="dropdown" className="flex flex-row">
               <h1 className="whitespace-nowrap">
-                <strong>Select Program Type:</strong>
+                <strong>Program:</strong>
               </h1>
               <select
                 className="border border-light-gray rounded ml-2"
@@ -405,7 +410,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
                 <option key={-1} value="">
                   Select...
                 </option>
-                {selectedClassData.programs.map((program) => (
+                {selectedCourseData.programs.map((program) => (
                   <option key={program.id} value={program.id}>
                     {program.type}
                   </option>
@@ -413,13 +418,13 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
               </select>
             </div>
             <div className="mt-2">
-              {typeDescriptions.length > 0 && selectedProgramId !== "" && (
+              {programDescriptions.length > 0 && selectedProgramId !== "" && (
                 <div>
-                  <label className="font-bold">Program Description: </label>
+                  <label className="font-bold">Description: </label>
                   <p>
-                    {typeDescriptions.find(
+                    {programDescriptions.find(
                       (desc) => desc.id === selectedProgramId
-                    )?.description || "No Program Description"}
+                    )?.description || "No Description"}
                   </p>
                 </div>
               )}
@@ -443,8 +448,10 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
                       Appointment Details
                     </h3>
                     <p className="pb-2">
-                      <b>Type</b>: {selectedClassData.programs.find(
-                        (type) => type.id === selectedProgramId)?.type || ""}
+                      <b>Name</b>:{" "}
+                      {selectedCourseData.programs.find(
+                        (type) => type.id === selectedProgramId
+                      )?.type || ""}
                     </p>
                     <p className="pb-2">
                       <b>Date</b>: {format(selectedTimeslot.startTime, "PPPP")}
@@ -492,7 +499,7 @@ const ScheduleMeetingPopup = ({ onClose, param }) => {
         )}
       </div>
     </div>
-  )
+  );
 };
 
 export default ScheduleMeetingPopup;

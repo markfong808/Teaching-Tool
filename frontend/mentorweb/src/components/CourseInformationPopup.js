@@ -1,18 +1,19 @@
 /* CourseInformationPopup.js
- * Last Edited: 3/1/24
+ * Last Edited: 3/11/24
  *
- * UI Popup shown when student clicks on one of the class details buttons
+ * UI Popup shown when student clicks on one of the course details buttons
  * inside the "Courses" tab. Allows student to see information about
  * a course they're registered in
  *
  * Known Bugs:
- * - Padding issue for the information depending on class times and office hours times
+ * - Padding issue for the information depending on course times and office hours times
  * - Need to decide if last_name will be pulled from db or if we're sticking with name that holds first and last name
  *
 */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 const CourseInformationPopup = ({onClose, courseData, instructorData}) => {
+
     ////////////////////////////////////////////////////////
     //                 Render Functions                   //
     ////////////////////////////////////////////////////////
@@ -24,9 +25,9 @@ const CourseInformationPopup = ({onClose, courseData, instructorData}) => {
             <h2 className="pb-10 text-center font-bold text-4xl">{courseData.class_name}</h2>
             <div className="grid grid-cols-2 font-bold">
                 <div className="flex flex-col">
-                    <label> Class Times: <span className="font-normal">{courseData.class_times}</span></label>
-                    <label> Class Location: <span className="font-normal">{courseData.class_location}</span></label>
-                    <label> Class Recordings Link: <span className="font-normal"> {courseData.class_recordings_link}</span></label>
+                    <label> Course Times: <span className="font-normal">{courseData.class_times}</span></label>
+                    <label> Course Location: <span className="font-normal">{courseData.class_location}</span></label>
+                    <label> Course Recordings Link: <span className="font-normal"> {courseData.class_recordings_link}</span></label>
                     <label> Comments: &nbsp; <p className="font-normal">{courseData.class_comment}</p></label>
                 </div>
                 <div className="flex flex-col justify-self-end">
