@@ -2,19 +2,17 @@
  * Last Edited: 3/11/24
  *
  * Mapping front-end routes for public, admin, student, and instructor view.
- *  
+ *
  * Known Bugs:
- * - 
- *   
-*/
+ * -
+ *
+ */
 
 import Navbar from "./components/Navbar";
-import Courses from "./components/Courses"
+import Courses from "./components/Courses";
 import ViewFeedback from "./components/ViewFeedback";
 import Home from "./pages/Home";
-import Admin from "./pages/Admin";
 import Student from "./pages/Student";
-import Mentor from "./pages/Instructor";
 import LoginSignup from "./pages/LoginSignup";
 import RegisterForm from "./pages/RegisterForm";
 import { Route, Routes } from "react-router-dom";
@@ -24,9 +22,10 @@ import ManagePrograms from "./components/ManagePrograms";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Unauthorized from "./context/Unauthorized";
 import ManageTimes from "./components/ManageTimes";
-import Program from "./components/Program"
+import Program from "./components/Program";
 import ProfileSettings from "./components/ProfileSettings";
 import Instructor from "./pages/Instructor";
+import AdminContent from "./pages/AdminContent";
 
 function App() {
   ////////////////////////////////////////////////////////
@@ -47,84 +46,96 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Admin Routes */}
-          <Route path="/admin"
+          <Route
+            path="/admin"
             element={
-              <ProtectedRoute allowedAccountTypes={['admin']}>
-                <Admin />
+              <ProtectedRoute allowedAccountTypes={["admin"]}>
+                <AdminContent />
               </ProtectedRoute>
             }
           />
 
-          <Route path="/admin/user-management"
+          <Route
+            path="/admin/user-management"
             element={
-              <ProtectedRoute allowedAccountTypes={['admin']}>
+              <ProtectedRoute allowedAccountTypes={["admin"]}>
                 <Users />
               </ProtectedRoute>
             }
           />
 
-          <Route path="/admin/program-management"
+          <Route
+            path="/admin/program-management"
             element={
-              <ProtectedRoute allowedAccountTypes={['admin']}>
+              <ProtectedRoute allowedAccountTypes={["admin"]}>
                 <ManagePrograms />
               </ProtectedRoute>
             }
           />
 
-          <Route path="/admin/view-feedback"
+          <Route
+            path="/admin/view-feedback"
             element={
-              <ProtectedRoute allowedAccountTypes={['admin']}>
+              <ProtectedRoute allowedAccountTypes={["admin"]}>
                 <ViewFeedback />
               </ProtectedRoute>
             }
           />
 
           {/* Student Routes */}
-          <Route path="/student"
+          <Route
+            path="/student"
             element={
-              <ProtectedRoute allowedAccountTypes={['student']}>
+              <ProtectedRoute allowedAccountTypes={["student"]}>
                 <Student />
               </ProtectedRoute>
             }
           />
-          
-          <Route path="/student/courses"
+
+          <Route
+            path="/student/courses"
             element={
-              <ProtectedRoute allowedAccountTypes={['student']}>
+              <ProtectedRoute allowedAccountTypes={["student"]}>
                 <Courses />
               </ProtectedRoute>
             }
           />
 
           {/* Instructor Routes */}
-          <Route path="/mentor"
+          <Route
+            path="/mentor"
             element={
-              <ProtectedRoute allowedAccountTypes={['mentor']}>
+              <ProtectedRoute allowedAccountTypes={["mentor"]}>
                 <Instructor />
               </ProtectedRoute>
             }
           />
-          
-          <Route path="/instructor/manage-times"
+
+          <Route
+            path="/instructor/manage-times"
             element={
-              <ProtectedRoute allowedAccountTypes={['mentor']}>
+              <ProtectedRoute allowedAccountTypes={["mentor"]}>
                 <ManageTimes />
               </ProtectedRoute>
             }
           />
-          
-          <Route path="/instructor/edit-class-availability"
+
+          <Route
+            path="/instructor/edit-class-availability"
             element={
-              <ProtectedRoute allowedAccountTypes={['mentor']}>
+              <ProtectedRoute allowedAccountTypes={["mentor"]}>
                 <Program />
               </ProtectedRoute>
             }
           />
-          
+
           {/* Routes For All Roles*/}
-          <Route path="/profile"
+          <Route
+            path="/profile"
             element={
-              <ProtectedRoute allowedAccountTypes={['mentor', 'student', 'admin']}>
+              <ProtectedRoute
+                allowedAccountTypes={["mentor", "student", "admin"]}
+              >
                 <ProfileSettings />
               </ProtectedRoute>
             }
@@ -132,7 +143,7 @@ function App() {
         </Routes>
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

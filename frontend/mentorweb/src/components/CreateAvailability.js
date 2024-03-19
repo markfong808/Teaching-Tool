@@ -18,7 +18,6 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
-import TimeRangePicker from "@wojtekmaj/react-timerange-picker";
 import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
