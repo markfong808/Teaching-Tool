@@ -1,5 +1,5 @@
 /* ProfileSettings.js
- * Last Edited: 2/29/24
+ * Last Edited: 3/18/24
  *
  * Profile Tab for Student and Instructor Roles.
  * The Profile tab has role-based layouts for the
@@ -25,9 +25,18 @@ export default function ProfileSettings() {
   // Load Variables
   const [changesMade, setChangesMade] = useState(false);
   const [textBoxShown, setTextBoxShown] = useState(false);
+  const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
+    account_type: true,
+    discord_id: true,
+    email: true,
+    first_name: true,
+    meeting_url: true,
+    pronouns: true,
+    title: true,
+  });
 
   // Profile Data Variables
-  const [allProfileData, setallProfileData] = useState({}); // backup data/database-specific data
+  const [profileData, setProfileData] = useState({}); // backup data/database-specific data
   const [formData, setFormData] = useState({}); // user input-based data
   const [pronounsType, setPronounsType] = useState("");
   const [pronounsUserInput, setPronounsUserInput] = useState("");
@@ -37,7 +46,7 @@ export default function ProfileSettings() {
   ////////////////////////////////////////////////////////
 
   // fetch the profile data for a user
-  const fetchProfileInformation = async () => {
+  const fetchProfileData = async () => {
     try {
       const response = await fetch(
         `/profile/instructor/${encodeURIComponent(user.id)}`,
@@ -46,13 +55,13 @@ export default function ProfileSettings() {
         }
       );
 
-      const fetchedProfileInformation = await response.json();
+      const fetchedProfileData = await response.json();
 
-      // set allProfileData to their profile data
-      setallProfileData(fetchedProfileInformation);
+      // set profileData to their profile data
+      setProfileData(fetchedProfileData);
 
       // set formData to their profile data
-      setFormData(fetchedProfileInformation);
+      setFormData(fetchedProfileData);
     } catch (error) {
       console.error("Error fetching information:", error);
     }
@@ -77,18 +86,13 @@ export default function ProfileSettings() {
 
       const updatedUser = await response.json();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Profile update failed");
-      }
-
       // Reset changes made
       setChangesMade(false);
 
       // Update the user context with the new data
-      setallProfileData(updatedUser);
+      setProfileData(updatedUser);
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error("Error saving changes:", error);
     }
   };
 
@@ -100,48 +104,37 @@ export default function ProfileSettings() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    // if pronouns are selected, but not given a value, return
-    if (name === "pronouns" && value === "Undefined") {
-      return;
-    }
+    // if pronouns is selected
+    if (name === "pronouns") {
+      // if no value, return
+      if (
+        value === "Undefined" ||
+        (pronounsType === "Other" && (value === "" || !value))
+      ) {
+        return;
+      }
 
-    // if pronouns are selected, but value is Other, set type to "Other"
-    // called when using dropdown options
-    if (name === "pronouns" && value === "Other") {
-      setPronounsType("Other");
-      return;
-    }
-
-    // if pronouns are selected, type is "Other", and value isn't real data, return
-    // called when using input field
-    if (
-      name === "pronouns" &&
-      pronounsType === "Other" &&
-      (value === "" || !value)
-    ) {
-      return;
+      // if value is Other, set type to "Other"
+      // called when using dropdown options
+      if (value === "Other") {
+        setPronounsType("Other");
+        return;
+      }
     }
 
     // set formData index(name) to value
     setFormData({ ...formData, [name]: value });
 
-    // Check if changes were made
-    const formIsSameAsUser =
-      (name === "first_name" && value === allProfileData.first_name) ||
-      (name === "about" && value === allProfileData.about) ||
-      (name === "pronouns" && value === allProfileData.pronouns) ||
-      (name === "title" && value === allProfileData.title) ||
-      (name === "discord_id" && value === allProfileData.discord_id) ||
-      (name === "linkedin_url" && value === allProfileData.linkedin_url) ||
-      (name === "meeting_url" && value === allProfileData.meeting_url);
-
-    // Set changesMade to true if form data does not match initial user data
-    setChangesMade(!formIsSameAsUser);
+    // Update showButtons state
+    setShowSaveCancelButtons((prevButtons) => ({
+      ...prevButtons,
+      [e.target.name]: e.target.value === profileData[e.target.name],
+    }));
   };
 
   const handleCancelChanges = () => {
     // Reset form data to initial user data
-    setFormData(allProfileData);
+    setFormData(profileData);
     setChangesMade(false); // Reset changes made
   };
 
@@ -152,7 +145,7 @@ export default function ProfileSettings() {
   // on page load, fetch the user's profile data
   useEffect(() => {
     if (user) {
-      fetchProfileInformation();
+      fetchProfileData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -181,6 +174,13 @@ export default function ProfileSettings() {
       setPronounsUserInput("");
     }
   }, [formData.pronouns]);
+
+  // check if all values are same as original
+  useEffect(() => {
+    setChangesMade(
+      !Object.values(showSaveCancelButtons).every((value) => value === true)
+    );
+  }, [showSaveCancelButtons]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -252,18 +252,18 @@ export default function ProfileSettings() {
             )}
           </div>
 
-          {allProfileData.account_type === "student" && (
+          {profileData.account_type === "student" && (
             <div className="flex flex-col mt-3">
               <label className="font-bold">Student ID</label>
               <label>
-                {allProfileData.student_id
-                  ? allProfileData.student_id
+                {profileData.student_id
+                  ? profileData.student_id
                   : "No known Student ID"}
               </label>
             </div>
           )}
 
-          {allProfileData.account_type === "mentor" && (
+          {profileData.account_type === "mentor" && (
             <div className="mt-3 mb-3">
               <label className="font-bold inline-block">Title</label>
               <select
@@ -314,11 +314,11 @@ export default function ProfileSettings() {
           <input
             className="bg-gray border border-light-gray mb-3"
             name="type"
-            value={capitalizeFirstLetter(allProfileData.account_type)}
+            value={capitalizeFirstLetter(profileData.account_type)}
             disabled
           />
 
-          {allProfileData.account_type === "mentor" && (
+          {profileData.account_type === "mentor" && (
             <div className="flex flex-col">
               <div>
                 <label className="font-bold">

@@ -8,6 +8,7 @@
  * Known Bugs:
  * - Padding issue for the information depending on course times and office hours times
  * - Need to decide if last_name will be pulled from db or if we're sticking with name that holds first and last name
+ * - In rare occasions, the courses times and office hours are corrupted
  *
 */
 import React from 'react';

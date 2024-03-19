@@ -25,7 +25,7 @@ export default function ManageAvailability({ courseId }) {
   const csrfToken = getCookie("csrf_access_token");
 
   // Load Variables
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   // Availability Table Variables
   const [data, setData] = useState([]);
@@ -192,20 +192,13 @@ export default function ManageAvailability({ courseId }) {
 
   // on initial page load, fetchAvailability()
   useEffect(() => {
-    if (!isPageLoaded) {
-      fetchAvailability();
-      setIsPageLoaded(!isPageLoaded);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPageLoaded, user]);
-
-  // fetch availability when the course id is updated and valid
-  useEffect(() => {
-    if (courseId !== null || courseId !== "") {
+    // Fetch availability when it's not the initial load and courseId is updated and valid
+    if (!initialLoad && (courseId !== null || courseId !== "")) {
       fetchAvailability();
     }
+    setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]);
+  }, [initialLoad, courseId, user]);
 
   // sortTable function called when sortedBy is updated
   useEffect(() => {

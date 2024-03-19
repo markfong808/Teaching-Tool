@@ -29,7 +29,7 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
   const [appointmentStatus, setAppointmentStatus] = useState("");
 
   // Load Variables
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [isCourseVisible, setIsCourseVisible] = useState(false);
   const [isPopupGrown, setPopupGrown] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
@@ -305,12 +305,12 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
 
   // on initial page load, fetchAllStudentCourses()
   useEffect(() => {
-    if (!isPageLoaded) {
+    if (!initialLoad) {
       fetchAllStudentCourses();
-      setIsPageLoaded(!isPageLoaded);
     }
+    setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPageLoaded, user]);
+  }, [initialLoad, user]);
 
   // when selectedCourseId changes, set it and fetchProgramDetails() if a real value
   useEffect(() => {

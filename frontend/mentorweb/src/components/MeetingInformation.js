@@ -30,6 +30,9 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   const csrfToken = getCookie("csrf_access_token");
   const [changesMade, setChangesMade] = useState(false);
 
+  // Load Variables
+  const [initialLoad, setInitialLoad] = useState(true);
+
   // Appointment Table Variables
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showTable, setShowTable] = useState(true);
@@ -188,7 +191,10 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         // update the selected appointment with the new formData
         setSelectedAppointment({ ...selectedAppointment, ...formData });
         setChangesMade(false);
-        alert("Appointment updated successfully!");
+        // QOL delay
+        setTimeout(() => {
+          alert("Appointment updated successfully!");
+        }, 10);
         fetchAppointments(); // re-fetch appointments
       } else {
         throw new Error("Failed to update the appointment");
@@ -439,18 +445,14 @@ export default function MeetingInformation({ courseId, reloadTable }) {
 
   // fetch appointments and program type details when use, activeTab, or reloadTable updates
   useEffect(() => {
-    fetchAppointments();
-    fetchProgramDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, activeTab, reloadTable]);
-
-  // fetch appointments when the course id is updated and valid
-  useEffect(() => {
-    if (courseId !== null || courseId !== "") {
+    if (!initialLoad || reloadTable) {
       fetchAppointments();
+      fetchProgramDetails();
     }
+
+    setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]);
+  }, [user, activeTab, initialLoad, reloadTable]);
 
   // fetch dfedback when the selectedAppointment is updated
   useEffect(() => {

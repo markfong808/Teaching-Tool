@@ -22,7 +22,7 @@ export default function ManageTimes() {
   const { user } = useContext(UserContext);
 
   // Load Variables
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState(-1);
@@ -72,12 +72,12 @@ export default function ManageTimes() {
 
   // on initial page load, fetchAllInstructorCourses()
   useEffect(() => {
-    if (!isPageLoaded) {
+    if (!initialLoad) {
       fetchAllInstructorCourses();
-      setIsPageLoaded(!isPageLoaded);
     }
+    setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPageLoaded, user]);
+  }, [initialLoad, user]);
 
   ////////////////////////////////////////////////////////
   //               Render Functions                     //
@@ -111,7 +111,7 @@ export default function ManageTimes() {
         <ManageAvailability courseId={selectedCourseId} />
       </div>
       <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-        <MeetingInformation courseId={selectedCourseId} />
+        <MeetingInformation courseId={selectedCourseId} reloadTable={false} />
       </div>
       {/* Empty Space at bottom of webpage */}
       <div className="p-10"></div>

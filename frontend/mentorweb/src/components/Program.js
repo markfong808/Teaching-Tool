@@ -23,6 +23,7 @@ import ChooseMeetingDatesPopup from "./ChooseMeetingDatesPopup.js";
 import MeetingLocation from "./MeetingLocation.js";
 import CreateProgramTypePopup from "./CreateProgramTypePopup.js";
 import CreateAvailability from "./CreateAvailability.js";
+import AutoAcceptMeetings from "./AutoAcceptMeetings.js";
 
 export default function Program() {
   // General Variables
@@ -31,7 +32,7 @@ export default function Program() {
 
   // Load Variables
   const [changesMade, setChangesMade] = useState(false);
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [loadProgramTable, setLoadProgramTable] = useState(false);
   const [resetOfficeHoursTable, setResetOfficeHoursTable] = useState(false);
   const [loadLocRec, setLocRec] = useState(false);
@@ -59,6 +60,10 @@ export default function Program() {
     duration: true,
     physical_location: true,
     virtual_link: true,
+    auto_approve_appointments: true,
+    max_daily_meetings: true,
+    max_weekly_meetings: true,
+    max_monthly_meetings: true,
   });
 
   // Course Data Variables
@@ -450,9 +455,7 @@ export default function Program() {
         // inform instructor that timesplit is too long
         if (e.target.value > maxRecommendedTimeSplit) {
           setTimeout(() => {
-            window.alert(
-              "Time Split value is too large. Lower your time split"
-            );
+            window.alert("Duration value is too large. Lower your duration");
           }, 10);
         }
       }
@@ -471,14 +474,15 @@ export default function Program() {
     });
 
     // update selectedCourseData.programs to the selectedProgramData
-    const selectedCourse = selectedCourseData.programs.find(
+    const selectedProgram = selectedCourseData.programs.find(
       (program) => program.id === selectedProgramData.id
     );
 
     // Update showButtons state
     setShowSaveCancelButtons((prevButtons) => ({
       ...prevButtons,
-      [e.target.name]: e.target.value === selectedCourse[e.target.name],
+      [e.target.name]:
+        e.target.value === String(selectedProgram[e.target.name]),
     }));
   };
 
@@ -512,57 +516,6 @@ export default function Program() {
     }
     // Set the selectedProgramTimesData variable
     setSelectedProgramTimesData(updatedTimesData);
-  };
-
-  // update selectedProgramData meeting limit's based on instructor entries
-  const handleLimitInputChange = (e) => {
-    const { name, value } = e.target;
-    let newLimitData = {
-      ...selectedProgramData,
-      [name]: parseInt(value, 10) || 0,
-    };
-
-    // Ensure daily limit doesn't exceed weekly or total limit
-    if (name === "max_daily_meetings") {
-      if (newLimitData.max_daily_meetings > newLimitData.max_weekly_meetings) {
-        newLimitData.max_weekly_meetings = newLimitData.max_daily_meetings;
-      }
-      if (newLimitData.max_daily_meetings > newLimitData.max_monthly_meetings) {
-        newLimitData.max_monthly_meetings = newLimitData.max_daily_meetings;
-      }
-    }
-
-    // Ensure weekly limit is between daily limit and total limit
-    if (name === "max_weekly_meetings") {
-      if (newLimitData.max_weekly_meetings < newLimitData.max_daily_meetings) {
-        newLimitData.max_daily_meetings = newLimitData.max_weekly_meetings;
-      }
-      if (
-        newLimitData.max_weekly_meetings > newLimitData.max_monthly_meetings
-      ) {
-        newLimitData.max_monthly_meetings = newLimitData.max_weekly_meetings;
-      }
-    }
-
-    // Ensure total limit isn't less than daily or weekly limit
-    if (name === "max_monthly_meetings") {
-      if (newLimitData.max_monthly_meetings < newLimitData.max_daily_meetings) {
-        newLimitData.max_daily_meetings = newLimitData.max_monthly_meetings;
-      }
-      if (
-        newLimitData.max_monthly_meetings < newLimitData.max_weekly_meetings
-      ) {
-        newLimitData.max_weekly_meetings = newLimitData.max_monthly_meetings;
-      }
-    }
-
-    // update selectedProgramData with new max daily, weekly, and montly meeting numbers
-    setSelectedProgramData({
-      ...selectedProgramData,
-      max_daily_meetings: newLimitData.max_daily_meetings,
-      max_weekly_meetings: newLimitData.max_weekly_meetings,
-      max_monthly_meetings: newLimitData.max_monthly_meetings,
-    });
   };
 
   // handle to cancel webpage changes when instructor is done editing details
@@ -616,13 +569,13 @@ export default function Program() {
 
   // on initial page load, fetchAllInstructorCourses()
   useEffect(() => {
-    if (!isPageLoaded) {
+    if (!initialLoad) {
       tabSelect(true);
       fetchAllInstructorCourses();
-      setIsPageLoaded(!isPageLoaded);
     }
+    setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPageLoaded, user]);
+  }, [initialLoad, user]);
 
   // reload the child info when SelectedProgramTimesData updates
   useEffect(() => {
@@ -632,6 +585,7 @@ export default function Program() {
 
   // check if all values are same as original
   useEffect(() => {
+    console.log(showSaveCancelButtons);
     setChangesMade(
       !Object.values(showSaveCancelButtons).every((value) => value === true)
     );
@@ -933,98 +887,18 @@ export default function Program() {
                       )}
 
                       {!isDropinsLayout && (
-                        <div className="flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
-                          {user?.account_type === "mentor" && (
-                            <div className="w-1/2">
-                              <label className="font-bold text-lg">
-                                Auto-Accept Meeting Requests?
-                              </label>
-                              <br />
-                              <label className="ml-2">
-                                Yes
-                                <input
-                                  className="mb-3 ml-1"
-                                  type="radio"
-                                  name="auto_approve_appointments"
-                                  value="true"
-                                  checked={
-                                    selectedProgramData.auto_approve_appointments ===
-                                    true
-                                  }
-                                  onChange={handleInputChange}
-                                  disabled={!isProgramSelected}
-                                />
-                              </label>
-                              &nbsp;&nbsp;
-                              <label>
-                                No
-                                <input
-                                  className="ml-1"
-                                  type="radio"
-                                  name="auto_approve_appointments"
-                                  value="false"
-                                  checked={
-                                    selectedProgramData.auto_approve_appointments ===
-                                    false
-                                  }
-                                  onChange={handleInputChange}
-                                  disabled={!isProgramSelected}
-                                />
-                              </label>
-                            </div>
-                          )}
-                          {user?.account_type === "mentor" && (
-                            <div className="flex flex-col">
-                              <h2 className="font-bold text-lg">
-                                Set Meeting Limits
-                              </h2>
-                              <div className="flex flex-row justify-between">
-                                <div className="flex flex-col mr-5">
-                                  <label>Daily Max</label>
-                                  <input
-                                    className="border border-light-gray w-28"
-                                    type="number"
-                                    name="max_daily_meetings"
-                                    min="1"
-                                    value={
-                                      selectedProgramData.max_daily_meetings
-                                    }
-                                    onChange={handleLimitInputChange}
-                                    disabled={!isProgramSelected}
-                                  />
-                                </div>
-                                <div className="flex flex-col mr-5">
-                                  <label>Weekly Max</label>
-                                  <input
-                                    className="border border-light-gray w-28"
-                                    type="number"
-                                    name="max_weekly_meetings"
-                                    min="1"
-                                    value={
-                                      selectedProgramData.max_weekly_meetings
-                                    }
-                                    onChange={handleLimitInputChange}
-                                    disabled={!isProgramSelected}
-                                  />
-                                </div>
-                                <div className="flex flex-col">
-                                  <label>Total Max</label>
-                                  <input
-                                    className="border border-light-gray w-28"
-                                    type="number"
-                                    name="max_monthly_meetings"
-                                    min="1"
-                                    value={
-                                      selectedProgramData.max_monthly_meetings
-                                    }
-                                    onChange={handleLimitInputChange}
-                                    disabled={!isProgramSelected}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        <AutoAcceptMeetings
+                          functions={{
+                            setSelectedProgramData: setSelectedProgramData,
+                            handleInputChange: handleInputChange,
+                            setShowButtons: setShowSaveCancelButtons,
+                          }}
+                          userInstance={user}
+                          programSelected={isProgramSelected}
+                          data={selectedProgramData}
+                          courseData={selectedCourseData}
+                          programData={selectedProgramData}
+                        />
                       )}
 
                       {locationChecker === true &&
@@ -1173,7 +1047,7 @@ export default function Program() {
           <CreateProgramTypePopup
             onClose={() => setCreateProgramTypePopup(false)}
             courseId={selectedCourseId}
-            loadFunction={setIsPageLoaded}
+            loadFunction={setInitialLoad}
           />
         </div>
       )}

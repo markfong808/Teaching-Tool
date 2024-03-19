@@ -23,7 +23,7 @@ export default function Courses() {
   const { user } = useContext(UserContext);
 
   // Load Variables
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
   const [isScheduleMeetingPopUpVisible, setScheduleMeetingPopUpVisible] =
     useState(false);
@@ -137,12 +137,12 @@ export default function Courses() {
 
   // on initial page load, fetchCourseList()
   useEffect(() => {
-    if (!isPageLoaded) {
+    if (!initialLoad) {
       fetchAllStudentCourses();
-      setIsPageLoaded(!isPageLoaded);
     }
+    setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPageLoaded, user]);
+  }, [initialLoad, user]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //

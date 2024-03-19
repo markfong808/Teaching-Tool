@@ -106,7 +106,7 @@ export default function MeetingLocation({
 
         {isClassLocation && (
           <div>
-            <label className="whitespace-nowrap">Class Recordings Link:</label>
+            <label className="whitespace-nowrap">Course Recordings Link:</label>
             <input
               className="border border-light-gray ml-2 w-40 hover:bg-gray"
               name="class_recordings_link"
