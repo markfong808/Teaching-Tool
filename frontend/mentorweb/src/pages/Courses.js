@@ -12,11 +12,11 @@
  */
 
 import React, { useState, useContext, useEffect } from "react";
-import { UserContext } from "../context/UserContext";
-import ScheduleMeetingPopup from "./ScheduleMeetingPopup.js";
-import MeetingInformation from "./MeetingInformation.js";
-import CourseInformationPopup from "./CourseInformationPopup.js";
-import DropinsTable from "./DropinsTable.js";
+import { UserContext } from "../context/UserContext.js";
+import ScheduleMeetingPopup from "../components/ScheduleMeetingPopup.js";
+import MeetingInformation from "../components/MeetingInformation.js";
+import CourseInformationPopup from "../components/CourseInformationPopup.js";
+import DropinsTable from "../components/DropinsTable.js";
 
 export default function Courses() {
   // General Variables

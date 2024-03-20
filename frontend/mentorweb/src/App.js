@@ -9,22 +9,20 @@
  */
 
 import Navbar from "./components/Navbar";
-import Courses from "./components/Courses";
+import Courses from "./pages/Courses";
 import ViewFeedback from "./components/ViewFeedback";
 import Home from "./pages/Home";
-import Student from "./pages/Student";
 import LoginSignup from "./pages/LoginSignup";
 import RegisterForm from "./pages/RegisterForm";
 import { Route, Routes } from "react-router-dom";
-import Logout from "./components/Logout";
+import Logout from "./pages/Logout";
 import Users from "./components/Users";
 import ManagePrograms from "./components/ManagePrograms";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Unauthorized from "./context/Unauthorized";
-import ManageTimes from "./components/ManageTimes";
-import Program from "./components/Program";
-import ProfileSettings from "./components/ProfileSettings";
-import Instructor from "./pages/Instructor";
+import ManageTimes from "./pages/ManageTimes";
+import Program from "./pages/Program";
+import ProfileSettings from "./pages/ProfileSettings";
 import AdminContent from "./pages/AdminContent";
 
 function App() {
@@ -87,7 +85,7 @@ function App() {
             path="/student"
             element={
               <ProtectedRoute allowedAccountTypes={["student"]}>
-                <Student />
+                <Home />
               </ProtectedRoute>
             }
           />
@@ -106,7 +104,7 @@ function App() {
             path="/mentor"
             element={
               <ProtectedRoute allowedAccountTypes={["mentor"]}>
-                <Instructor />
+                <Home />
               </ProtectedRoute>
             }
           />
@@ -133,9 +131,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute
-                allowedAccountTypes={["mentor", "student", "admin"]}
-              >
+              <ProtectedRoute allowedAccountTypes={["mentor", "student", "admin"]}>
                 <ProfileSettings />
               </ProtectedRoute>
             }

@@ -1,10 +1,28 @@
+/* Navbar.js
+ * Last Edited: 3/18/24
+ * 
+ * Navigation bar displayed on top of the webpage which has different tabs.
+ * Once user clicks on a tab, they're redirected to a different webpage which
+ * contains the contents of the tab.
+ * 
+ * 
+ * Known Bugs:
+ * - 
+ * 
+*/
 import React, { useContext } from "react";
 import { Link, useMatch, useResolvedPath } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 
 export default function Navbar() {
+    // General Variables
     const { user } = useContext(UserContext);
 
+    ////////////////////////////////////////////////////////
+    //                 Render Functions                   //
+    ////////////////////////////////////////////////////////
+
+    // HTML for webpage
     return (
         <nav className="bg-purple text-white flex flex-row justify-between align-middle items-stretch gap-8 px-4 py-1">
             <Link to="/" className="text-4xl hover:text-gold font-headlines">
@@ -59,6 +77,7 @@ export default function Navbar() {
         </nav>
     )
 }
+
 
 function CustomLink({ to, children, ...props }) {
     const resolvedPath = useResolvedPath(to)

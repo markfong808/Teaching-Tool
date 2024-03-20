@@ -15,7 +15,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
-import { Tooltip } from "./Tooltip";
+import { Tooltip } from "../components/Tooltip";
 
 export default function ProfileSettings() {
   // General Variables

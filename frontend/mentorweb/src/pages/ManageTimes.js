@@ -13,9 +13,9 @@
  */
 
 import React, { useEffect, useState, useContext } from "react";
-import MeetingInformation from "./MeetingInformation.js";
-import ManageAvailability from "./ManageAvailability.js";
-import { UserContext } from "../context/UserContext";
+import MeetingInformation from "../components/MeetingInformation.js";
+import ManageAvailability from "../components/ManageAvailability.js";
+import { UserContext } from "../context/UserContext.js";
 
 export default function ManageTimes() {
   // General Variables
