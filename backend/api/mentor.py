@@ -388,7 +388,7 @@ def generate_appointment_tuples(mentor_id, course_id, program_id, date, start_ti
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
 
-        if timeSplit == 0:
+        if timeSplit == 0 or not timeSplit:
             new_appointment = Appointment(
                 type=program_id,
                 mentor_id=mentor_id,

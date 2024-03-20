@@ -1,21 +1,15 @@
-/* Program.js
+/* CreateAvailability.js
  * Last Edited: 3/3/24
  *
- * Class Availability tab for Instructor Role.
- * Instructor can choose if they're creating, updating, or deleting
- * program types, availability, description,
- * meeting duration, location, and virtual meeting links
- * for a class or globally that applies to all classes.
+ * Popup menu to create a meeting block for a specific date
  *
  * Known Bugs:
- * - Disable button doesnt affect details
- * - should show time somewhere??
- * - css changes to make it look better
+ * -
  *
  */
 
 import React, { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -40,10 +34,9 @@ export default function CreateAvailability({
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showDuration, setShowDuration] = useState(false);
   const [boxShown, setBoxShown] = useState(false);
-  const [enableDurationAndDates, setEnableDurationAndDates] = useState(false);
   const [local_duration, setDuration] = useState("");
   const [timeBlock, setTimeBlock] = useState({});
-  const [locationChecker, setLocationChecker] = useState(false);
+  const [dateSelected, setDateSelected] = useState(false);
 
   const createTimeSlot = async () => {
     if (date && timeRange) {
@@ -81,9 +74,6 @@ export default function CreateAvailability({
         body: JSON.stringify(convertedAvailability),
       })
         .then((response) => {
-          if (!response.ok) {
-            throw new Error("Failed to create availability");
-          }
           return response.json();
         })
         .catch((error) => {
@@ -97,6 +87,7 @@ export default function CreateAvailability({
   const handleCalendarChange = (event) => {
     const formattedDate = format(event, "yyyy-MM-dd");
     setDate(formattedDate);
+    setDateSelected(true);
     setShowTimePicker(true);
   };
 
@@ -179,27 +170,6 @@ export default function CreateAvailability({
     setDuration(duration);
   }, [duration]);
 
-  // update setLocationChecker when selectedProgramData physical location or virtual link is
-  useEffect(() => {
-    if (
-      (physical_location && physical_location !== "") ||
-      (virtual_link && virtual_link !== "")
-    ) {
-      setLocationChecker(true); // if physical_location or virtual link valid, set to true
-    } else {
-      setLocationChecker(false);
-    }
-  }, [physical_location, virtual_link]);
-
-  // update setEnableDurationAndDates when locationChecker and timeChecker are updated
-  useEffect(() => {
-    if (locationChecker) {
-      setEnableDurationAndDates(true);
-    } else {
-      setEnableDurationAndDates(false);
-    }
-  }, [locationChecker]);
-
   return (
     <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-calendar-popup-gray border border-gray-300 shadow-md pb-7 relative">
       <button
@@ -212,12 +182,18 @@ export default function CreateAvailability({
             <h2 className="font-bold pt-5">
               Enter Dates Along With Their Times
             </h2>
+
             <Calendar
               onChange={handleCalendarChange}
-              value={date}
               minDate={new Date()} // disables past dates from being selected
             />
+
+            {dateSelected && (
+              <label>{format(addDays(date, 1), "MMMM do, yyyy")}</label>
+            )}
+
             <br />
+
             {showTimePicker && (
               <div className="flex flex-col items-center py-5">
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -232,6 +208,7 @@ export default function CreateAvailability({
             )}
           </div>
         </div>
+
         {showDuration && (
           <div className="flex flex-row items-center mt-4">
             <label className="whitespace-nowrap font-bold text-xl">
@@ -243,7 +220,6 @@ export default function CreateAvailability({
               class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
               checked={boxShown}
               onChange={showBox}
-              disabled={!enableDurationAndDates}
             ></input>
             {boxShown && (
               <div className="flex items-end">
@@ -263,11 +239,8 @@ export default function CreateAvailability({
               </div>
             )}
             <button
-              className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 ${
-                !enableDurationAndDates ? "opacity-50" : ""
-              }`}
+              className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2`}
               onClick={createTimeSlot}
-              disabled={!enableDurationAndDates}
             >
               Create
             </button>

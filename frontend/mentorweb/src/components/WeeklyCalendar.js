@@ -20,9 +20,7 @@ export default function WeeklyCalendar({
   functions,
   times,
   loadPage,
-  reset,
   program_id,
-  disabled,
 }) {
   // temp time range used for each SingleInputTimeRangeField
   const [timeRange, setTimeRange] = useState(["12:00", "12:30"]);
@@ -93,8 +91,6 @@ export default function WeeklyCalendar({
       name: day,
       value: [],
     });
-
-    functions.setChangesMade(true);
   };
 
   // create button to push time block to parent function
@@ -106,10 +102,8 @@ export default function WeeklyCalendar({
         name: day,
         value: newTimeBlock,
       });
-
-      functions.setChangesMade(true);
     } else {
-      console.error("Invalid time block entered.");
+      alert("Invalid time block entered.");
     }
   };
 
@@ -124,7 +118,7 @@ export default function WeeklyCalendar({
 
   useEffect(() => {
     // load the weekday values on page load
-    if (loadPage || reset) {
+    if (loadPage) {
       // set the headers based on incoming data
       const updatedShowTimeEntries = {};
       for (const day in times) {
@@ -153,14 +147,10 @@ export default function WeeklyCalendar({
       }
       setLocalTimes(updatedLocalTimes);
 
-      //reload data
-      if (reset) {
-        functions.setReset(!reset);
-      }
-      functions.loadPageFunction(!loadPage);
+      functions.loadPageFunction(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTimeEntryField, times, localTimes, loadPage, reset]);
+  }, [showTimeEntryField, times, localTimes, loadPage]);
 
   useEffect(() => {
     const anyDayHasData = Object.values(localTimes).some(
@@ -182,7 +172,7 @@ export default function WeeklyCalendar({
       <th
         className={`border-r w-1/5 ${
           showTimeEntryField[day] ? "bg-light-gray" : "bg-white"
-        } ${disabled ? "pointer-events-none opacity-50" : ""}`}
+        }`}
         name={day}
         onClick={() => handleWeekdayClick(day)}
       >

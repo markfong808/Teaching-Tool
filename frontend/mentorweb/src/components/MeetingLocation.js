@@ -10,10 +10,9 @@
  */
 
 export default function MeetingLocation({
-  isClassLocation,
-  param,
+  isCourseInfoProgram,
+  functions,
   data,
-  disabled,
 }) {
   ////////////////////////////////////////////////////////
   //                 Handler Functions                  //
@@ -22,13 +21,12 @@ export default function MeetingLocation({
   // passing entry of location and links for programs
   // back to Program.js
   const handleInputChange = (e) => {
-    param.functionPassed({
+    functions.inputChangeFunction({
       target: {
         name: e.target.name,
         value: e.target.value,
       },
     });
-    param.changesMade(true);
   };
 
   ////////////////////////////////////////////////////////
@@ -38,10 +36,10 @@ export default function MeetingLocation({
   // HTML for webpage
   // conditional rendering of boxes if isClassLocation is true or not
   return (
-    <div className={isClassLocation ? "w-2/3 m-auto" : "w-full m-auto"}>
+    <div className={isCourseInfoProgram ? "w-2/3 m-auto" : "w-full m-auto"}>
       <div
         className={
-          isClassLocation
+          isCourseInfoProgram
             ? "flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5"
             : "flex flex-row p-5 border border-light-gray rounded-md shadow-md m-auto mt-5 justify-between"
         }
@@ -53,58 +51,46 @@ export default function MeetingLocation({
         </div>
         <div
           className={
-            isClassLocation
+            isCourseInfoProgram
               ? "flex flex-row items-center mb-2"
               : "flex flex-row items-center mb-1"
           }
         >
           <label
             className={
-              isClassLocation ? "whitespace-nowrap" : "whitespace-nowrap ml-2"
+              isCourseInfoProgram
+                ? "whitespace-nowrap"
+                : "whitespace-nowrap ml-2"
             }
           >
             In-Person Location:
           </label>
           <input
             className="border border-light-gray ml-2 w-40 hover:bg-gray"
-            name={isClassLocation ? "physical_location" : "physical_location"}
-            value={
-              isClassLocation
-                ? data.physical_location ?? ""
-                : data.physical_location ?? ""
-            }
+            name={"physical_location"}
+            value={data.physical_location ?? ""}
             onChange={handleInputChange}
-            disabled={disabled}
+            onBlur={functions.saveChangeFunction}
           />
         </div>
         <div
           className={
-            isClassLocation
+            isCourseInfoProgram
               ? "flex flex-row items-center mb-2"
               : "flex flex-row items-center mb-1"
           }
         >
-          <label
-            className={
-              isClassLocation ? "whitespace-nowrap" : "whitespace-nowrap"
-            }
-          >
-            Virtual Meeting Link:
-          </label>
+          <label className={"whitespace-nowrap"}>Virtual Meeting Link:</label>
           <input
             className="border border-light-gray ml-2 w-40 hover:bg-gray"
-            name={isClassLocation ? "virtual_link" : "virtual_link"}
-            value={
-              isClassLocation
-                ? data.virtual_link ?? ""
-                : data.virtual_link ?? ""
-            }
+            name={"virtual_link"}
+            value={data.virtual_link ?? ""}
             onChange={handleInputChange}
-            disabled={disabled}
+            onBlur={functions.saveChangeFunction}
           />
         </div>
 
-        {isClassLocation && (
+        {isCourseInfoProgram && (
           <div>
             <label className="whitespace-nowrap">Course Recordings Link:</label>
             <input
@@ -112,6 +98,7 @@ export default function MeetingLocation({
               name="class_recordings_link"
               value={data.class_recordings_link ?? ""}
               onChange={handleInputChange}
+              onBlur={functions.saveChangeFunction}
             />
           </div>
         )}

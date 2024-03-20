@@ -51,12 +51,17 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         body: JSON.stringify(payload),
       });
 
-      if (response.status === 400) {
-        window.alert("Program Type already exists.");
-      }
+      const responseData = await response.json();
 
-      loadFunction(true); // flag to reload page to add new program to dropdown selector
-      onClose();
+      if (response.ok) {
+        // Program added successfully, reload page or update UI as needed
+        loadFunction(responseData.program_id); // Pass the new program ID to the loadFunction
+        onClose();
+      } else if (response.status === 400) {
+        window.alert("Program Type already exists.");
+      } else {
+        console.error("Failed to add program:", responseData.error);
+      }
     } catch (error) {
       console.error("Error creating program:", error);
     }

@@ -247,8 +247,10 @@ def add_new_program():
                     )
                     db.session.add(new_details)
                     db.session.commit()
-                    
-                    return jsonify({"message": "Added to program successfully"}), 200
+
+                    # Return the new program ID
+                    new_program_id = new_details.id
+                    return jsonify({"message": "Added to program successfully", "program_id": new_program_id}), 200
             else:
                 return jsonify({"error": "Insufficient details to add program to course"}), 404
         else:

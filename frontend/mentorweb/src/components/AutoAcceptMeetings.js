@@ -10,14 +10,7 @@
 
 import React from "react";
 
-export default function AutoAcceptMeetings({
-  functions,
-  userInstance,
-  programSelected,
-  data,
-  courseData,
-  programData,
-}) {
+export default function AutoAcceptMeetings({ functions, userInstance, data }) {
   // update data meeting limit's based on instructor entries
   const handleLimitInputChange = (e) => {
     const { name, value } = e.target;
@@ -67,18 +60,6 @@ export default function AutoAcceptMeetings({
       max_weekly_meetings: newLimitData.max_weekly_meetings,
       max_monthly_meetings: newLimitData.max_monthly_meetings,
     });
-
-    // update selectedCourseData.programs to the programData
-    const selectedProgram = courseData.programs.find(
-      (program) => program.id === programData.id
-    );
-
-    // Update showButtons state
-    functions.setShowButtons((prevButtons) => ({
-      ...prevButtons,
-      [e.target.name]:
-        parseInt(e.target.value) === selectedProgram[e.target.name],
-    }));
   };
 
   ////////////////////////////////////////////////////////
@@ -103,7 +84,7 @@ export default function AutoAcceptMeetings({
               value="true"
               checked={data.auto_approve_appointments === true}
               onChange={functions.handleInputChange}
-              disabled={!programSelected}
+              onBlur={functions.saveChangeFunction}
             />
           </label>
           &nbsp;&nbsp;
@@ -116,7 +97,7 @@ export default function AutoAcceptMeetings({
               value="false"
               checked={data.auto_approve_appointments === false}
               onChange={functions.handleInputChange}
-              disabled={!programSelected}
+              onBlur={functions.saveChangeFunction}
             />
           </label>
         </div>
@@ -134,7 +115,7 @@ export default function AutoAcceptMeetings({
                 min="1"
                 value={data.max_daily_meetings}
                 onChange={handleLimitInputChange}
-                disabled={!programSelected}
+                onBlur={functions.saveChangeFunction}
               />
             </div>
             <div className="flex flex-col mr-5">
@@ -146,7 +127,7 @@ export default function AutoAcceptMeetings({
                 min="1"
                 value={data.max_weekly_meetings}
                 onChange={handleLimitInputChange}
-                disabled={!programSelected}
+                onBlur={functions.saveChangeFunction}
               />
             </div>
             <div className="flex flex-col">
@@ -158,7 +139,7 @@ export default function AutoAcceptMeetings({
                 min="1"
                 value={data.max_monthly_meetings}
                 onChange={handleLimitInputChange}
-                disabled={!programSelected}
+                onBlur={functions.saveChangeFunction}
               />
             </div>
           </div>

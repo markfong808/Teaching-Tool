@@ -8,7 +8,6 @@
  * for a course or globally that applies to all courses.
  *
  * Known Bugs:
- * - Comment on line 623 in showBox -> need to make work with save/cancel changes button
  * - ToolTip UI Box next to Create Program Type button needs adjusting
  * - Dont let Course Times be used as a name. dont let repeat names be true
  *
@@ -17,13 +16,13 @@
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext.js";
 import { getCookie } from "../utils/GetCookie.js";
-import { Tooltip } from "./Tooltip.js";
-import WeeklyCalendar from "./WeeklyCalendar.js";
-import ChooseMeetingDatesPopup from "./ChooseMeetingDatesPopup.js";
-import MeetingLocation from "./MeetingLocation.js";
-import CreateProgramTypePopup from "./CreateProgramTypePopup.js";
-import CreateAvailability from "./CreateAvailability.js";
-import AutoAcceptMeetings from "./AutoAcceptMeetings.js";
+import { Tooltip } from "../components/Tooltip.js";
+import WeeklyCalendar from "../components/WeeklyCalendar.js";
+import ChooseMeetingDatesPopup from "../components/ChooseMeetingDatesPopup.js";
+import MeetingLocation from "../components/MeetingLocation.js";
+import CreateProgramTypePopup from "../components/CreateProgramTypePopup.js";
+import CreateAvailability from "../components/CreateAvailability.js";
+import AutoAcceptMeetings from "../components/AutoAcceptMeetings.js";
 
 export default function Program() {
   // General Variables
@@ -31,19 +30,16 @@ export default function Program() {
   const { user } = useContext(UserContext);
 
   // Load Variables
-  const [changesMade, setChangesMade] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [loadProgramTable, setLoadProgramTable] = useState(false);
-  const [resetOfficeHoursTable, setResetOfficeHoursTable] = useState(false);
-  const [loadLocRec, setLocRec] = useState(false);
-  const [post, setPost] = useState(false);
+  const [loadProgramTable, setLoadProgramTable] = useState(true);
+  const [postTimes, setPostTimes] = useState(false);
   const [isCourseSelected, setIsCourseSelected] = useState(true);
   const [isProgramSelected, setIsProgramSelected] = useState(false);
   const [locationChecker, setLocationChecker] = useState(false);
   const [isAllCoursesSelected, setIsAllCoursesSelected] = useState(true);
-  const [hasLoaded, setHasLoaded] = useState(false);
   const [isDropinsLayout, setIsDropinsLayout] = useState(true);
   const [isRangedBasedLayout, setIsRangedBasedLayout] = useState(true);
+  const [newProgramId, setNewProgramId] = useState();
 
   // Popup Load Variables
   const [boxShown, setBoxShown] = useState(false);
@@ -53,21 +49,9 @@ export default function Program() {
     useState(false);
   const [isCreateProgramTypePopup, setCreateProgramTypePopup] = useState(false);
   const [showDuration, setShowDuration] = useState(false);
-  const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
-    course_id: true,
-    type: true,
-    description: true,
-    duration: true,
-    physical_location: true,
-    virtual_link: true,
-    auto_approve_appointments: true,
-    max_daily_meetings: true,
-    max_weekly_meetings: true,
-    max_monthly_meetings: true,
-  });
 
   // Course Data Variables
-  const [selectedCourseId, setSelectedCourseId] = useState("-2");
+  const [selectedCourseId, setSelectedCourseId] = useState();
   const [selectedProgramId, setSelectedProgramId] = useState("");
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedCourseData, setSelectedCourseData] = useState({
@@ -91,8 +75,7 @@ export default function Program() {
   });
 
   // Times Data Variables
-  const [backupTimesData, setBackupTimesData] = useState({});
-  const [selectedProgramTimesData, setSelectedProgramTimesData] = useState({});
+  const [allProgramTimesInCourse, setAllProgramTimesInCourse] = useState({});
 
   ////////////////////////////////////////////////////////
   //               Fetch Get Functions                  //
@@ -109,20 +92,6 @@ export default function Program() {
 
       const fetchedCourses = await response.json();
       setAllCourseData(fetchedCourses);
-
-      if (!hasLoaded) {
-        // check for a global program in fetched course list with unique id -2
-        const containsGlobalPrograms = fetchedCourses.find(
-          (course) => course.id === -2
-        );
-
-        // if there is a global program
-        if (containsGlobalPrograms) {
-          setSelectedCourseId(containsGlobalPrograms.id); // set selectedCourseId to containsGlobalPrograms.id
-          updateCourseInfo(containsGlobalPrograms.id); // update the courseInfo with the containsGlobalPrograms.id
-        }
-        setHasLoaded(true);
-      }
     } catch (error) {
       console.error("Error fetching all instructor courses:", error);
     }
@@ -167,9 +136,9 @@ export default function Program() {
           }, {});
 
         // set allTimesData to tempData
-        setBackupTimesData(tempData);
+        setAllProgramTimesInCourse(tempData);
       } else {
-        setBackupTimesData({});
+        setAllProgramTimesInCourse({});
       }
     } catch (error) {
       console.error("Error fetching time info:", error);
@@ -179,26 +148,6 @@ export default function Program() {
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
-
-  // called when user clicks save changes button
-  // saves all course and times details to database
-  const handleSaveChanges = async () => {
-    if (selectedProgramData.type === "" || !selectedProgramData.type) {
-      alert("Program Name cannot be empty.");
-      return;
-    }
-
-    if (Object.keys(selectedProgramTimesData).length > 0) {
-      setBackupTimesData({
-        ...backupTimesData,
-        [selectedProgramId]: selectedProgramTimesData,
-      });
-      setPost(true);
-    }
-    if (selectedProgramData) {
-      postProgramToDatabase();
-    }
-  };
 
   // posts updated program data for a course to the ProgramType table
   const postProgramToDatabase = async () => {
@@ -239,8 +188,6 @@ export default function Program() {
       });
 
       fetchAllInstructorCourses();
-
-      setChangesMade(false); // Hide Save/Cancel Buttons
     } catch (error) {
       console.error("Error saving program type details:", error);
     }
@@ -248,7 +195,7 @@ export default function Program() {
 
   // handleSaveChanges helper: update ClassTimes table in database for attached course
   // called in a UseEffect below
-  const postCourseDetailsToDatabase = async () => {
+  const postProgramTimes = async () => {
     try {
       await fetch(
         `/course/setTime/${encodeURIComponent(selectedCourseData.id)}`,
@@ -259,11 +206,9 @@ export default function Program() {
             "Content-Type": "application/json",
             "X-CSRF-TOKEN": csrfToken,
           },
-          body: JSON.stringify(backupTimesData),
+          body: JSON.stringify(allProgramTimesInCourse),
         }
       );
-
-      setChangesMade(false); // Hide Save/Cancel Buttons
     } catch (error) {
       console.error("Error saving course details:", error);
     }
@@ -286,7 +231,7 @@ export default function Program() {
           alert("Program Type deleted successfully!");
           // reload webpage details (like program switch)
           await fetchAllInstructorCourses();
-          handleProgramChange({ target: { value: "-1" } });
+          handleProgramChange({ target: { value: -1 } });
         } else {
           throw new Error("Failed to delete program type");
         }
@@ -301,15 +246,16 @@ export default function Program() {
   ////////////////////////////////////////////////////////
 
   // called when instructor clicks to change selected course
-  const handleCourseChange = (e) => {
+  const handleCourseChange = async (e) => {
     if (!e) {
       return;
     }
+    const newValue = e.target.value;
 
     // reload courseIds with all courses
-    fetchAllInstructorCourses();
+    await fetchAllInstructorCourses();
 
-    const selectedCourse = parseInt(e.target.value);
+    const selectedCourse = parseInt(newValue);
 
     // change selectedCourseId
     setSelectedCourseId(selectedCourse);
@@ -320,19 +266,9 @@ export default function Program() {
     // reset program information
     setSelectedProgramId(-1);
     updateProgramInfo(-1);
-    setSelectedProgramTimesData({});
 
     // update timesData to selectedCourse
     fetchTimesData(selectedCourse);
-
-    reloadChildInfo();
-    setChangesMade(false);
-  };
-
-  // helper function called when information on the webpage needs to be reloaded
-  // will flag to child objects to reload their information
-  const reloadChildInfo = () => {
-    setLoadProgramTable(!loadProgramTable);
   };
 
   // called when the instructor changes the program
@@ -353,18 +289,12 @@ export default function Program() {
     // update programinfo displayed on page to selectedProgram
     updateProgramInfo(selectedProgram);
 
-    // update programTimesData to selectedProgram
-    if (backupTimesData.hasOwnProperty(selectedProgram)) {
-      setSelectedProgramTimesData(backupTimesData[selectedProgram]);
-    } else {
-      setSelectedProgramTimesData({});
-    }
-
-    setChangesMade(false);
+    // reload program times table
+    setLoadProgramTable(true);
   };
 
   // update the selectedCourseData based on a courseId
-  const updateCourseInfo = (courseId) => {
+  const updateCourseInfo = async (courseId) => {
     if (!courseId) {
       setSelectedCourseData({});
       return;
@@ -408,21 +338,24 @@ export default function Program() {
       return;
     }
 
-    const selectedProgram = selectedCourseData.programs.find(
+    const selectedCourse = allCourseData.find(
+      (course) => course.id === selectedCourseId
+    );
+
+    const selectedProgram = selectedCourse.programs.find(
       (program) => program.id === programId
     );
 
-    if (!selectedProgram.duration) {
-      selectedProgram.duration = "";
-    }
-
     if (selectedProgram) {
       // Update selectedProgramData with selectedProgram.id
+      if (!selectedProgram.duration) {
+        selectedProgram.duration = "";
+      }
       setSelectedProgramData(selectedProgram);
-    }
 
-    if (!selectedProgram.duration || selectedProgram.duration === "") {
-      setBoxShown(false);
+      if (!selectedProgram.duration || selectedProgram.duration === "") {
+        setBoxShown(false);
+      }
     }
   };
 
@@ -437,8 +370,10 @@ export default function Program() {
       if (Number(e.target.value) > 0) {
         let maxRecommendedTimeSplit = 1440;
 
-        // iterate through selectedProgramTimesData
-        for (const data of Object.entries(selectedProgramTimesData)) {
+        // iterate through allProgramTimesInCourse[selectedProgramId]
+        for (const data of Object.entries(
+          allProgramTimesInCourse[selectedProgramId]
+        )) {
           const startDate = new Date(`1970-01-01T${data[1].start_time}`);
           const endDate = new Date(`1970-01-01T${data[1].end_time}`);
 
@@ -472,18 +407,6 @@ export default function Program() {
       ...selectedProgramData,
       [e.target.name]: newValue,
     });
-
-    // update selectedCourseData.programs to the selectedProgramData
-    const selectedProgram = selectedCourseData.programs.find(
-      (program) => program.id === selectedProgramData.id
-    );
-
-    // Update showButtons state
-    setShowSaveCancelButtons((prevButtons) => ({
-      ...prevButtons,
-      [e.target.name]:
-        e.target.value === String(selectedProgram[e.target.name]),
-    }));
   };
 
   // update timesData based on instructor entries
@@ -495,12 +418,12 @@ export default function Program() {
     const tempDay = e.name;
     const tempValue = e.value;
 
-    // Create a new times data object to store the selectedProgramTimesData
-    let updatedTimesData = { ...selectedProgramTimesData };
+    // Create a new times data object to store the allProgramTimesInCourse[selectedProgramId]
+    let updatedTimesData = { ...allProgramTimesInCourse[selectedProgramId] };
 
-    // Check if the day already exists in selectedProgramTimesData
+    // Check if the day already exists in allProgramTimesInCourse[selectedProgramId]
     if (tempValue.length === 0) {
-      // If e.value.length == 0, delete the day from selectedProgramTimesData
+      // If e.value.length == 0, delete the day from allProgramTimesInCourse[selectedProgramId]
       if (updatedTimesData[tempDay]) {
         delete updatedTimesData[tempDay];
       }
@@ -514,30 +437,36 @@ export default function Program() {
         },
       };
     }
-    // Set the selectedProgramTimesData variable
-    setSelectedProgramTimesData(updatedTimesData);
+
+    setAllProgramTimesInCourse({
+      ...allProgramTimesInCourse,
+      [selectedProgramId]: updatedTimesData,
+    });
+
+    setPostTimes(true);
   };
 
-  // handle to cancel webpage changes when instructor is done editing details
-  const handleCancelChanges = () => {
-    // Reset courseinfo, program info, adn officeHoursTable to initial data
-    updateCourseInfo(selectedCourseData.id);
-    updateProgramInfo(selectedProgramId);
-    setResetOfficeHoursTable(true);
-    reloadChildInfo();
-
-    if (backupTimesData[selectedProgramId]) {
-      setSelectedProgramTimesData(backupTimesData[selectedProgramId]);
-    } else {
-      setSelectedProgramTimesData({});
+  // saves all course details to database
+  const handleSaveChanges = async () => {
+    if (selectedProgramData.type === "" || !selectedProgramData.type) {
+      alert("Program Name cannot be empty.");
+      return;
     }
-    setChangesMade(false); // Reset changes made
+
+    if (selectedProgramData) {
+      postProgramToDatabase();
+    }
+  };
+
+  // reload webpage data and select new program
+  const loadNewProgram = (programId) => {
+    setNewProgramId(programId);
+    fetchAllInstructorCourses();
   };
 
   // updates setBoxShown when instructor clicks on checkbox
   const showBox = () => {
     if (boxShown) {
-      // need to make work with save/cancel changes button
       handleInputChange({ target: { name: "duration", value: "" } });
       setBoxShown(false);
     } else {
@@ -549,91 +478,63 @@ export default function Program() {
   const tabSelect = (boolean) => {
     setIsAllCoursesSelected(boolean);
     if (boolean) {
-      handleCourseChange({ target: { value: "-2" } }); // -2 associated with all course programs having global type
+      handleCourseChange({ target: { value: -2 } }); // -2 associated with all course programs having global type
     } else {
-      handleCourseChange({ target: { value: "-1" } }); // no global type with single course
+      handleCourseChange({ target: { value: -1 } }); // no global type with single course
     }
+    handleProgramChange({ target: { value: -1 } });
   };
 
   ////////////////////////////////////////////////////////
   //               UseEffects Functions                 //
   ////////////////////////////////////////////////////////
 
-  // post to database once changes save
-  useEffect(() => {
-    if (post) {
-      postCourseDetailsToDatabase();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [post]);
-
-  // on initial page load, fetchAllInstructorCourses()
+  // on initial page load, select default tab
   useEffect(() => {
     if (!initialLoad) {
       tabSelect(true);
-      fetchAllInstructorCourses();
     }
     setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLoad, user]);
 
+  // post to database once changes save
+  useEffect(() => {
+    if (postTimes) {
+      postProgramTimes();
+      setPostTimes(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postTimes]);
+
   // reload the child info when SelectedProgramTimesData updates
   useEffect(() => {
-    reloadChildInfo();
+    setLoadProgramTable(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProgramTimesData]);
-
-  // check if all values are same as original
-  useEffect(() => {
-    console.log(showSaveCancelButtons);
-    setChangesMade(
-      !Object.values(showSaveCancelButtons).every((value) => value === true)
-    );
-  }, [showSaveCancelButtons]);
-
-  // update boxShown if duration is greater than 0
-  // and update setIsDropinsLayout when selectedProgramData updates
-  useEffect(() => {
-    if (Number(selectedProgramData.duration) > 0) {
-      setBoxShown(true);
-    }
-    if (
-      selectedProgramData.isDropins !== "" &&
-      selectedProgramData.isDropins === false
-    ) {
-      setIsDropinsLayout(false);
-    } else {
-      setIsDropinsLayout(true);
-    }
-    if (
-      selectedProgramData.isRangeBased !== "" &&
-      selectedProgramData.isRangeBased === false
-    ) {
-      setIsRangedBasedLayout(false);
-    } else {
-      setIsRangedBasedLayout(true);
-    }
-  }, [selectedProgramData]);
+  }, [allProgramTimesInCourse]);
 
   // update courseInfo when selectedCourseId is updated
   useEffect(() => {
-    if (selectedCourseId && selectedCourseId !== "-1") {
-      updateCourseInfo(selectedCourseId);
-    }
+    const fetchDataAndUpdate = async () => {
+      if (selectedCourseId && selectedCourseId !== -1) {
+        await updateCourseInfo(selectedCourseId);
+
+        if (newProgramId) {
+          handleProgramChange({ target: { value: newProgramId } });
+          setNewProgramId();
+        }
+
+        setIsCourseSelected(true);
+      } else {
+        setIsCourseSelected(false);
+      }
+    };
+
+    // call async function
+    fetchDataAndUpdate();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourseId, allCourseData]);
-
-  // update isCourseSelected when selectedCourseId is updated
-  useEffect(() => {
-    if (
-      (selectedCourseId !== "" && selectedCourseId !== -1) ||
-      selectedCourseId === -2
-    ) {
-      setIsCourseSelected(true); // if course id valid set to true
-    } else {
-      setIsCourseSelected(false);
-    }
-  }, [selectedCourseId]);
 
   // update isProgramSelected when selectedProgramId is updated
   useEffect(() => {
@@ -644,19 +545,47 @@ export default function Program() {
     }
   }, [selectedProgramId]);
 
-  // update setLocationChecker when selectedProgramData physical location or virtual link is
+  // - update boxShown if duration is greater than 0
+  // - update setIsDropinsLayout when selectedProgramData updates
+  // - update setLocationChecker when selectedProgramData physical location or virtual link is
   useEffect(() => {
-    if (
+    // check if duration is greater than 0 to show the box
+    const isDurationValid = Number(selectedProgramData.duration) > 0;
+    setBoxShown(isDurationValid);
+
+    // check and set isDropinsLayout
+    const isDropinsLayoutValid =
+      selectedProgramData.isDropins !== "" && !selectedProgramData.isDropins;
+    setIsDropinsLayout(!isDropinsLayoutValid);
+
+    // check and set isRangedBasedLayout
+    const isRangedBasedLayoutValid =
+      selectedProgramData.isRangeBased !== "" &&
+      !selectedProgramData.isRangeBased;
+    setIsRangedBasedLayout(!isRangedBasedLayoutValid);
+
+    // check if physical_location or virtual_link is valid and set locationChecker
+    const isLocationValid =
       (selectedProgramData.physical_location &&
         selectedProgramData.physical_location !== "") ||
       (selectedProgramData.virtual_link &&
-        selectedProgramData.virtual_link !== "")
-    ) {
-      setLocationChecker(true); // if physical_location or virtual link valid, set to true
-    } else {
-      setLocationChecker(false);
+        selectedProgramData.virtual_link !== "");
+    setLocationChecker(isLocationValid);
+  }, [
+    selectedProgramData.duration,
+    selectedProgramData.isDropins,
+    selectedProgramData.isRangeBased,
+    selectedProgramData.physical_location,
+    selectedProgramData.virtual_link,
+  ]);
+
+  // post a null duration to database when duration box is unchecked
+  useEffect(() => {
+    if (!boxShown && selectedProgramId && selectedProgramId !== -1) {
+      handleSaveChanges();
     }
-  }, [selectedProgramData.physical_location, selectedProgramData.virtual_link]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boxShown]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -677,7 +606,11 @@ export default function Program() {
                 ? "bg-gold border-gold"
                 : "bg-metallic-gold border-metallic-gold"
             }`}
-            onClick={() => tabSelect(true)}
+            onClick={() => {
+              if (!isAllCoursesSelected) {
+                tabSelect(true);
+              }
+            }}
           >
             All Course Programs
           </div>
@@ -687,7 +620,11 @@ export default function Program() {
                 ? "bg-metallic-gold border-metallic-gold"
                 : "bg-gold border-gold"
             }`}
-            onClick={() => tabSelect(false)}
+            onClick={() => {
+              if (isAllCoursesSelected) {
+                tabSelect(false);
+              }
+            }}
           >
             Single Course Programs
           </div>
@@ -791,19 +728,13 @@ export default function Program() {
                 <div className="py-5 border border-light-gray rounded-md shadow-md">
                   <div className="relative">
                     <button
-                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 hover:bg-gray ${
-                        !isProgramSelected ? "opacity-50" : ""
-                      }`}
-                      disabled={!isProgramSelected}
+                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 hover:bg-gray z-10`}
                     >
                       Auto Generate Details
                     </button>
                     <button
-                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray ${
-                        !isProgramSelected ? "opacity-50" : ""
-                      }`}
+                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray z-10`}
                       onClick={handleDeleteProgramType}
-                      disabled={!isProgramSelected}
                     >
                       Delete Program
                     </button>
@@ -812,12 +743,13 @@ export default function Program() {
                   <div className="pb-10 flex justify-center relative">
                     <input
                       className="text-center font-bold text-2xl px-2"
-                      name="type"
-                      value={selectedProgramData.type}
-                      onChange={handleInputChange}
                       style={{
                         width: `${selectedProgramData.type.length * 16}px`,
                       }}
+                      name="type"
+                      value={selectedProgramData.type}
+                      onChange={handleInputChange}
+                      onBlur={handleSaveChanges}
                     />
                     <Tooltip
                       text="Click Program Name To Change Value."
@@ -843,26 +775,34 @@ export default function Program() {
                           name="description"
                           value={selectedProgramData.description || ""}
                           onChange={(event) => handleInputChange(event)}
-                          disabled={!isProgramSelected}
+                          onBlur={handleSaveChanges}
                         />
                       </div>
 
                       <MeetingLocation
-                        isClassLocation={false}
-                        param={{
-                          functionPassed: handleInputChange,
-                          loadPageFunction: setLocRec,
-                          changesMade: setChangesMade,
+                        isCourseInfoProgram={false}
+                        functions={{
+                          inputChangeFunction: handleInputChange,
+                          saveChangeFunction: handleSaveChanges,
                         }}
                         data={{
                           physical_location:
                             selectedProgramData.physical_location,
                           virtual_link: selectedProgramData.virtual_link,
                         }}
-                        loadPage={loadLocRec}
-                        changes={changesMade}
-                        disabled={!isProgramSelected}
                       />
+
+                      {!isDropinsLayout && (
+                        <AutoAcceptMeetings
+                          functions={{
+                            setSelectedProgramData: setSelectedProgramData,
+                            handleInputChange: handleInputChange,
+                            saveChangeFunction: handleSaveChanges,
+                          }}
+                          userInstance={user}
+                          data={selectedProgramData}
+                        />
+                      )}
 
                       {!locationChecker ? (
                         <div className="flex flex-row p-5 m-auto mt-5 justify-center">
@@ -886,21 +826,6 @@ export default function Program() {
                         )
                       )}
 
-                      {!isDropinsLayout && (
-                        <AutoAcceptMeetings
-                          functions={{
-                            setSelectedProgramData: setSelectedProgramData,
-                            handleInputChange: handleInputChange,
-                            setShowButtons: setShowSaveCancelButtons,
-                          }}
-                          userInstance={user}
-                          programSelected={isProgramSelected}
-                          data={selectedProgramData}
-                          courseData={selectedCourseData}
-                          programData={selectedProgramData}
-                        />
-                      )}
-
                       {locationChecker === true &&
                         (isRangedBasedLayout ? (
                           <>
@@ -909,15 +834,14 @@ export default function Program() {
                                 functions={{
                                   timesChangeFunction: handleTimesChange,
                                   loadPageFunction: setLoadProgramTable,
-                                  setChangesMade: setChangesMade,
-                                  setReset: setResetOfficeHoursTable,
                                   setShowDuration: setShowDuration,
+                                  saveChangeFunction: handleSaveChanges,
                                 }}
-                                times={selectedProgramTimesData}
+                                times={
+                                  allProgramTimesInCourse[selectedProgramId]
+                                }
                                 loadPage={loadProgramTable}
-                                reset={resetOfficeHoursTable}
                                 program_id={selectedProgramData.id}
-                                disabled={!isProgramSelected}
                               />
                             </div>
                             {showDuration && (
@@ -951,6 +875,7 @@ export default function Program() {
                                           },
                                         });
                                       }}
+                                      onBlur={handleSaveChanges}
                                     />
                                     <label className="whitespace-nowrap font-bold text-sm ml-1">
                                       minutes
@@ -992,23 +917,6 @@ export default function Program() {
                         ))}
                     </div>
                   </div>
-
-                  {changesMade && (
-                    <div className="flex flex-row justify-end my-5 mr-6">
-                      <button
-                        className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-                        onClick={handleSaveChanges}
-                      >
-                        Save Course Changes
-                      </button>
-                      <button
-                        className="bg-purple text-white rounded-md p-2 hover:text-gold"
-                        onClick={handleCancelChanges}
-                      >
-                        Discard Course Changes
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             ) : (
@@ -1030,7 +938,7 @@ export default function Program() {
         <div className="fixed inset-0 z-10">
           <ChooseMeetingDatesPopup
             onClose={() => setChooseMeetingDatesPopUpVisible(false)}
-            data={selectedProgramTimesData}
+            data={allProgramTimesInCourse[selectedProgramId]}
             id={selectedCourseId}
             duration={selectedProgramData.duration}
             physical_location={selectedProgramData.physical_location}
@@ -1047,7 +955,7 @@ export default function Program() {
           <CreateProgramTypePopup
             onClose={() => setCreateProgramTypePopup(false)}
             courseId={selectedCourseId}
-            loadFunction={setInitialLoad}
+            loadFunction={loadNewProgram}
           />
         </div>
       )}
