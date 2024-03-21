@@ -32,6 +32,7 @@ export default function Courses() {
 
   // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState();
+  const [selectedCourseName, setSelectedCourseName] = useState();
   const [allCourseData, setAllCourseData] = useState([]);
   const [courseData, setCourseData] = useState({});
   const [instructorData, setInstructorData] = useState({
@@ -105,6 +106,16 @@ export default function Courses() {
 
     // change selectedCourseId
     setSelectedCourseId(parseInt(e.target.value));
+
+    const course = allCourseData.find(
+      (course) => course.id === parseInt(e.target.value)
+    );
+
+    if (course) {
+      setSelectedCourseName(course.class_name);
+    } else {
+      setSelectedCourseName();
+    }
   };
 
   // reload appointments table
@@ -185,7 +196,10 @@ export default function Courses() {
         </div>
 
         <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-          <DropinsTable courseId={selectedCourseId} />
+          <DropinsTable
+            courseId={selectedCourseId}
+            courseName={selectedCourseName}
+          />
         </div>
 
         <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">

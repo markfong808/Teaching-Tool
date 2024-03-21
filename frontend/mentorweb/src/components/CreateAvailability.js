@@ -1,7 +1,7 @@
 /* CreateAvailability.js
  * Last Edited: 3/3/24
  *
- * Popup menu to create a meeting block for a specific date
+ * Popup menu to create a appointment block for a specific date
  *
  * Known Bugs:
  * -
@@ -212,7 +212,7 @@ export default function CreateAvailability({
         {showDuration && (
           <div className="flex flex-row items-center mt-4">
             <label className="whitespace-nowrap font-bold text-xl">
-              Define Meeting Duration?
+              Define Appointment Duration?
             </label>
             <input
               type="checkbox"

@@ -33,6 +33,13 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
 
   // posts the programtype to the ProgramType table
   const createProgramType = async () => {
+    if (programTitle === "Course Times" && courseId === -2) {
+      alert(
+        'Program Name: "Course Name" is not allowed for All Course Programs. For Course Times use Single Course Programs.'
+      );
+      return;
+    }
+
     try {
       const payload = {
         name: programTitle,

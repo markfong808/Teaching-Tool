@@ -209,6 +209,8 @@ def get_student_appointments_for_class(class_id):
         mentor = User.query.get(appt.mentor_id) if appt.mentor_id else None
         mentor_info = {
             "first_name": mentor.first_name,
+            "title": mentor.title,
+            "pronouns": mentor.pronouns,
             "email": mentor.email,
             "about": mentor.about,
             "social_url": mentor.linkedin_url
@@ -620,6 +622,7 @@ def get_comments(appointment_id):
                 comment_info = {
                     'id': comment.id,
                     'name': comment.user.first_name,
+                    'pronouns': comment.user.pronouns,
                     'user_id': comment.user_id,
                     'appointment_comment': comment.appointment_comment,
                     'created_at': comment.created_at

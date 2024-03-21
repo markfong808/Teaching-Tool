@@ -9,6 +9,7 @@ export default function Comment({ appointmentId }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
+  const csrfToken = getCookie("csrf_access_token");
 
   const handleInputChange = (e) => {
     setComment(e.target.value);
@@ -16,7 +17,6 @@ export default function Comment({ appointmentId }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const csrfToken = getCookie("csrf_access_token");
     const payload = { appointment_comment: comment };
     try {
       const response = await fetch(
@@ -33,7 +33,6 @@ export default function Comment({ appointmentId }) {
       );
 
       if (response.ok) {
-        alert("Comment posted!");
         fetchComments(); // Fetch comments again to update the list
       } else {
         const errorText = await response.text();
@@ -45,7 +44,6 @@ export default function Comment({ appointmentId }) {
   };
 
   const fetchComments = async () => {
-    const csrfToken = getCookie("csrf_access_token");
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -83,7 +81,6 @@ export default function Comment({ appointmentId }) {
   }, [appointmentId, initialLoad, user.account_type]);
 
   const handleDelete = async (id) => {
-    const csrfToken = getCookie("csrf_access_token");
     try {
       // Replace this URL with the URL for your server's delete comment endpoint
       await fetch(
@@ -134,12 +131,23 @@ export default function Comment({ appointmentId }) {
               className="flex flex-col border border-light-gray p-2 mt-2"
             >
               <div className="flex justify-between">
-                <p className="font-bold">{comment.name}</p>
-                <div>
-                  <p className="text-xs">
+                <p className="font-bold">
+                  {user.account_type === "student" ? (
+                    <>
+                      {comment.name} <i>({comment.pronouns})</i>
+                    </>
+                  ) : (
+                    <>
+                      {comment.title} {comment.name} <i>({comment.pronouns})</i>
+                    </>
+                  )}
+                </p>
+
+                <div className="flex relative">
+                  <button onClick={() => handleDelete(comment.id)}>X</button>
+                  <p className="text-xs absolute top-1 right-5 w-36">
                     {new Date(comment.created_at).toLocaleString()}
                   </p>
-                  <button onClick={() => handleDelete(comment.id)}>X</button>
                 </div>
               </div>
               <p>{comment.appointment_comment}</p>

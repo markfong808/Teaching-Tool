@@ -17,7 +17,7 @@ import {
   getDayFromDate,
 } from "../utils/FormatDatetime";
 
-export default function DropinsTable({ courseId }) {
+export default function DropinsTable({ courseId, courseName }) {
   // General Variables
   const { user } = useContext(UserContext);
 
@@ -141,7 +141,7 @@ export default function DropinsTable({ courseId }) {
   return (
     <div className="flex flex-col w-full m-auto items-center">
       <div className="text-center font-bold text-2xl pb-5">
-        <h1>Drop-Ins</h1>
+        <h1>{courseName ? `${courseName} Drop-Ins` : "Select A Course"}</h1>
       </div>
       <button
         className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-end"

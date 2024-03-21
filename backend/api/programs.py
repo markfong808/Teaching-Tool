@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import and_, or_
-from .models import ProgramType, User, Appointment, Availability, ClassTimes, ClassInformation, CourseMembers
+from .models import ProgramType, User, Appointment, Availability, ClassTimes, ClassInformation, CourseMembers, AppointmentComment, Feedback
 from . import db
 
 programs = Blueprint('programs', __name__)
@@ -272,6 +272,17 @@ def delete_program_type(program_id):
         # delete appointments
         appointments = Appointment.query.filter_by(type=program_id).all()
         for appointment in appointments:
+            comments = AppointmentComment.query.filter_by(appointment_id=appointment.id).all()
+            feedbacks = Feedback.query.filter_by(appointment_id=appointment.id).all()
+
+            # delete comments
+            for comment in comments:
+                db.session.delete(comment)
+
+            # delete feedback
+            for feedback in feedbacks:
+                db.session.delete(feedback)
+
             db.session.delete(appointment)
 
         # delete availability

@@ -763,6 +763,8 @@ def get_comments(appointment_id):
                 comment_info = {
                     'id': comment.id,
                     'name': comment.user.first_name,  # Assuming first_name is the field name in User table
+                    'title': comment.user.title,
+                    'pronouns': comment.user.pronouns,
                     'user_id': comment.user_id,
                     'appointment_comment': comment.appointment_comment,
                     'created_at': comment.created_at
@@ -1010,6 +1012,7 @@ def get_mentor_appointments_for_class(class_id):
         student = User.query.get(appt.student_id) if appt.student_id else None
         student_info = {
             "first_name": student.first_name,
+            "pronouns": student.pronouns,
             "email": student.email,
             "about": student.about,
             "social_url": student.linkedin_url

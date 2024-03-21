@@ -495,6 +495,7 @@ export default function Program() {
       tabSelect(true);
     }
     setInitialLoad(false);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLoad, user]);
 
@@ -599,7 +600,7 @@ export default function Program() {
   return (
     <div>
       <div className="flex flex-col m-auto">
-        <div className=" flex w-full cursor-pointer justify-center">
+        <div className="flex w-full cursor-pointer justify-center">
           <div
             className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
               isAllCoursesSelected
@@ -724,201 +725,221 @@ export default function Program() {
         {isCourseSelected ? (
           <>
             {isProgramSelected ? (
-              <div className="flex flex-col w-3/4 px-5 m-auto">
-                <div className="py-5 border border-light-gray rounded-md shadow-md">
-                  <div className="relative">
-                    <button
-                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 hover:bg-gray z-10`}
-                    >
-                      Auto Generate Details
-                    </button>
-                    <button
-                      className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray z-10`}
-                      onClick={handleDeleteProgramType}
-                    >
-                      Delete Program
-                    </button>
-                  </div>
+              <>
+                <div className="flex justify-center items-center">
+                  <button
+                    className="w-10% font-bold border border-light-gray bg-gray rounded-md shadow-md px-1 py-1 mb-2 mr-1"
+                    disabled
+                  >
+                    {isDropinsLayout ? "Drop-Ins" : "Appointment Based"}
+                  </button>
+                  <button
+                    className="w-10% font-bold border border-light-gray bg-gray rounded-md shadow-md px-1 py-1 mb-2 ml-1"
+                    disabled
+                  >
+                    {isRangedBasedLayout ? "Range Based" : "Specific Dates"}
+                  </button>
+                </div>
 
-                  <div className="pb-10 flex justify-center relative">
-                    <input
-                      className="text-center font-bold text-2xl px-2"
-                      style={{
-                        width: `${selectedProgramData.type.length * 16}px`,
-                      }}
-                      name="type"
-                      value={selectedProgramData.type}
-                      onChange={handleInputChange}
-                      onBlur={handleSaveChanges}
-                    />
-                    <Tooltip
-                      text="Click Program Name To Change Value."
-                      position="top"
-                    >
-                      <span className="absolute transform">ⓘ</span>
-                    </Tooltip>
-                  </div>
+                <div className="flex flex-col w-3/4 px-5 m-auto">
+                  <div className="py-5 border border-light-gray rounded-md shadow-md">
+                    <div className="relative">
+                      <button
+                        className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 hover:bg-gray z-10`}
+                      >
+                        Auto Generate Details
+                      </button>
+                      <button
+                        className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray z-10`}
+                        onClick={handleDeleteProgramType}
+                      >
+                        Delete Program
+                      </button>
+                    </div>
 
-                  <div className="flex flex-col">
-                    <div className="w-3/4 m-auto">
-                      <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-                        <div>
-                          <label className="font-bold">
-                            Program Description &nbsp;
-                          </label>
-                          <Tooltip text="Description of the program type related to meetings for a course.">
-                            <span>ⓘ</span>
-                          </Tooltip>
-                        </div>
-                        <textarea
-                          className="border border-light-gray mt-3 hover:bg-gray"
-                          name="description"
-                          value={selectedProgramData.description || ""}
-                          onChange={(event) => handleInputChange(event)}
-                          onBlur={handleSaveChanges}
-                        />
-                      </div>
-
-                      <MeetingLocation
-                        isCourseInfoProgram={false}
-                        functions={{
-                          inputChangeFunction: handleInputChange,
-                          saveChangeFunction: handleSaveChanges,
+                    <div className="pb-10 flex justify-center relative">
+                      <input
+                        className="text-center font-bold text-2xl px-2"
+                        style={{
+                          width: `${selectedProgramData.type.length * 16}px`,
                         }}
-                        data={{
-                          physical_location:
-                            selectedProgramData.physical_location,
-                          virtual_link: selectedProgramData.virtual_link,
-                        }}
+                        name="type"
+                        value={selectedProgramData.type}
+                        onChange={handleInputChange}
+                        onBlur={handleSaveChanges}
                       />
+                      <Tooltip
+                        text="Click Program Name To Change Value."
+                        position="top"
+                      >
+                        <span className="absolute transform">ⓘ</span>
+                      </Tooltip>
+                    </div>
 
-                      {!isDropinsLayout && (
-                        <AutoAcceptMeetings
+                    <div className="flex flex-col">
+                      <div className="w-3/4 m-auto">
+                        <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+                          <div>
+                            <label className="font-bold">
+                              Program Description &nbsp;
+                            </label>
+                            <Tooltip text="Description of the program type related to meetings for a course.">
+                              <span>ⓘ</span>
+                            </Tooltip>
+                          </div>
+                          <textarea
+                            className="border border-light-gray mt-3 hover:bg-gray"
+                            name="description"
+                            value={selectedProgramData.description || ""}
+                            onChange={(event) => handleInputChange(event)}
+                            onBlur={handleSaveChanges}
+                          />
+                        </div>
+
+                        <MeetingLocation
+                          isCourseInfoProgram={false}
                           functions={{
-                            setSelectedProgramData: setSelectedProgramData,
-                            handleInputChange: handleInputChange,
+                            inputChangeFunction: handleInputChange,
                             saveChangeFunction: handleSaveChanges,
                           }}
-                          userInstance={user}
-                          data={selectedProgramData}
+                          data={{
+                            physical_location:
+                              selectedProgramData.physical_location,
+                            virtual_link: selectedProgramData.virtual_link,
+                          }}
                         />
-                      )}
 
-                      {!locationChecker ? (
-                        <div className="flex flex-row p-5 m-auto mt-5 justify-center">
-                          <label className="font-bold text-xl">
-                            *Enter A Location And/Or Virtual Meeting Link To
-                            Create Times*
-                          </label>
-                        </div>
-                      ) : (
-                        !isRangedBasedLayout && (
-                          <button
-                            className="flex flex-row p-5 m-auto mt-5 justify-center font-bold border border-light-gray rounded-md shadow-md text-xl px-5 py-3 hover:bg-gray"
-                            onClick={() =>
-                              setCreateAvailabilityPopUpVisible(
-                                !isCreateAvailabilityPopUpVisible
-                              )
-                            }
-                          >
-                            Create Meeting Block
-                          </button>
-                        )
-                      )}
+                        {!isDropinsLayout && (
+                          <AutoAcceptMeetings
+                            functions={{
+                              setSelectedProgramData: setSelectedProgramData,
+                              handleInputChange: handleInputChange,
+                              saveChangeFunction: handleSaveChanges,
+                            }}
+                            userInstance={user}
+                            data={selectedProgramData}
+                          />
+                        )}
 
-                      {locationChecker === true &&
-                        (isRangedBasedLayout ? (
-                          <>
-                            <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
-                              <WeeklyCalendar
-                                functions={{
-                                  timesChangeFunction: handleTimesChange,
-                                  loadPageFunction: setLoadProgramTable,
-                                  setShowDuration: setShowDuration,
-                                  saveChangeFunction: handleSaveChanges,
-                                }}
-                                times={
-                                  allProgramTimesInCourse[selectedProgramId]
-                                }
-                                loadPage={loadProgramTable}
-                                program_id={selectedProgramData.id}
-                              />
-                            </div>
-                            {showDuration && (
-                              <div className="flex flex-row items-center mt-4">
-                                <label className="whitespace-nowrap font-bold text-2xl">
-                                  Define Meeting Duration?
-                                </label>
-                                <input
-                                  type="checkbox"
-                                  class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
-                                  checked={boxShown}
-                                  onChange={showBox}
-                                ></input>
-
-                                {boxShown && (
-                                  <div className="flex items-end">
-                                    <input
-                                      className="border border-light-gray ml-3 mt-1 w-20 hover:bg-gray"
-                                      name="duration"
-                                      value={selectedProgramData.duration}
-                                      onChange={(event) => {
-                                        const inputValue = event.target.value;
-                                        const numericValue = inputValue.replace(
-                                          /[^0-9]/g, // Remove non-numeric characters
-                                          "a"
-                                        );
-                                        handleInputChange({
-                                          target: {
-                                            name: "duration",
-                                            value: numericValue,
-                                          },
-                                        });
-                                      }}
-                                      onBlur={handleSaveChanges}
-                                    />
-                                    <label className="whitespace-nowrap font-bold text-sm ml-1">
-                                      minutes
-                                    </label>
-                                  </div>
-                                )}
-                                <button
-                                  className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 hover:bg-gray`}
-                                  onClick={() =>
-                                    setChooseMeetingDatesPopUpVisible(
-                                      !isChooseMeetingDatesPopUpVisible
-                                    )
-                                  }
-                                >
-                                  Choose Meeting Dates
-                                </button>
-                              </div>
-                            )}
-                          </>
+                        {!locationChecker ? (
+                          <div className="flex flex-row p-5 m-auto mt-5 justify-center">
+                            <label className="font-bold text-xl">
+                              *Enter A Location And/Or Virtual Meeting Link To
+                              Create Times*
+                            </label>
+                          </div>
                         ) : (
-                          isCreateAvailabilityPopUpVisible && (
-                            <div className="fixed inset-0 z-10">
-                              <CreateAvailability
-                                id={selectedCourseId}
-                                program_id={selectedProgramData.id}
-                                program_name={selectedProgramData.type}
-                                duration={selectedProgramData.duration}
-                                physical_location={
-                                  selectedProgramData.physical_location
-                                }
-                                virtual_link={selectedProgramData.virtual_link}
-                                isDropins={selectedProgramData.isDropins}
-                                onClose={() =>
-                                  setCreateAvailabilityPopUpVisible(false)
-                                }
-                              />
-                            </div>
+                          !isRangedBasedLayout && (
+                            <button
+                              className="flex flex-row p-5 m-auto mt-5 justify-center font-bold border border-light-gray rounded-md shadow-md text-xl px-5 py-3 hover:bg-gray"
+                              onClick={() =>
+                                setCreateAvailabilityPopUpVisible(
+                                  !isCreateAvailabilityPopUpVisible
+                                )
+                              }
+                            >
+                              Create Appointment Block
+                            </button>
                           )
-                        ))}
+                        )}
+
+                        {locationChecker === true &&
+                          (isRangedBasedLayout ? (
+                            <>
+                              <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
+                                <WeeklyCalendar
+                                  functions={{
+                                    timesChangeFunction: handleTimesChange,
+                                    loadPageFunction: setLoadProgramTable,
+                                    setShowDuration: setShowDuration,
+                                    saveChangeFunction: handleSaveChanges,
+                                  }}
+                                  times={
+                                    allProgramTimesInCourse[selectedProgramId]
+                                  }
+                                  loadPage={loadProgramTable}
+                                  program_id={selectedProgramData.id}
+                                />
+                              </div>
+                              {showDuration && (
+                                <div className="flex flex-row items-center mt-4">
+                                  <label className="whitespace-nowrap font-bold text-2xl">
+                                    Define Appointment Duration?
+                                  </label>
+                                  <input
+                                    type="checkbox"
+                                    class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
+                                    checked={boxShown}
+                                    onChange={showBox}
+                                  ></input>
+
+                                  {boxShown && (
+                                    <div className="flex items-end">
+                                      <input
+                                        className="border border-light-gray ml-3 mt-1 w-20 hover:bg-gray"
+                                        name="duration"
+                                        value={selectedProgramData.duration}
+                                        onChange={(event) => {
+                                          const inputValue = event.target.value;
+                                          const numericValue =
+                                            inputValue.replace(
+                                              /[^0-9]/g, // Remove non-numeric characters
+                                              "a"
+                                            );
+                                          handleInputChange({
+                                            target: {
+                                              name: "duration",
+                                              value: numericValue,
+                                            },
+                                          });
+                                        }}
+                                        onBlur={handleSaveChanges}
+                                      />
+                                      <label className="whitespace-nowrap font-bold text-sm ml-1">
+                                        minutes
+                                      </label>
+                                    </div>
+                                  )}
+                                  <button
+                                    className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 hover:bg-gray`}
+                                    onClick={() =>
+                                      setChooseMeetingDatesPopUpVisible(
+                                        !isChooseMeetingDatesPopUpVisible
+                                      )
+                                    }
+                                  >
+                                    Choose Appointment Dates
+                                  </button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            isCreateAvailabilityPopUpVisible && (
+                              <div className="fixed inset-0 z-10">
+                                <CreateAvailability
+                                  id={selectedCourseId}
+                                  program_id={selectedProgramData.id}
+                                  program_name={selectedProgramData.type}
+                                  duration={selectedProgramData.duration}
+                                  physical_location={
+                                    selectedProgramData.physical_location
+                                  }
+                                  virtual_link={
+                                    selectedProgramData.virtual_link
+                                  }
+                                  isDropins={selectedProgramData.isDropins}
+                                  onClose={() =>
+                                    setCreateAvailabilityPopUpVisible(false)
+                                  }
+                                />
+                              </div>
+                            )
+                          ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </>
             ) : (
               <div className="m-auto mt-40 py-10 px-16 border border-light-gray rounded-3xl shadow-md">
                 <label className="font-bold text-3xl">

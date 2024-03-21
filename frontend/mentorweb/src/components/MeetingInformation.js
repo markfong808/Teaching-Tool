@@ -370,7 +370,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     // Reset form data to initial appointment data
     setFormData({
       notes: selectedAppointment.notes || "",
-      appointment_url: selectedAppointment.appointment_url || "",
+      appointment_url: selectedAppointment.meeting_url || "",
       status: selectedAppointment.status || "",
     });
     setChangesMade(false); // Reset changes made
@@ -392,7 +392,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         // sort based on appointment name
         case "Name":
           return a.type.localeCompare(b.type);
-        // sort based on class name
+        // sort based on course_name
         case "class_name":
           return a.class_name.localeCompare(b.class_name);
         // sort based on day
@@ -436,7 +436,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     if (selectedAppointment) {
       setFormData({
         notes: selectedAppointment.notes || "",
-        appointment_url: selectedAppointment.appointment_url || "",
+        appointment_url: selectedAppointment.meeting_url || "",
         status: selectedAppointment.status || "",
       });
       setChangesMade(false);
@@ -559,10 +559,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
 
     // HTML for webpage
     return (
-      <div
-        id="details-panel"
-        className="flex flex-col font-body border border-light-gray rounded-md shadow-md p-5"
-      >
+      <div className="fixed top-1/2 left-1/2 w-11/12 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-8 relative">
         <div className="flex flex-row ">
           <h2 className="m-auto text-2xl font-body font-bold">
             Appointment Details
@@ -660,49 +657,80 @@ export default function MeetingInformation({ courseId, reloadTable }) {
 
         {isProvidingFeedback && renderProvideFeedbackForm()}
         <br />
-        <div className="flex flex-col">
-          <div className="flex flex-row">
-            <label htmlFor="type" className="font-bold">
-              Program&nbsp;
+        <div className="grid grid-cols-2">
+          {/*Left Side */}
+          <div className="flex flex-col">
+            <div className="flex flex-row">
+              <label htmlFor="type" className="font-bold">
+                Program&nbsp;
+              </label>
+              <Tooltip
+                text={
+                  programDescriptions.find(
+                    (desc) => desc.id === Number(selectedAppointment.program_id)
+                  )?.description || "No description for this program :("
+                }
+              >
+                <span>ⓘ</span>
+              </Tooltip>
+            </div>
+
+            <label htmlFor="type">
+              {programDescriptions.find(
+                (desc) => desc.id === Number(selectedAppointment.program_id)
+              )?.type || "No name for this program"}
             </label>
-            <Tooltip
-              text={
-                programDescriptions.find(
-                  (desc) => desc.id === Number(selectedAppointment.program_id)
-                )?.description || "No description for this program :("
-              }
-            >
-              <span>ⓘ</span>
-            </Tooltip>
+
+            <label htmlFor="date" className="font-bold pt-2">
+              Date
+            </label>
+            {getDayFromDate(selectedAppointment.date) +
+              ", " +
+              formatDate(selectedAppointment.date)}
+
+            <label htmlFor="time" className="font-bold pt-2">
+              Time
+            </label>
+            {`${formatTime(selectedAppointment.start_time)} - ${formatTime(
+              selectedAppointment.end_time
+            )} (PST)`}
           </div>
-          <label htmlFor="type">
-            {programDescriptions.find(
-              (desc) => desc.id === Number(selectedAppointment.program_id)
-            )?.type || "No name for this program"}
-          </label>
 
-          <label className="font-bold pt-2">Class</label>
-          {selectedAppointment.class_name}
+          {/*Right Side */}
+          <div className="flex flex-col justify-self-end">
+            <label className="font-bold pt-2">Course</label>
+            {selectedAppointment.class_name}
 
-          <label htmlFor="date" className="font-bold pt-2">
-            Date
-          </label>
-          {getDayFromDate(selectedAppointment.date) +
-            ", " +
-            formatDate(selectedAppointment.date)}
+            {selectedAppointment.physical_location ? (
+              <>
+                <label className="font-bold pt-2">Physical Location</label>
+                {selectedAppointment.physical_location}
+              </>
+            ) : null}
 
-          <label htmlFor="time" className="font-bold pt-2">
-            Time
-          </label>
-          {`${formatTime(selectedAppointment.start_time)} - ${formatTime(
-            selectedAppointment.end_time
-          )} (PST)`}
+            {selectedAppointment.meeting_url ? (
+              <>
+                <label className="font-bold pt-2">Your Appointment URL</label>
+                <input
+                  className="w-full border border-light-gray bg-gray"
+                  type="text"
+                  name="appointment_url"
+                  value={formData.appointment_url}
+                  onChange={handleInputChange}
+                  disabled={
+                    activeTab === "past" || user.account_type === "student"
+                  }
+                />
+              </>
+            ) : null}
 
-          <label htmlFor="status" className="font-bold pt-2">
-            Current Status
-          </label>
-          {capitalizeFirstLetter(selectedAppointment.status)}
-
+            <label htmlFor="status" className="font-bold pt-2">
+              Current Status
+            </label>
+            {capitalizeFirstLetter(selectedAppointment.status)}
+          </div>
+        </div>
+        <div className="flex flex-col">
           <label htmlFor="notes" className="font-bold pt-2">
             Appointment Notes
           </label>
@@ -712,52 +740,36 @@ export default function MeetingInformation({ courseId, reloadTable }) {
             value={formData.notes}
             onChange={handleInputChange}
           />
-
-          {selectedAppointment.physical_location ? (
-            <>
-              <label className="font-bold pt-2">Physical Location</label>
-              {selectedAppointment.physical_location}
-            </>
-          ) : null}
-
-          <label className="font-bold pt-2">Your Appointment URL</label>
-          <input
-            className="w-full border border-light-gray bg-gray"
-            type="text"
-            name="appointment_url"
-            value={formData.appointment_url}
-            onChange={handleInputChange}
-            disabled={activeTab === "past"}
-          />
           {/* display student details if mentor view */}
           {user.account_type === "mentor" && selectedAppointment.student && (
             <div className="flex flex-col pt-5">
               <h2 className="text-2xl font-bold">Student Info</h2>
-              <label htmlFor="name" className="font-bold pt-2">
-                Name
-              </label>
+              <label className="font-bold pt-2">Name</label>
               {selectedAppointment.student.first_name}
 
-              <label htmlFor="email" className="font-bold pt-2">
-                Email
-              </label>
+              <label className="font-bold pt-2">Pronouns</label>
+              {selectedAppointment.student.pronouns}
+
+              <label className="font-bold pt-2">Email</label>
               {selectedAppointment.student.email}
             </div>
           )}
+
           {/* display mentor details if student view */}
           {user.account_type === "student" &&
             selectedAppointment.mentor &&
             activeTab !== "pending" && (
               <div className="flex flex-col pt-5">
-                <h2 className="text-2xl font-bold">Mentor Info</h2>
-                <label htmlFor="name" className="font-bold pt-2">
-                  Name
-                </label>
-                {selectedAppointment.mentor.first_name}
+                <h2 className="text-2xl font-bold">Instructor Info</h2>
+                <label className="font-bold pt-2">Name</label>
+                {selectedAppointment.mentor.title +
+                  " " +
+                  selectedAppointment.mentor.first_name}
 
-                <label htmlFor="email" className="font-bold pt-2">
-                  Email
-                </label>
+                <label className="font-bold pt-2">Pronouns</label>
+                {selectedAppointment.mentor.pronouns}
+
+                <label className="font-bold pt-2">Email</label>
                 {selectedAppointment.mentor.email}
               </div>
             )}
@@ -840,7 +852,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                       className="border-r w-14% cursor-pointer hover:bg-gold"
                       onClick={() => sortBy("class_name")}
                     >
-                      Class Name
+                      Course Name
                     </th>
                     <th
                       className="border-r w-8% hover:bg-gold"
