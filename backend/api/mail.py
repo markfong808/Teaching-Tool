@@ -1,3 +1,14 @@
+""" 
+ * mail.py
+ * Last Edited: 3/24/24
+ *
+ * Contains functions used to send emails when appointments are booked
+ *
+ * Known Bugs:
+ * - not sure if this system works
+ *
+"""
+
 # using SendGrid's Python Library
 # https://github.com/sendgrid/sendgrid-python
 import os
@@ -5,8 +16,14 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
 from dotenv import load_dotenv
 import base64
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+""             Backend Only Functions              ""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 load_dotenv()
         
+# push email object to SendGrid API
 def send_email(to_email, subject, html_content, ics_data):
     # Create an email message
     message = Mail(
@@ -30,4 +47,4 @@ def send_email(to_email, subject, html_content, ics_data):
         sendgrid_client = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         sendgrid_client.send(message)
     except Exception as e:
-        print(str(e))
+        print(f"fwafaw: {str(e)}")

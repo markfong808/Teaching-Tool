@@ -1,5 +1,5 @@
 /* Courses.js
- * Last Edited: 3/11/24
+ * Last Edited: 3/24/24
  *
  * Courses Tab for students's view of courses they're registered in,
  * details of each course, drop in times for all and specific courses,
@@ -13,8 +13,8 @@
 
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext.js";
-import ScheduleMeetingPopup from "../components/ScheduleMeetingPopup.js";
-import MeetingInformation from "../components/MeetingInformation.js";
+import ScheduleAppointmentPopup from "../components/ScheduleAppointmentPopup.js";
+import AppointmentsTable from "../components/AppointmentsTable.js";
 import CourseInformationPopup from "../components/CourseInformationPopup.js";
 import DropinsTable from "../components/DropinsTable.js";
 
@@ -24,6 +24,7 @@ export default function Courses() {
 
   // Load Variables
   const [initialLoad, setInitialLoad] = useState(true);
+  const [coursesFound, setCoursesFound] = useState(true);
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
   const [isScheduleMeetingPopUpVisible, setScheduleMeetingPopUpVisible] =
     useState(false);
@@ -39,7 +40,7 @@ export default function Courses() {
     id: "",
     email: "",
     title: "",
-    last_name: "",
+    name: "",
     pronouns: "",
   });
 
@@ -52,14 +53,19 @@ export default function Courses() {
     if (user.account_type !== "student") return;
 
     try {
-      const response = await fetch(`/student/courses`, {
+      const response = await fetch(`/user/courses`, {
         credentials: "include",
       });
 
       const allCourses = await response.json();
 
       // set courses a student is enrolled in with fetched data
-      setAllCourseData(allCourses);
+      if (allCourses.length > 0) {
+        setAllCourseData(allCourses);
+      } else {
+        setCoursesFound(false);
+        alert("No courses found.");
+      }
     } catch (error) {
       console.error("Error fetching all student courses:", error);
     }
@@ -69,7 +75,7 @@ export default function Courses() {
   const fetchInstructorInformation = async (teacherId) => {
     try {
       const response = await fetch(
-        `/profile/instructor/${encodeURIComponent(teacherId)}`,
+        `/user/profile/${encodeURIComponent(teacherId)}`,
         {
           credentials: "include",
         }
@@ -112,7 +118,7 @@ export default function Courses() {
     );
 
     if (course) {
-      setSelectedCourseName(course.class_name);
+      setSelectedCourseName(course.course_name);
     } else {
       setSelectedCourseName();
     }
@@ -138,7 +144,7 @@ export default function Courses() {
       setCourseData(selectedCourse);
 
       // fetch instructor information from selected course
-      fetchInstructorInformation(selectedCourse.teacher_id);
+      fetchInstructorInformation(selectedCourse.instructor_id);
     }
   };
 
@@ -170,7 +176,7 @@ export default function Courses() {
               className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
               onClick={() => handleButtonClick(course)}
             >
-              {course.class_name}: Course Details
+              {course.course_name}: Course Details
             </button>
           ))}
         </div>
@@ -180,7 +186,7 @@ export default function Courses() {
             <strong>Course:</strong>
           </h1>
           <select
-            className="border border-light-gray rounded ml-2"
+            className="border border-light-gray rounded ml-2 hover:cursor-pointer"
             value={selectedCourseId}
             onChange={(e) => handleCourseChange(e)}
           >
@@ -189,7 +195,7 @@ export default function Courses() {
             </option>
             {allCourseData.map((course) => (
               <option key={course.id} value={course.id}>
-                {course.class_name}
+                {course.course_name}
               </option>
             ))}
           </select>
@@ -203,7 +209,7 @@ export default function Courses() {
         </div>
 
         <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-          <MeetingInformation
+          <AppointmentsTable
             courseId={selectedCourseId}
             reloadTable={reloadAppointmentsTable}
           />
@@ -211,12 +217,15 @@ export default function Courses() {
 
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <button
-            className="bg-purple p-2 rounded-md text-white hover:text-gold"
+            className={`bg-purple p-2 rounded-md text-white ${
+              coursesFound ? "hover:text-gold" : "opacity-50"
+            }`}
             onClick={() =>
               setScheduleMeetingPopUpVisible(!isScheduleMeetingPopUpVisible)
             }
+            disabled={!coursesFound}
           >
-            Schedule New Meeting
+            Schedule New Appointment
           </button>
         </div>
       </div>
@@ -233,7 +242,7 @@ export default function Courses() {
 
       {isScheduleMeetingPopUpVisible && (
         <div className="fixed inset-0">
-          <ScheduleMeetingPopup
+          <ScheduleAppointmentPopup
             onClose={() => setScheduleMeetingPopUpVisible(false)}
             functions={{ reloadAppointments: reloadAppointments }}
           />

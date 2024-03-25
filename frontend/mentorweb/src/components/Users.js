@@ -194,7 +194,7 @@ export default function Users() {
                                 {capitalizeFirstLetter(user.account_type)}
                               </option>
                               <option value="admin">Admin</option>
-                              <option value="mentor">Mentor</option>
+                              <option value="instructor">Instructor</option>
                               <option value="student">Student</option>
                             </select>
                           </div>

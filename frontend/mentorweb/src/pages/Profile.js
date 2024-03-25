@@ -1,12 +1,11 @@
 /* ProfileSettings.js
- * Last Edited: 3/18/24
+ * Last Edited: 3/24/24
  *
- * Profile Tab for Student and Instructor Roles.
- * The Profile tab has role-based layouts for the
+ * Profile Tab for Student and Instructor account_types.
+ * The Profile tab has account_type-based layouts for the
  * information for the user
  *
  * Known bugs:
- * - Changes made checker in handleInputChange does not work correctly
  * -
  *
  */
@@ -23,17 +22,7 @@ export default function ProfileSettings() {
   const { user } = useContext(UserContext);
 
   // Load Variables
-  const [changesMade, setChangesMade] = useState(false);
   const [textBoxShown, setTextBoxShown] = useState(false);
-  const [showSaveCancelButtons, setShowSaveCancelButtons] = useState({
-    account_type: true,
-    discord_id: true,
-    email: true,
-    first_name: true,
-    meeting_url: true,
-    pronouns: true,
-    title: true,
-  });
 
   // Profile Data Variables
   const [profileData, setProfileData] = useState({}); // backup data/database-specific data
@@ -49,7 +38,7 @@ export default function ProfileSettings() {
   const fetchProfileData = async () => {
     try {
       const response = await fetch(
-        `/profile/instructor/${encodeURIComponent(user.id)}`,
+        `/user/profile/${encodeURIComponent(user.id)}`,
         {
           credentials: "include",
         }
@@ -74,7 +63,7 @@ export default function ProfileSettings() {
   // posts the profile data to the User Table
   const handleSaveChanges = async () => {
     try {
-      const response = await fetch("/profile/update", {
+      const response = await fetch("/user/profile", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -85,9 +74,6 @@ export default function ProfileSettings() {
       });
 
       const updatedUser = await response.json();
-
-      // Reset changes made
-      setChangesMade(false);
 
       // Update the user context with the new data
       setProfileData(updatedUser);
@@ -124,18 +110,6 @@ export default function ProfileSettings() {
 
     // set formData index(name) to value
     setFormData({ ...formData, [name]: value });
-
-    // Update showButtons state
-    setShowSaveCancelButtons((prevButtons) => ({
-      ...prevButtons,
-      [e.target.name]: e.target.value === profileData[e.target.name],
-    }));
-  };
-
-  const handleCancelChanges = () => {
-    // Reset form data to initial user data
-    setFormData(profileData);
-    setChangesMade(false); // Reset changes made
   };
 
   ////////////////////////////////////////////////////////
@@ -175,13 +149,6 @@ export default function ProfileSettings() {
     }
   }, [formData.pronouns]);
 
-  // check if all values are same as original
-  useEffect(() => {
-    setChangesMade(
-      !Object.values(showSaveCancelButtons).every((value) => value === true)
-    );
-  }, [showSaveCancelButtons]);
-
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
@@ -207,18 +174,20 @@ export default function ProfileSettings() {
 
           <input
             className="border border-light-gray mb-3"
-            name="first_name"
-            value={formData.first_name}
+            name="name"
+            value={formData.name}
             onChange={handleInputChange}
+            onBlur={handleSaveChanges}
           />
 
           <div>
             <label className="font-bold inline-block">Pronouns</label>
             <select
-              className="border border-light-gray rounded ml-2"
+              className="border border-light-gray rounded ml-2 hover:cursor-pointer"
               name="pronouns"
               value={pronounsType}
               onChange={handleInputChange}
+              onBlur={handleSaveChanges}
             >
               <option key="Undefined" value="Undefined">
                 Select...
@@ -242,28 +211,17 @@ export default function ProfileSettings() {
                 className="border border-light-gray ml-2 mt-1"
                 name="pronouns"
                 value={pronounsUserInput}
-                onChange={(e) => setPronounsUserInput(e.target.value)}
-                onBlur={() =>
+                onChange={(e) =>
                   handleInputChange({
-                    target: { name: "pronouns", value: pronounsUserInput },
+                    target: { name: "pronouns", value: e.target.value },
                   })
                 }
+                onBlur={handleSaveChanges}
               />
             )}
           </div>
 
-          {profileData.account_type === "student" && (
-            <div className="flex flex-col mt-3">
-              <label className="font-bold">Student ID</label>
-              <label>
-                {profileData.student_id
-                  ? profileData.student_id
-                  : "No known Student ID"}
-              </label>
-            </div>
-          )}
-
-          {profileData.account_type === "mentor" && (
+          {profileData.account_type === "instructor" && (
             <div className="mt-3 mb-3">
               <label className="font-bold inline-block">Title</label>
               <select
@@ -271,6 +229,7 @@ export default function ProfileSettings() {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
+                onBlur={handleSaveChanges}
               >
                 <option key={-1} value="">
                   No Title...
@@ -308,6 +267,7 @@ export default function ProfileSettings() {
             name="discord_id"
             value={formData.discord_id}
             onChange={handleInputChange}
+            onBlur={handleSaveChanges}
           />
 
           <label className="font-bold">Account Type</label>
@@ -318,7 +278,7 @@ export default function ProfileSettings() {
             disabled
           />
 
-          {profileData.account_type === "mentor" && (
+          {profileData.account_type === "instructor" && (
             <div className="flex flex-col">
               <div>
                 <label className="font-bold">
@@ -335,24 +295,8 @@ export default function ProfileSettings() {
                 name="meeting_url"
                 value={formData.meeting_url}
                 onChange={handleInputChange}
+                onBlur={handleSaveChanges}
               />
-            </div>
-          )}
-
-          {changesMade && (
-            <div className="flex flex-row justify-end my-5">
-              <button
-                className="bg-purple text-white rounded-md p-2 mr-2 hover:text-gold"
-                onClick={handleSaveChanges}
-              >
-                Save Account Changes
-              </button>
-              <button
-                className="bg-purple text-white rounded-md p-2 hover:text-gold"
-                onClick={handleCancelChanges}
-              >
-                Discard Account Changes
-              </button>
             </div>
           )}
         </div>

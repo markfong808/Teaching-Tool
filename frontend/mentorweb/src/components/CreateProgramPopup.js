@@ -1,8 +1,8 @@
-/* CreateProgramTypePopup.js
- * Last Edited: 3/3/24
+/* CreateProgramPopup.js
+ * Last Edited: 3/24/24
  *
- * UI popup shown when instructor clicks on the create program type button
- * in the "Class Availability" tab. Allows teacher to enter name of program,
+ * UI popup shown when instructor clicks on the create program button
+ * in the "Programs" tab. Allows teacher to enter name of program,
  * and whether it's drop-in or appointment based
  *
  * Known Bugs:
@@ -13,14 +13,14 @@
 import React, { useState, useEffect } from "react";
 import { getCookie } from "../utils/GetCookie.js";
 
-const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
+const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
 
   // Load Variables
   const [readyToCreate, setReadyToCreate] = useState(false);
 
-  // Program Type Data Variables
+  // Program Data Variables
   const [isDropIns, setIsDropIns] = useState(false);
   const [isAppointments, setIsAppointments] = useState(false);
   const [isRangeBased, setIsRangeBased] = useState(false);
@@ -31,8 +31,8 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  // posts the programtype to the ProgramType table
-  const createProgramType = async () => {
+  // posts the program to the Program table
+  const createProgram = async () => {
     if (programTitle === "Course Times" && courseId === -2) {
       alert(
         'Program Name: "Course Name" is not allowed for All Course Programs. For Course Times use Single Course Programs.'
@@ -48,7 +48,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         isRangeBased: isRangeBased,
       };
 
-      const response = await fetch(`/course/add-program`, {
+      const response = await fetch(`/program/create`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -65,7 +65,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         loadFunction(responseData.program_id); // Pass the new program ID to the loadFunction
         onClose();
       } else if (response.status === 400) {
-        window.alert("Program Type already exists.");
+        window.alert("Program already exists.");
       } else {
         console.error("Failed to add program:", responseData.error);
       }
@@ -78,7 +78,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  // set program type meeting option to drop-in
+  // set program meeting option to drop-in
   const handleDropInChange = () => {
     if (isAppointments) {
       setIsAppointments(false);
@@ -86,7 +86,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
     setIsDropIns(!isDropIns);
   };
 
-  // set program type meeting option to appointment
+  // set program meeting option to appointment
   const handleAppointmentChange = () => {
     if (isDropIns) {
       setIsDropIns(false);
@@ -94,7 +94,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
     setIsAppointments(!isAppointments);
   };
 
-  // set program type meeting option to drop-in
+  // set program meeting option to drop-in
   const handleRangeBasedChange = () => {
     if (isSpecificDates) {
       setIsSpecificDates(false);
@@ -102,7 +102,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
     setIsRangeBased(!isRangeBased);
   };
 
-  // set program type meeting option to appointment
+  // set program meeting option to appointment
   const handleSpecificDatesChange = () => {
     if (isRangeBased) {
       setIsRangeBased(false);
@@ -194,7 +194,7 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
         <div className="flex justify-center mt-4">
           <button
             className="bg-purple font-bold text-white rounded-md text-2xl px-5 py-1 hover:text-gold"
-            onClick={createProgramType}
+            onClick={createProgram}
           >
             Create
           </button>
@@ -204,4 +204,4 @@ const CreateProgramTypePopup = ({ onClose, courseId, loadFunction }) => {
   );
 };
 
-export default CreateProgramTypePopup;
+export default CreateProgramPopup;

@@ -1,15 +1,14 @@
-/* Program.js
- * Last Edited: 3/9/24
+/* ProgramDetails.js
+ * Last Edited: 3/24/24
  *
- * Class Availability tab for Instructor Role.
+ * Programs tab for Instructor account_type.
  * Instructor can choose if they're creating, updating, or deleting
- * program types, availability, description,
+ * programs, availability, description,
  * meeting duration, location, and virtual meeting links
  * for a course or globally that applies to all courses.
  *
  * Known Bugs:
- * - ToolTip UI Box next to Create Program Type button needs adjusting
- * - Dont let Course Times be used as a name. dont let repeat names be true
+ * -
  *
  */
 
@@ -18,19 +17,20 @@ import { UserContext } from "../context/UserContext.js";
 import { getCookie } from "../utils/GetCookie.js";
 import { Tooltip } from "../components/Tooltip.js";
 import WeeklyCalendar from "../components/WeeklyCalendar.js";
-import ChooseMeetingDatesPopup from "../components/ChooseMeetingDatesPopup.js";
-import MeetingLocation from "../components/MeetingLocation.js";
-import CreateProgramTypePopup from "../components/CreateProgramTypePopup.js";
-import CreateAvailability from "../components/CreateAvailability.js";
-import AutoAcceptMeetings from "../components/AutoAcceptMeetings.js";
+import ChooseAppointmentDatesPopup from "../components/ChooseAppointmentDatesPopup.js";
+import ProgramLocation from "../components/ProgramLocation.js";
+import CreateProgramPopup from "../components/CreateProgramPopup.js";
+import CreateAppointmentBlock from "../components/CreateAppointmentBlock.js";
+import AutoAcceptAppointments from "../components/AutoAcceptAppointments.js";
 
-export default function Program() {
+export default function ProgramDetails() {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
   const { user } = useContext(UserContext);
 
   // Load Variables
   const [initialLoad, setInitialLoad] = useState(true);
+  const [coursesFound, setCoursesFound] = useState(true);
   const [loadProgramTable, setLoadProgramTable] = useState(true);
   const [postTimes, setPostTimes] = useState(false);
   const [isCourseSelected, setIsCourseSelected] = useState(true);
@@ -43,36 +43,25 @@ export default function Program() {
 
   // Popup Load Variables
   const [boxShown, setBoxShown] = useState(false);
-  const [isChooseMeetingDatesPopUpVisible, setChooseMeetingDatesPopUpVisible] =
-    useState(false);
+  const [
+    isChooseAppointmentDatesPopUpVisible,
+    setChooseAppointmentDatesPopUpVisible,
+  ] = useState(false);
   const [isCreateAvailabilityPopUpVisible, setCreateAvailabilityPopUpVisible] =
     useState(false);
-  const [isCreateProgramTypePopup, setCreateProgramTypePopup] = useState(false);
+  const [isCreateProgramPopup, setCreateProgramPopup] = useState(false);
   const [showDuration, setShowDuration] = useState(false);
 
   // Course Data Variables
-  const [selectedCourseId, setSelectedCourseId] = useState();
-  const [selectedProgramId, setSelectedProgramId] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [selectedProgramId, setSelectedProgramId] = useState(null);
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedCourseData, setSelectedCourseData] = useState({
     id: "",
     course_name: "",
     programs: [],
   });
-  const [selectedProgramData, setSelectedProgramData] = useState({
-    id: "",
-    type: "",
-    description: "",
-    duration: "",
-    physical_location: "",
-    virtual_link: "",
-    auto_approve_appointments: true,
-    max_daily_meetings: "",
-    max_weekly_meetings: "",
-    max_monthly_meetings: "",
-    isDropins: "",
-    isRangeBased: "",
-  });
+  const [selectedProgramData, setSelectedProgramData] = useState({});
 
   // Times Data Variables
   const [allProgramTimesInCourse, setAllProgramTimesInCourse] = useState({});
@@ -83,15 +72,26 @@ export default function Program() {
 
   // fetch all courses the instructor is associated with
   const fetchAllInstructorCourses = async () => {
-    if (user.account_type !== "mentor") return;
+    if (user.account_type !== "instructor") return;
 
     try {
-      const response = await fetch(`/mentor/courses`, {
+      const response = await fetch(`/instructor/programs`, {
         credentials: "include",
       });
 
-      const fetchedCourses = await response.json();
-      setAllCourseData(fetchedCourses);
+      // no courses found
+      if (response.status === 204) {
+        setCoursesFound(false);
+        setTimeout(() => {
+          alert("No courses found.");
+        }, [10]);
+      }
+      // courses found
+      else {
+        const fetchedCourses = await response.json();
+
+        setAllCourseData(fetchedCourses);
+      }
     } catch (error) {
       console.error("Error fetching all instructor courses:", error);
     }
@@ -99,13 +99,13 @@ export default function Program() {
 
   // fetch all times the courseId is associated with
   const fetchTimesData = async (courseId) => {
-    if (!courseId) {
+    if (courseId === -1) {
       return;
     }
 
     try {
       const response = await fetch(
-        `/course/times/${encodeURIComponent(courseId)}`,
+        `/course/programs/times/${encodeURIComponent(courseId)}`,
         {
           credentials: "include",
         }
@@ -116,7 +116,7 @@ export default function Program() {
       if (fetchedCourseTimes !== null) {
         // create a tempData object and loop through fetchedCourseTimes
         const tempData = fetchedCourseTimes
-          .filter((item) => item.type !== "Course Times") // filter out fetchedCoursesTimes by "course times" type
+          .filter((item) => item.name !== "Course Times") // filter out fetchedCoursesTimes by "course times" name
           .reduce((acc, item) => {
             const programId = item.program_id;
 
@@ -149,7 +149,7 @@ export default function Program() {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  // posts updated program data for a course to the ProgramType table
+  // posts updated program data for a course to the ProgramDetails table
   const postProgramToDatabase = async () => {
     try {
       // Set default values for max_daily_meetings, max_weekly_meetings, and max_monthly_meetings if they are empty or null
@@ -174,7 +174,7 @@ export default function Program() {
         selectedProgramData.max_monthly_meetings = 999;
       }
 
-      await fetch(`/program/setDetails`, {
+      await fetch(`/program/details`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -189,16 +189,16 @@ export default function Program() {
 
       fetchAllInstructorCourses();
     } catch (error) {
-      console.error("Error saving program type details:", error);
+      console.error("Error saving program details:", error);
     }
   };
 
-  // handleSaveChanges helper: update ClassTimes table in database for attached course
+  // handleSaveChanges helper: update ProgramTimes table in database for attached course
   // called in a UseEffect below
   const postProgramTimes = async () => {
     try {
       await fetch(
-        `/course/setTime/${encodeURIComponent(selectedCourseData.id)}`,
+        `/course/programs/times/${encodeURIComponent(selectedProgramData.id)}`,
         {
           method: "POST",
           credentials: "include",
@@ -214,9 +214,9 @@ export default function Program() {
     }
   };
 
-  // posts deletion of program to the ProgramType table
-  const handleDeleteProgramType = async () => {
-    if (window.confirm("Are your sure you want to delete this program type?")) {
+  // posts deletion of program to the ProgramDetails table
+  const handleDeleteProgram = async () => {
+    if (window.confirm("Are your sure you want to delete this program?")) {
       try {
         const response = await fetch(`/program/delete/${selectedProgramId}`, {
           method: "DELETE",
@@ -228,15 +228,15 @@ export default function Program() {
 
         if (response.ok) {
           // If the cancellation was successful, update the state to reflect that
-          alert("Program Type deleted successfully!");
+          alert("Program deleted successfully!");
           // reload webpage details (like program switch)
           await fetchAllInstructorCourses();
           handleProgramChange({ target: { value: -1 } });
         } else {
-          throw new Error("Failed to delete program type");
+          throw new Error("Failed to delete program");
         }
       } catch (error) {
-        console.error("Error deleting program type:", error);
+        console.error("Error deleting program:", error);
       }
     }
   };
@@ -250,12 +250,12 @@ export default function Program() {
     if (!e) {
       return;
     }
-    const newValue = e.target.value;
+
+    const selectedCourse =
+      e.target.value === null ? null : parseInt(e.target.value);
 
     // reload courseIds with all courses
     await fetchAllInstructorCourses();
-
-    const selectedCourse = parseInt(newValue);
 
     // change selectedCourseId
     setSelectedCourseId(selectedCourse);
@@ -277,11 +277,8 @@ export default function Program() {
       return;
     }
 
-    let selectedProgram = parseInt(e.target.value);
-
-    if (!selectedProgram) {
-      selectedProgram = -1;
-    }
+    const selectedProgram =
+      e.target.value === null ? null : parseInt(e.target.value);
 
     // change selectedProgramid to selectedProgram
     setSelectedProgramId(selectedProgram);
@@ -295,8 +292,12 @@ export default function Program() {
 
   // update the selectedCourseData based on a courseId
   const updateCourseInfo = async (courseId) => {
-    if (!courseId) {
-      setSelectedCourseData({});
+    if (courseId === -1) {
+      setSelectedCourseData({
+        id: "",
+        course_name: "",
+        programs: [],
+      });
       return;
     }
 
@@ -307,32 +308,13 @@ export default function Program() {
     if (selectedCourse) {
       // Update selectedCourseData with selectedCourse.id
       setSelectedCourseData(selectedCourse);
-    } else {
-      setSelectedCourseData({
-        id: "",
-        course_name: "",
-        programs: [],
-      });
     }
   };
 
   // update the selectedProgramData based on a programId
   const updateProgramInfo = (programId) => {
     if (!programId || programId === -1) {
-      setSelectedProgramData({
-        id: "",
-        type: "",
-        description: "",
-        duration: "",
-        physical_location: "",
-        virtual_link: "",
-        auto_approve_appointments: true,
-        max_daily_meetings: "",
-        max_weekly_meetings: "",
-        max_monthly_meetings: "",
-        isDropins: "",
-        isRangeBased: "",
-      });
+      setSelectedProgramData({});
 
       setBoxShown(false);
       return;
@@ -368,7 +350,7 @@ export default function Program() {
     // if name is duration check the duration provided by instructor
     if (e.target.name === "duration") {
       if (Number(e.target.value) > 0) {
-        let maxRecommendedTimeSplit = 1440;
+        let maxRecommendedDuration = 1440;
 
         // iterate through allProgramTimesInCourse[selectedProgramId]
         for (const data of Object.entries(
@@ -382,13 +364,13 @@ export default function Program() {
           const minutes = Math.floor(timeDifference / (1000 * 60));
 
           // if maxsplit larger than minutes, set maxsplit to minutes
-          if (minutes < maxRecommendedTimeSplit) {
-            maxRecommendedTimeSplit = minutes;
+          if (minutes < maxRecommendedDuration) {
+            maxRecommendedDuration = minutes;
           }
         }
 
-        // inform instructor that timesplit is too long
-        if (e.target.value > maxRecommendedTimeSplit) {
+        // inform instructor that Duration is too long
+        if (e.target.value > maxRecommendedDuration) {
           setTimeout(() => {
             window.alert("Duration value is too large. Lower your duration");
           }, 10);
@@ -448,12 +430,12 @@ export default function Program() {
 
   // saves all course details to database
   const handleSaveChanges = async () => {
-    if (selectedProgramData.type === "" || !selectedProgramData.type) {
-      alert("Program Name cannot be empty.");
-      return;
-    }
+    if (Object.entries(selectedProgramData).length > 0) {
+      if (selectedProgramData.name === "" || !selectedProgramData.name) {
+        alert("Program Name cannot be empty.");
+        return;
+      }
 
-    if (selectedProgramData) {
       postProgramToDatabase();
     }
   };
@@ -478,7 +460,7 @@ export default function Program() {
   const tabSelect = (boolean) => {
     setIsAllCoursesSelected(boolean);
     if (boolean) {
-      handleCourseChange({ target: { value: -2 } }); // -2 associated with all course programs having global type
+      handleCourseChange({ target: { value: null } }); // -1 associated with all course programs having global type
     } else {
       handleCourseChange({ target: { value: -1 } }); // no global type with single course
     }
@@ -517,7 +499,7 @@ export default function Program() {
   // update courseInfo when selectedCourseId is updated
   useEffect(() => {
     const fetchDataAndUpdate = async () => {
-      if (selectedCourseId && selectedCourseId !== -1) {
+      if (selectedCourseId !== -1) {
         await updateCourseInfo(selectedCourseId);
 
         if (newProgramId) {
@@ -539,7 +521,7 @@ export default function Program() {
 
   // update isProgramSelected when selectedProgramId is updated
   useEffect(() => {
-    if (selectedProgramId !== "" && selectedProgramId !== -1) {
+    if (selectedProgramId && selectedProgramId !== -1) {
       setIsProgramSelected(true); // if, programid valid set to true
     } else {
       setIsProgramSelected(false);
@@ -565,28 +547,44 @@ export default function Program() {
       !selectedProgramData.isRangeBased;
     setIsRangedBasedLayout(!isRangedBasedLayoutValid);
 
-    // check if physical_location or virtual_link is valid and set locationChecker
+    // check if physical_location or meeting_url is valid and set locationChecker
     const isLocationValid =
       (selectedProgramData.physical_location &&
         selectedProgramData.physical_location !== "") ||
-      (selectedProgramData.virtual_link &&
-        selectedProgramData.virtual_link !== "");
+      (selectedProgramData.meeting_url &&
+        selectedProgramData.meeting_url !== "");
     setLocationChecker(isLocationValid);
   }, [
     selectedProgramData.duration,
     selectedProgramData.isDropins,
     selectedProgramData.isRangeBased,
     selectedProgramData.physical_location,
-    selectedProgramData.virtual_link,
+    selectedProgramData.meeting_url,
   ]);
 
   // post a null duration to database when duration box is unchecked
   useEffect(() => {
-    if (!boxShown && selectedProgramId && selectedProgramId !== -1) {
+    if (!boxShown && selectedProgramId) {
       handleSaveChanges();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boxShown]);
+
+  useEffect(() => {
+    //console.log("course", selectedCourseId);
+  }, [selectedCourseId]);
+
+  useEffect(() => {
+    //console.log("program", selectedProgramId);
+  }, [selectedProgramId]);
+
+  useEffect(() => {
+    //console.log("times", allProgramTimesInCourse);
+  }, [allProgramTimesInCourse]);
+
+  useEffect(() => {
+    console.log("data", allCourseData);
+  }, [allCourseData]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -616,13 +614,15 @@ export default function Program() {
             All Course Programs
           </div>
           <div
-            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
-              isAllCoursesSelected
-                ? "bg-metallic-gold border-metallic-gold"
-                : "bg-gold border-gold"
+            className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 ${
+              coursesFound
+                ? isAllCoursesSelected
+                  ? "bg-metallic-gold border-metallic-gold hover:border-green"
+                  : "bg-gold border-gold hover:border-green"
+                : "bg-light-gray border-light-gray cursor-default"
             }`}
             onClick={() => {
-              if (isAllCoursesSelected) {
+              if (isAllCoursesSelected && coursesFound) {
                 tabSelect(false);
               }
             }}
@@ -646,17 +646,17 @@ export default function Program() {
                     <strong>Course:</strong>
                   </h1>
                   <select
-                    className="border border-light-gray rounded ml-2 hover:bg-gray"
+                    className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
                     id="course-dropdown"
                     value={selectedCourseId}
                     onChange={(e) => handleCourseChange(e)}
                   >
-                    <option className="bg-white" key={-1} value="-1">
+                    <option className="bg-white" key={-1} value={-1}>
                       Select...
                     </option>
                     {allCourseData.map(
                       (course) =>
-                        course.id !== -2 && (
+                        course.id && (
                           <option
                             className="bg-white"
                             key={course.id}
@@ -682,13 +682,13 @@ export default function Program() {
                 <strong>Program:</strong>
               </h1>
               <select
-                className="border border-light-gray rounded ml-2 hover:bg-gray"
+                className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
                 id="course-dropdown"
                 value={selectedProgramId}
                 onChange={(e) => handleProgramChange(e)}
                 disabled={!isCourseSelected}
               >
-                <option className="bg-white" key={-1} value="">
+                <option className="bg-white" key="" value="">
                   Select...
                 </option>
                 {selectedCourseData.programs.map((program) => (
@@ -697,7 +697,7 @@ export default function Program() {
                     key={program.id}
                     value={program.id}
                   >
-                    {program.type}
+                    {program.name}
                   </option>
                 ))}
               </select>
@@ -705,9 +705,7 @@ export default function Program() {
                 className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 hover:bg-gray ${
                   !isCourseSelected ? "opacity-50" : ""
                 }`}
-                onClick={() =>
-                  setCreateProgramTypePopup(!isCreateProgramTypePopup)
-                }
+                onClick={() => setCreateProgramPopup(!isCreateProgramPopup)}
                 disabled={!isCourseSelected}
               >
                 Create Program
@@ -751,7 +749,7 @@ export default function Program() {
                       </button>
                       <button
                         className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray z-10`}
-                        onClick={handleDeleteProgramType}
+                        onClick={handleDeleteProgram}
                       >
                         Delete Program
                       </button>
@@ -761,10 +759,14 @@ export default function Program() {
                       <input
                         className="text-center font-bold text-2xl px-2"
                         style={{
-                          width: `${selectedProgramData.type.length * 16}px`,
+                          width: `${
+                            selectedProgramData.name
+                              ? selectedProgramData.name.length * 16
+                              : ""
+                          }px`,
                         }}
-                        name="type"
-                        value={selectedProgramData.type}
+                        name="name"
+                        value={selectedProgramData.name}
                         onChange={handleInputChange}
                         onBlur={handleSaveChanges}
                       />
@@ -783,7 +785,7 @@ export default function Program() {
                             <label className="font-bold">
                               Program Description &nbsp;
                             </label>
-                            <Tooltip text="Description of the program type related to meetings for a course.">
+                            <Tooltip text="Description of the program related to meetings for a course.">
                               <span>ⓘ</span>
                             </Tooltip>
                           </div>
@@ -796,7 +798,7 @@ export default function Program() {
                           />
                         </div>
 
-                        <MeetingLocation
+                        <ProgramLocation
                           isCourseInfoProgram={false}
                           functions={{
                             inputChangeFunction: handleInputChange,
@@ -805,12 +807,12 @@ export default function Program() {
                           data={{
                             physical_location:
                               selectedProgramData.physical_location,
-                            virtual_link: selectedProgramData.virtual_link,
+                            meeting_url: selectedProgramData.meeting_url,
                           }}
                         />
 
                         {!isDropinsLayout && (
-                          <AutoAcceptMeetings
+                          <AutoAcceptAppointments
                             functions={{
                               setSelectedProgramData: setSelectedProgramData,
                               handleInputChange: handleInputChange,
@@ -862,13 +864,13 @@ export default function Program() {
                                 />
                               </div>
                               {showDuration && (
-                                <div className="flex flex-row items-center mt-4">
+                                <div className="flex flex-row items-center mt-4 p-5 border border-light-gray rounded-md shadow-md mt-5">
                                   <label className="whitespace-nowrap font-bold text-2xl">
                                     Define Appointment Duration?
                                   </label>
                                   <input
                                     type="checkbox"
-                                    class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
+                                    class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1 hover:cursor-pointer"
                                     checked={boxShown}
                                     onChange={showBox}
                                   ></input>
@@ -903,8 +905,8 @@ export default function Program() {
                                   <button
                                     className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 hover:bg-gray`}
                                     onClick={() =>
-                                      setChooseMeetingDatesPopUpVisible(
-                                        !isChooseMeetingDatesPopUpVisible
+                                      setChooseAppointmentDatesPopUpVisible(
+                                        !isChooseAppointmentDatesPopUpVisible
                                       )
                                     }
                                   >
@@ -916,17 +918,15 @@ export default function Program() {
                           ) : (
                             isCreateAvailabilityPopUpVisible && (
                               <div className="fixed inset-0 z-10">
-                                <CreateAvailability
+                                <CreateAppointmentBlock
                                   id={selectedCourseId}
                                   program_id={selectedProgramData.id}
-                                  program_name={selectedProgramData.type}
+                                  program_name={selectedProgramData.name}
                                   duration={selectedProgramData.duration}
                                   physical_location={
                                     selectedProgramData.physical_location
                                   }
-                                  virtual_link={
-                                    selectedProgramData.virtual_link
-                                  }
+                                  meeting_url={selectedProgramData.meeting_url}
                                   isDropins={selectedProgramData.isDropins}
                                   onClose={() =>
                                     setCreateAvailabilityPopUpVisible(false)
@@ -955,26 +955,26 @@ export default function Program() {
         )}
       </div>
 
-      {isChooseMeetingDatesPopUpVisible && (
+      {isChooseAppointmentDatesPopUpVisible && (
         <div className="fixed inset-0 z-10">
-          <ChooseMeetingDatesPopup
-            onClose={() => setChooseMeetingDatesPopUpVisible(false)}
+          <ChooseAppointmentDatesPopup
+            onClose={() => setChooseAppointmentDatesPopUpVisible(false)}
             data={allProgramTimesInCourse[selectedProgramId]}
             id={selectedCourseId}
             duration={selectedProgramData.duration}
             physical_location={selectedProgramData.physical_location}
-            virtual_link={selectedProgramData.virtual_link}
+            meeting_url={selectedProgramData.meeting_url}
             program_id={selectedProgramId}
-            program_name={selectedProgramData.type}
+            program_name={selectedProgramData.name}
             isDropins={selectedProgramData.isDropins}
           />
         </div>
       )}
 
-      {isCreateProgramTypePopup && (
+      {isCreateProgramPopup && (
         <div className="fixed inset-0 z-10">
-          <CreateProgramTypePopup
-            onClose={() => setCreateProgramTypePopup(false)}
+          <CreateProgramPopup
+            onClose={() => setCreateProgramPopup(false)}
             courseId={selectedCourseId}
             loadFunction={loadNewProgram}
           />

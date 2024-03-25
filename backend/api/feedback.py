@@ -1,3 +1,14 @@
+""" 
+ * feedback.py
+ * Last Edited: 3/24/24
+ *
+ * Contains functions used to manipulate the feedback for appointments
+ *
+ * Known Bugs:
+ * - 
+ *
+"""
+
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, set_access_cookies,\
     jwt_required, get_jwt_identity, get_jwt
@@ -22,6 +33,11 @@ def refresh_expiring_jwts(response):
         # Case where there is not a valid JWT. Just return the original response
         return response
 
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+""               Endpoint Functions                ""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+# create a new feedback tuple for the Feedback Table
 @feedback.route('/feedback/add', methods=['POST'])
 @jwt_required()
 def add_feedback():
@@ -33,19 +49,19 @@ def add_feedback():
     existing_feedback = Feedback.query.filter_by(appointment_id=appointment_id).first()
 
     user = User.query.get(user_id)
-    if not user or user.account_type not in ['student', 'mentor']:
-        return jsonify({"error": "Only students and mentors can add feedback"}), 401
+    if not user or user.account_type not in ['student', 'instructor']:
+        return jsonify({"error": "Only students and instructors can add feedback"}), 401
 
     # Function to update or create feedback
     def update_or_create_feedback(feedback, is_student):
         if is_student:
-            feedback.student_id = user_id
-            feedback.student_rating = data.get('satisfaction')
-            feedback.student_notes = data.get('additional_comments')
+            feedback.attendee_id = user_id
+            feedback.attendee_rating = data.get('satisfaction')
+            feedback.attendee_notes = data.get('additional_comments')
         else:
-            feedback.mentor_id = user_id
-            feedback.mentor_rating = data.get('satisfaction')
-            feedback.mentor_notes = data.get('additional_comments')
+            feedback.instructor_id = user_id
+            feedback.instructor_rating = data.get('satisfaction')
+            feedback.instructor_notes = data.get('additional_comments')
         return feedback
 
     try:
@@ -64,8 +80,8 @@ def add_feedback():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-
-
+# fetch all feedback in the Feedback Table
+# expensive performance**
 @feedback.route('/feedback/all', methods=['GET'])
 @jwt_required()
 def get_all_feedback():
@@ -75,18 +91,18 @@ def get_all_feedback():
 
     feedback_list = []
     for feedback in feedbacks:
-        student = User.query.get(feedback.student_id)
-        mentor = User.query.get(feedback.mentor_id)
+        student = User.query.get(feedback.attendee_id)
+        instructor = User.query.get(feedback.instructor_id)
         appointment = Appointment.query.get(feedback.appointment_id)
         feedback_data = {
             "id": feedback.id,
-            "appointment_type": appointment.type,
-            "student_id": student.first_name,
-            "student_rating": feedback.student_rating,
-            "student_notes": feedback.student_notes,
-            "mentor_id": mentor.first_name,
-            "mentor_rating": feedback.mentor_rating,
-            "mentor_notes": feedback.mentor_notes,
+            "appointment_type": appointment.program_id,
+            "attendee_id": student.name,
+            "attendee_rating": feedback.attendee_rating,
+            "attendee_notes": feedback.attendee_notes,
+            "instructor_id": instructor.name,
+            "instructor_rating": feedback.instructor_rating,
+            "instructor_notes": feedback.instructor_notes,
             "appointment_id": feedback.appointment_id,
             "appointment_data": {
                 "start_time": appointment.start_time,
@@ -94,8 +110,8 @@ def get_all_feedback():
                 "appointment_date": appointment.appointment_date,
                 "meeting_url": appointment.meeting_url,
                 "notes": appointment.notes,                
-                "student_id": appointment.student_id,
-                "mentor_id": appointment.mentor_id,
+                "attendee_id": appointment.attendee_id,
+                "instructor_id": appointment.instructor_id,
                 "type": appointment.type,
                 "status": appointment.status
             }
@@ -104,6 +120,7 @@ def get_all_feedback():
 
     return jsonify(feedback_list=feedback_list), 200
 
+# fetch all feedback for an appointment
 @feedback.route('/feedback/<int:appointment_id>', methods=['GET'])
 def get_feedback(appointment_id):
     feedback = Feedback.query.filter_by(appointment_id=appointment_id).first()
@@ -113,12 +130,12 @@ def get_feedback(appointment_id):
     
     feedback_data = {
         "id": feedback.id,
-        "student_id": feedback.student_id,
-        "student_rating": feedback.student_rating,
-        "student_notes": feedback.student_notes,
-        "mentor_id": feedback.mentor_id,
-        "mentor_rating": feedback.mentor_rating,
-        "mentor_notes": feedback.mentor_notes
+        "attendee_id": feedback.attendee_id,
+        "attendee_rating": feedback.attendee_rating,
+        "attendee_notes": feedback.attendee_notes,
+        "instructor_id": feedback.instructor_id,
+        "instructor_rating": feedback.instructor_rating,
+        "instructor_notes": feedback.instructor_notes
     }
 
     return jsonify(feedback_data), 200

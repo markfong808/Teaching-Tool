@@ -1,8 +1,8 @@
-/* ManageAvailability.js
- * Last Edited: 3/11/24
+/* ManageAvailabilityTable.js
+ * Last Edited: 3/24/24
  *
- * Table that shows instructor their global program type availabilities
- * and course specific program type availabilities in the "Manage Times" tab.
+ * Table that shows instructor their global program availabilities
+ * and course specific program availabilities in the "Manage Times" tab.
  *
  * Known Bugs:
  * -
@@ -19,7 +19,7 @@ import {
 } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
 
-export default function ManageAvailability({ courseId }) {
+export default function ManageAvailabilityTable({ courseId }) {
   // General Variables
   const { user } = useContext(UserContext);
   const csrfToken = getCookie("csrf_access_token");
@@ -30,7 +30,7 @@ export default function ManageAvailability({ courseId }) {
   // Availability Table Variables
   const [data, setData] = useState([]);
   const [showTable, setShowTable] = useState(true);
-  const [sortedBy, sortBy] = useState("Type");
+  const [sortedBy, sortBy] = useState("Name");
   const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
 
   ////////////////////////////////////////////////////////
@@ -43,7 +43,7 @@ export default function ManageAvailability({ courseId }) {
 
     try {
       const response = await fetch(
-        `/mentor/availability/${encodeURIComponent(courseId)}`,
+        `/instructor/availability/${encodeURIComponent(courseId)}`,
         {
           credentials: "include",
         }
@@ -51,10 +51,10 @@ export default function ManageAvailability({ courseId }) {
 
       const fetchedData = await response.json();
 
-      // sort instructor availability based on type
+      // sort instructor availability based on name
       const sortedData = (fetchedData["instructor_availability"] || []).sort(
         (a, b) => {
-          return a.type.localeCompare(b.type);
+          return a.name.localeCompare(b.name);
         }
       );
 
@@ -77,7 +77,7 @@ export default function ManageAvailability({ courseId }) {
     };
 
     try {
-      const response = await fetch("/mentor/availability/status", {
+      const response = await fetch("/instructor/availability/status", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -110,7 +110,7 @@ export default function ManageAvailability({ courseId }) {
   // post deletion of availability to Availability table
   const handleDeleteAvailability = async (availabilityId) => {
     if (window.confirm("Are your sure you want to delete this availability?")) {
-      const deleteEndpoint = `/mentor/delete-availability/${availabilityId}`;
+      const deleteEndpoint = `/instructor/availability/${availabilityId}/delete`;
 
       try {
         const response = await fetch(deleteEndpoint, {
@@ -151,9 +151,9 @@ export default function ManageAvailability({ courseId }) {
     // iterate through data array and sort
     const sortedData = [...data].sort((a, b) => {
       switch (sort) {
-        // sort based on type
+        // sort based on name
         case "Name":
-          return a.type.localeCompare(b.type);
+          return a.name.localeCompare(b.name);
         // sort based on day
         case "Day":
           return (
@@ -279,11 +279,11 @@ export default function ManageAvailability({ courseId }) {
             {showTable &&
               data.map((availability) => (
                 <tr className="border" key={availability.id}>
-                  <td className="border-r">{availability.type}</td>
+                  <td className="border-r">{availability.name}</td>
                   {courseId !== -1 && (
                     <td className="border-r">
-                      {availability.class_name
-                        ? availability.class_name
+                      {availability.course_name
+                        ? availability.course_name
                         : "-------"}
                     </td>
                   )}

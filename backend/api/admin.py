@@ -1,14 +1,26 @@
+""" 
+ * admin.py
+ * Last Edited: 3/24/24
+ *
+ * Contains functions used by admin user account_type
+ *
+ * Known Bugs:
+ * - Has not been revised to work with Canvas Meeting Scheduler. All functions are from instructor Network
+ *
+"""
+
 from flask import Blueprint, jsonify, request
-from .models import User, db
-from flask_jwt_extended import create_access_token, get_jwt_identity, set_access_cookies, get_jwt
+from .models import User, ProgramDetails, db
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, set_access_cookies, get_jwt
 from datetime import datetime, timedelta, timezone
 from . import db
-from .profile import get_user_data
+from .user import get_user_data
 
 admin = Blueprint('admin', __name__)
-allowed_account_types = ["admin", "mentor", "student"]
+allowed_account_types = ["admin", "instructor", "student"]
 allowed_account_status = ["active", "inactive"]
 
+# token generator
 @admin.after_request
 def refresh_expiring_jwts(response):
     try:
@@ -22,6 +34,21 @@ def refresh_expiring_jwts(response):
     except (RuntimeError, KeyError):
         # Case where there is not a valid JWT. Just return the original response
         return response
+    
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+""             Backend Only Functions              ""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+# check if user_id is an admin
+def is_admin(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if user.account_type != 'admin':
+        return False
+    return True
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+""               Endpoint Functions                ""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 # Get a list of all users and return their basic information
 @admin.route('/admin/all-users', methods=['GET'])
@@ -32,14 +59,10 @@ def get_all_users():
     for user in users:
         user_data = {
             'id': user.id,
-            'name': user.first_name,
+            'name': user.name,
             'email': user.email,
             'account_type': user.account_type,
             'status': user.status,
-            'linkedin_url': user.linkedin_url,
-            'about': user.about,
-            'meeting_url': user.meeting_url,
-            'auto_approve_appointments': user.auto_approve_appointments,
         }
         user_list.append(user_data)
     
@@ -55,7 +78,7 @@ def get_all_admins():
     for admin in admins:
         admin_data = {
             'id': admin.id,
-            'name': admin.first_name,
+            'name': admin.name,
             'email': admin.email,
             'status': admin.status
         }
@@ -73,7 +96,7 @@ def get_all_students():
     for student in students:
         student_data = {
             'id': student.id,
-            'name': student.first_name,
+            'name': student.name,
             'email': student.email,
             'status': student.status
         }
@@ -82,22 +105,22 @@ def get_all_students():
     return jsonify({"students": student_list})
 
 
-# Get a list of all mentor users in the system
-@admin.route('/admin/mentors', methods=['GET'])
-def get_all_mentors():
-    mentors = User.query.filter_by(account_type='mentor')
-    mentor_list = []
+# Get a list of all instructor users in the system
+@admin.route('/admin/instructors', methods=['GET'])
+def get_all_instructors():
+    instructors = User.query.filter_by(account_type='instructor')
+    instructor_list = []
     
-    for mentor in mentors:
-        mentor_data = {
-            'id': mentor.id,
-            'name': mentor.first_name,
-            'email': mentor.email,
-            'status': mentor.status
+    for instructor in instructors:
+        instructor_data = {
+            'id': instructor.id,
+            'name': instructor.name,
+            'email': instructor.email,
+            'status': instructor.status
         }
-        mentor_list.append(mentor_data)
+        instructor_list.append(instructor_data)
         
-    return jsonify({"mentors": mentor_list})
+    return jsonify({"instructors": instructor_list})
 
 
 # Change the account type of a user to the specified new account type
@@ -164,8 +187,7 @@ def change_account_status():
         db.session.rollback()  # Roll back the changes
         return jsonify({"error": str(e)}), 500
     
-    
-    
+# update the profile for a given user based on their ID
 @admin.route('/profile/update/<user_id>', methods=['POST'])
 def update_profile(user_id):
     try:
@@ -177,15 +199,7 @@ def update_profile(user_id):
 
         # Update fields if they are provided in the request
         if 'name' in data:
-            user.first_name = data['name']
-        if 'linkedin_url' in data:
-            user.linkedin_url = data['linkedin_url']
-        if 'about' in data:
-            user.about = data['about']
-        if 'meeting_url' in data:
-            user.meeting_url = data['meeting_url']
-        if 'auto_approve_appointments' in data:
-            user.auto_approve_appointments = data['auto_approve_appointments']
+            user.name = data['name']
 
         db.session.commit()
         response = get_user_data(user_id)
@@ -194,3 +208,61 @@ def update_profile(user_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+# create a new program using type, description, and duration
+@admin.route('/program', methods=['POST'])
+@jwt_required()
+def create_program():
+    user_id = get_jwt_identity()
+
+    if not is_admin(user_id):
+        return jsonify({"msg": "Unauthorized"}), 401
+
+    data = request.get_json()
+    
+    # Check if program with the same name already exists
+    existing_program = ProgramDetails.query.filter_by(name=data.get('name')).first()
+    if existing_program is not None:
+        return jsonify({"msg": "Program with this name already exists"}), 409
+    
+    try:
+        new_program = ProgramDetails(
+            name=data.get('name'),
+            description=data.get('description'),
+            duration=data.get('duration')
+        )
+        db.session.add(new_program)
+        db.session.commit()
+        return jsonify({"msg": "Program created", "program": new_program.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error creating program", "error": str(e)}), 500
+    
+# update the program details of a program based on its ID
+@admin.route('/program/<int:program_id>', methods=['POST'])
+@jwt_required()
+def update_program(program_id):
+    user_id = get_jwt_identity()
+    if not is_admin(user_id):
+        return jsonify({"msg": "Admin access required"}), 401
+
+    program = ProgramDetails.query.get_or_404(program_id)
+    data = request.get_json()
+    program.name = data.get('name', program.name)
+    program.description = data.get('description', program.description)
+    program.duration = data.get('duration', program.duration)
+    db.session.commit()
+    return jsonify({"msg": "Program updated"}), 200
+
+# delete the program using its ID
+@admin.route('/program/<int:program_id>', methods=['DELETE'])
+@jwt_required()
+def delete_program(program_id):
+    user_id = get_jwt_identity()
+    if not is_admin(user_id):
+        return jsonify({"msg": "Admin access required"}), 401
+
+    program = ProgramDetails.query.get_or_404(program_id)
+    db.session.delete(program)
+    db.session.commit()
+    return jsonify({"msg": "Program deleted"}), 200

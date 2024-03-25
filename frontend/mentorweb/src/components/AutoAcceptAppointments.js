@@ -1,5 +1,5 @@
-/* AutoAcceptMeetings.js
- * Last Edited: 3/18/24
+/* AutoAcceptAppointments.js
+ * Last Edited: 3/24/24
  *
  * Auto accept meeting UI for Program.js
  *
@@ -10,7 +10,11 @@
 
 import React from "react";
 
-export default function AutoAcceptMeetings({ functions, userInstance, data }) {
+export default function AutoAcceptAppointments({
+  functions,
+  userInstance,
+  data,
+}) {
   // update data meeting limit's based on instructor entries
   const handleLimitInputChange = (e) => {
     const { name, value } = e.target;
@@ -69,10 +73,10 @@ export default function AutoAcceptMeetings({ functions, userInstance, data }) {
   // HTML for webpage
   return (
     <div className="flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
-      {userInstance?.account_type === "mentor" && (
+      {userInstance?.account_type === "instructor" && (
         <div className="w-1/2">
           <label className="font-bold text-lg">
-            Auto-Accept Meeting Requests?
+            Auto-Accept Appointment Requests?
           </label>
           <br />
           <label className="ml-2">
@@ -102,9 +106,9 @@ export default function AutoAcceptMeetings({ functions, userInstance, data }) {
           </label>
         </div>
       )}
-      {userInstance?.account_type === "mentor" && (
+      {userInstance?.account_type === "instructor" && (
         <div className="flex flex-col">
-          <h2 className="font-bold text-lg">Set Meeting Limits</h2>
+          <h2 className="font-bold text-lg">Set Appointment Limits</h2>
           <div className="flex flex-row justify-between">
             <div className="flex flex-col mr-5">
               <label>Daily Max</label>

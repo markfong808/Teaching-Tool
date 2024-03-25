@@ -1,43 +1,56 @@
+""" 
+ * models.py
+ * Last Edited: 3/24/24
+ *
+ * Contains all Tables and their attributes using SQLAlchemy
+ *
+ * Known Bugs:
+ * - 
+ *
+"""
+
 from . import db
 from datetime import datetime
-from sqlalchemy import UniqueConstraint
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    student_id = db.Column(db.String(150), unique=True)                                                          #  ADDED
+    account_type=db.Column(db.String(50)) # student, instructor, admin
+    status = db.Column(db.String(50)) # pending, active, inactive
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(150))
-    first_name = db.Column(db.String(150))
-    last_name = db.Column(db.String(150))                                                                        #  ADDED
-    title = db.Column(db.String(10))                                                                             #  ADDED
-    pronouns = db.Column(db.String(150))                                                                         #  ADDED(could change to array of string or something else)
-    discord_id = db.Column(db.String(255))                                                                       #  ADDED
-    calendar_link = db.Column(db.String(255))                                                                    #  ADDED
-    status = db.Column(db.String(50)) # pending, active, inactive
-    account_type=db.Column(db.String(50)) # student, mentor, admin
-    about=db.Column(db.Text())
-    linkedin_url = db.Column(db.String(255))
-    meeting_url = db.Column(db.String(255))
-    auto_approve_appointments = db.Column(db.Boolean, default=True)
+    title = db.Column(db.String(10))
+    name = db.Column(db.String(150))
+    pronouns = db.Column(db.String(150))
+    discord_id = db.Column(db.String(255))
+    calendar_link = db.Column(db.String(255))
     availabilities = db.relationship('Availability')
-    mentor_settings = db.relationship('MentorMeetingSettings', backref='mentor', uselist=False)
     appointment_comment = db.relationship('AppointmentComment', backref='user', cascade='all, delete-orphan')
-    
-class MentorMeetingSettings(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    max_daily_meetings = db.Column(db.Integer)
-    max_weekly_meetings = db.Column(db.Integer)
-    max_monthly_meetings = db.Column(db.Integer)
 
-class ProgramType(db.Model):
+class CourseDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
     instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    physical_location = db.Column(db.String(255))                                                                # ADDED
-    virtual_link = db.Column(db.String(255))                                                                     # ADDED
-    type = db.Column(db.String(150))
+    quarter = db.Column(db.String(50))
+    course_name = db.Column(db.String(255))
+    course_location = db.Column(db.String(255))
+    course_link = db.Column(db.String(255))
+    course_recordings_link = db.Column(db.String(255))
+    discord_link = db.Column(db.String(255))
+    course_comment = db.Column(db.Text)
+    
+class CourseMembers(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    account_type=db.Column(db.String(50)) # student, instructor, admin
+
+class ProgramDetails(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
+    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(150))
     description = db.Column(db.Text)
+    physical_location = db.Column(db.String(255))
+    meeting_url = db.Column(db.String(255))
     duration = db.Column(db.Integer)  # Duration in minutes
     auto_approve_appointments = db.Column(db.Boolean, default=True)
     max_daily_meetings = db.Column(db.Integer)
@@ -45,13 +58,19 @@ class ProgramType(db.Model):
     max_monthly_meetings = db.Column(db.Integer)
     isDropins = db.Column(db.Boolean)
     isRangeBased = db.Column(db.Boolean)
+    availability = db.relationship("Availability", back_populates="program_details")
 
+class ProgramTimes(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    program_id = db.Column(db.Integer, db.ForeignKey('program_details.id'))
+    day = db.Column(db.String(50))
+    start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
+    end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
 
 class Availability(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
-    type = db.Column(db.String(50))
+    program_id = db.Column(db.Integer, db.ForeignKey('program_details.id'))  
     date = db.Column(db.String(150))  # YYYY-MM-DD
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
@@ -61,35 +80,23 @@ class Availability(db.Model):
         back_populates='availability', 
         cascade='all, delete-orphan'
     )
+    program_details = db.relationship("ProgramDetails", back_populates="availability")
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                      # ADDED
-    physical_location = db.Column(db.String(255))                                                                # ADDED
-    type = db.Column(db.String(50))
+    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    course_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))  
+    attendee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    availability_id = db.Column(db.Integer, db.ForeignKey('availability.id'))
     appointment_date = db.Column(db.String(150))  # YYYY-MM-DD
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
-    status = db.Column(db.String(50))  # posted, booked, cancelled
-    notes = db.Column(db.Text)    
+    physical_location = db.Column(db.String(255))
     meeting_url = db.Column(db.String(255))
-    student_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    availability_id = db.Column(db.Integer, db.ForeignKey('availability.id'))
+    notes = db.Column(db.Text)
+    status = db.Column(db.String(50))  # posted, booked, cancelled
     availability = db.relationship('Availability', back_populates='appointments')
     appointment_comment = db.relationship('AppointmentComment', backref='appointment', cascade='all, delete-orphan')
-    class_information = db.relationship('ClassInformation', back_populates='appointments')
-    
-    
-class Feedback(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    student_rating = db.Column(db.String(255))
-    student_notes = db.Column(db.Text)
-    mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    mentor_rating = db.Column(db.String(255))
-    mentor_notes = db.Column(db.Text)
-    appointment_id = db.Column(db.Integer, db.ForeignKey('appointment.id'))
     
 class AppointmentComment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -99,36 +106,12 @@ class AppointmentComment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class ClassInformation(db.Model):                                                                          # ADDED
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
-    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                           # ADDED
-    quarter = db.Column(db.String(50))                                                                     # ADDED
-    class_name = db.Column(db.String(255))                                                                 # ADDED
-    class_location = db.Column(db.String(255))                                                             # ADDED
-    class_link = db.Column(db.String(255))                                                                 # ADDED
-    class_recordings_link = db.Column(db.String(255))                                                      # ADDED
-    office_hours_location = db.Column(db.String(255))                                                      # ADDED
-    office_hours_link = db.Column(db.String(255))                                                          # ADDED
-    discord_link = db.Column(db.String(255))                                                               # ADDED
-    class_comment = db.Column(db.Text)                                                                     # ADDED
-    appointments = db.relationship('Appointment', back_populates='class_information')
-
-class studentGroup(db.Model):                                                                              # ADDED
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
-    student_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                           # ADDED
-    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                # ADDED
-    group_name = db.Column(db.String(150))                                                                 # ADDED
-    
-class CourseMembers(db.Model):                                                                             # ADDED
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
-    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                # ADDED
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))                                              # ADDED
-    role=db.Column(db.String(50)) # student, mentor, admin                                                 # ADDED
-
-class ClassTimes(db.Model):                                                                                # ADDED
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)                                       # ADDED
-    class_id = db.Column(db.Integer, db.ForeignKey('class_information.id'))                                # ADDED
-    day = db.Column(db.String(50))                                                                         # ADDED
-    start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                          # ADDED
-    end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS                                            # ADDED
-    program_id = db.Column(db.Integer, db.ForeignKey('program_type.id'))                                   # ADDED
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointment.id'))
+    attendee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    attendee_rating = db.Column(db.String(255))
+    attendee_notes = db.Column(db.Text)
+    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    instructor_rating = db.Column(db.String(255))
+    instructor_notes = db.Column(db.Text)

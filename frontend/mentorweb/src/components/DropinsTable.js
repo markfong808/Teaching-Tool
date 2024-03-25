@@ -1,8 +1,8 @@
 /* DropinsTable.js
- * Last Edited: 3/11/24
+ * Last Edited: 3/24/24
  *
  * Table that shows student Drop-In times that instructors
- * have created for their class inside "Courses" tab
+ * have created for their course inside "Courses" tab
  *
  * Known Bugs:
  * -
@@ -24,7 +24,7 @@ export default function DropinsTable({ courseId, courseName }) {
   // Drop-In Table Variables
   const [data, setData] = useState([]);
   const [showTable, setShowTable] = useState(true);
-  const [sortedBy, sortBy] = useState("Type");
+  const [sortedBy, sortBy] = useState("Name");
   const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
 
   ////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ export default function DropinsTable({ courseId, courseName }) {
 
     try {
       const response = await fetch(
-        `/student/dropins/${encodeURIComponent(courseId)}`,
+        `/course/programs/dropins/${encodeURIComponent(courseId)}`,
         {
           credentials: "include",
         }
@@ -81,9 +81,9 @@ export default function DropinsTable({ courseId, courseName }) {
     // iterate through data array and sort
     const sortedData = [...data].sort((a, b) => {
       switch (sort) {
-        // sort based on type
-        case "Type":
-          return a.type.localeCompare(b.type);
+        // sort based on name
+        case "Name":
+          return a.name.localeCompare(b.name);
         // sort based on day
         case "Day":
           return (
@@ -157,9 +157,9 @@ export default function DropinsTable({ courseId, courseName }) {
               <thead className="border-b border-light-gray bg-purple text-white">
                 <th
                   className="border-r border-light-gray w-14% cursor-pointer hover:bg-gold"
-                  onClick={() => sortBy("Type")}
+                  onClick={() => sortBy("Name")}
                 >
-                  Type
+                  Name
                 </th>
                 <th
                   className="border-r border-light-gray w-8% cursor-pointer hover:bg-gold"
@@ -192,7 +192,7 @@ export default function DropinsTable({ courseId, courseName }) {
                 {showTable &&
                   data.map((availability) => (
                     <tr className="border" key={availability.id}>
-                      <td className="border-r">{availability.type}</td>
+                      <td className="border-r">{availability.name}</td>
                       <td className="border-r">
                         {getDayFromDate(availability.date)}
                       </td>

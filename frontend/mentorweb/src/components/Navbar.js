@@ -1,5 +1,5 @@
 /* Navbar.js
- * Last Edited: 3/18/24
+ * Last Edited: 3/24/24
  *
  * Navigation bar displayed on top of the webpage which has different tabs.
  * Once user clicks on a tab, they're redirected to a different webpage which
@@ -80,9 +80,9 @@ export default function Navbar() {
                 HOME
               </CustomLink>
             )}
-            {user.account_type === "mentor" && (
+            {user.account_type === "instructor" && (
               <CustomLink
-                to="/mentor"
+                to="/instructor"
                 className="hover:text-gold font-headlines"
               >
                 HOME
@@ -101,7 +101,7 @@ export default function Navbar() {
                     </CustomLink>
                   </>
                 )}
-                {user.account_type === "mentor" && (
+                {user.account_type === "instructor" && (
                   <>
                     <CustomLink
                       to="/instructor/manage-times"

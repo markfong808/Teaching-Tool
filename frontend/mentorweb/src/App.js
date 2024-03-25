@@ -15,14 +15,14 @@ import Home from "./pages/Home";
 import LoginSignup from "./pages/LoginSignup";
 import RegisterForm from "./pages/RegisterForm";
 import { Route, Routes } from "react-router-dom";
-import Logout from "./pages/Logout";
+import Logout from "./components/Logout";
 import Users from "./components/Users";
 import ManagePrograms from "./components/ManagePrograms";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Unauthorized from "./context/Unauthorized";
-import ManageTimes from "./pages/ManageTimes";
-import Program from "./pages/Program";
-import ProfileSettings from "./pages/ProfileSettings";
+import Times from "./pages/Times";
+import ProgramDetails from "./pages/ProgramDetails";
+import Profile from "./pages/Profile";
 import AdminContent from "./pages/AdminContent";
 
 function App() {
@@ -101,9 +101,9 @@ function App() {
 
           {/* Instructor Routes */}
           <Route
-            path="/mentor"
+            path="/instructor"
             element={
-              <ProtectedRoute allowedAccountTypes={["mentor"]}>
+              <ProtectedRoute allowedAccountTypes={["instructor"]}>
                 <Home />
               </ProtectedRoute>
             }
@@ -112,8 +112,8 @@ function App() {
           <Route
             path="/instructor/manage-times"
             element={
-              <ProtectedRoute allowedAccountTypes={["mentor"]}>
-                <ManageTimes />
+              <ProtectedRoute allowedAccountTypes={["instructor"]}>
+                <Times />
               </ProtectedRoute>
             }
           />
@@ -121,8 +121,8 @@ function App() {
           <Route
             path="/instructor/edit-class-availability"
             element={
-              <ProtectedRoute allowedAccountTypes={["mentor"]}>
-                <Program />
+              <ProtectedRoute allowedAccountTypes={["instructor"]}>
+                <ProgramDetails />
               </ProtectedRoute>
             }
           />
@@ -131,8 +131,10 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute allowedAccountTypes={["mentor", "student", "admin"]}>
-                <ProfileSettings />
+              <ProtectedRoute
+                allowedAccountTypes={["instructor", "student", "admin"]}
+              >
+                <Profile />
               </ProtectedRoute>
             }
           />

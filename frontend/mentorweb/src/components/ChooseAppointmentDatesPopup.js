@@ -1,12 +1,12 @@
-/* ChooseMeetingDatesPopup.js
- * Last Edited: 3/3/24
+/* ChooseAppointmentDatesPopup.js
+ * Last Edited: 3/24/24
  *
  * UI popup shown when Instructor clicks on choose meeting dates button
- * in the "Class Availability" tab. Allows teacher to set availabilities
- * based on what days times they have scheduled for program type already
+ * in the "Programs" tab. Allows teacher to set availabilities
+ * based on what days times they have scheduled for program already
  *
  * Known Bugs:
- *  - None
+ *  -
  *
  */
 import React, { useEffect, useState } from "react";
@@ -17,15 +17,15 @@ import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css";
 import { addDays } from "date-fns";
 
-const ChooseMeetingDatesPopup = ({
+const ChooseAppointmentDatesPopup = ({
   onClose,
   data,
   id,
   duration,
   physical_location,
-  virtual_link,
+  meeting_url,
   program_id,
-  program_type,
+  program_name,
   isDropins,
 }) => {
   // Calendar Data Variables
@@ -37,8 +37,8 @@ const ChooseMeetingDatesPopup = ({
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [dateSelected, setDateSelected] = useState(false);
 
-  // Class Variables
-  const [class_id, setClassId] = useState("");
+  // Course Variables
+  const [course_id, setCourseId] = useState();
 
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //
@@ -46,10 +46,6 @@ const ChooseMeetingDatesPopup = ({
 
   // posts added availbility data to the Availability table
   const createTimeSlot = async () => {
-    if (class_id === null) {
-      return;
-    }
-
     try {
       const csrfToken = getCookie("csrf_access_token");
       let convertedAvailability = [];
@@ -71,7 +67,7 @@ const ChooseMeetingDatesPopup = ({
 
           convertedAvailability.push({
             id: program_id,
-            type: program_type,
+            name: program_name,
             date: formattedDate,
             start_time: start_time,
             end_time: end_time,
@@ -91,22 +87,19 @@ const ChooseMeetingDatesPopup = ({
         availabilities: convertedAvailability,
         duration: duration,
         physical_location: physical_location,
-        virtual_link: virtual_link,
+        meeting_url: meeting_url,
         isDropins: isDropins,
       };
 
-      await fetch(
-        `/mentor/add-all-availability/${encodeURIComponent(class_id)}`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": csrfToken,
-          },
-          body: JSON.stringify(convertedAvailability),
-        }
-      );
+      await fetch(`/instructor/availability/${encodeURIComponent(course_id)}`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken,
+        },
+        body: JSON.stringify(convertedAvailability),
+      });
 
       window.alert("Availabilities created successfully!");
     } catch (error) {
@@ -140,7 +133,7 @@ const ChooseMeetingDatesPopup = ({
 
   // on page load, set course id
   useEffect(() => {
-    setClassId(id);
+    setCourseId(id);
   }, [id]);
 
   ////////////////////////////////////////////////////////
@@ -194,4 +187,4 @@ const ChooseMeetingDatesPopup = ({
   );
 };
 
-export default ChooseMeetingDatesPopup;
+export default ChooseAppointmentDatesPopup;

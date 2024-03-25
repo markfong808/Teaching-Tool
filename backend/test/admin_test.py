@@ -55,9 +55,9 @@ class AdminTestCase(unittest.TestCase):
         
     
     @patch('api.admin.User.query')
-    def test_get_all_mentors(self, mock_query):
-        mock_query.filter_by.return_value = self.mock_user_query(account_type='mentor')
-        response = self.client.get('/admin/mentors')
+    def test_get_all_instructors(self, mock_query):
+        mock_query.filter_by.return_value = self.mock_user_query(account_type='instructor')
+        response = self.client.get('/admin/instructors')
         self.assertEqual(response.status_code, 200)
         
 
@@ -65,7 +65,7 @@ class AdminTestCase(unittest.TestCase):
     @patch('api.admin.db.session')
     def test_change_account_type(self, mock_db_session, mock_query):
         mock_query.get.return_value = self.mock_user_query(user_id=1)[0]
-        data = {'user_id': 1, 'new_account_type': 'mentor'}
+        data = {'user_id': 1, 'new_account_type': 'instructor'}
         response = self.client.post('/admin/change-account-type', data=json.dumps(data), content_type='application/json')
         self.assertEqual(response.status_code, 200)
 

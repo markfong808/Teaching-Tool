@@ -24,16 +24,16 @@ class StudentBlueprintTestCase(unittest.TestCase):
     def test_get_program_description(self, mock_query):
         mock_program = MagicMock(spec=ProgramType, description="Test Description")
         mock_query.filter_by.return_value.first.return_value = mock_program
-        response = self.client.get('/program/description?program_type=Mentoring Session')
+        response = self.client.get('/program/description?program_type=instructoring Session')
         self.assertEqual(response.status_code, 200)
         self.assertIn("Test Description", response.get_json()['description'])
         
         
     @patch('api.student.Appointment.query')
     def test_get_available_appointment_slots(self, mock_appointment_query):
-        mock_future_appointments = [MagicMock(spec=Appointment, id=1, appointment_date=datetime.now().date(), type="Mentoring Session", start_time="15:00", end_time="16:00", status="posted")]
+        mock_future_appointments = [MagicMock(spec=Appointment, id=1, appointment_date=datetime.now().date(), type="instructoring Session", start_time="15:00", end_time="16:00", status="posted")]
         mock_appointment_query.filter.return_value.filter.return_value.filter.return_value.all.return_value = mock_future_appointments
-        response = self.client.get('/student/appointments/available/Mentoring Session')
+        response = self.client.get('/student/appointments/available/instructoring Session')
         self.assertEqual(response.status_code, 200)
         response = self.client.get('/student/appointments/available/Invalid Program Type')
         self.assertEqual(response.status_code, 400)
@@ -50,7 +50,7 @@ class StudentBlueprintTestCase(unittest.TestCase):
         mock_student = MagicMock(spec=User, id=1, account_type='student', meeting_url='http://example.com/meeting')
         mock_user_query.get.return_value = mock_student
         future_date = datetime.now() + timedelta(days=1)
-        mock_appointment = MagicMock(spec=Appointment, id=1, appointment_date=future_date.strftime('%Y-%m-%d'), start_time='10:00', status='posted', mentor_id=2)
+        mock_appointment = MagicMock(spec=Appointment, id=1, appointment_date=future_date.strftime('%Y-%m-%d'), start_time='10:00', status='posted', instructor_id=2)
         mock_appointment_query.get.return_value = mock_appointment
         mock_send_email.return_value = True
         mock_db_session.commit = MagicMock()

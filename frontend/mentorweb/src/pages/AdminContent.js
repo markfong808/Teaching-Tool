@@ -33,9 +33,9 @@ export default function AdminContent() {
             Program Management
           </h4>
           <p>
-            Create, update, or delete different mentorship programs. Each
+            Create, update, or delete different instructorship programs. Each
             program can be tailored to meet the evolving needs of our community,
-            ensuring that we offer relevant and impactful mentorship
+            ensuring that we offer relevant and impactful instructorship
             opportunities.
           </p>
         </article>
@@ -47,7 +47,7 @@ export default function AdminContent() {
           <p>
             Monitor scheduled appointments and their statuses. You have the
             ability to intervene in appointment scheduling if needed, ensuring
-            that both mentors and students have a seamless experience.
+            that both instructors and students have a seamless experience.
           </p>
         </article>
 
@@ -77,7 +77,7 @@ export default function AdminContent() {
       <p className="py-5">
         As an administrator, your role is instrumental in shaping the user
         experience on TechPrep. Your decisions and actions directly impact the
-        effectiveness of our mentorship programs and the satisfaction of our
+        effectiveness of our instructorship programs and the satisfaction of our
         users. We trust in your expertise and judgment to maintain the highest
         standards of quality and service on our platform.
       </p>
@@ -85,7 +85,7 @@ export default function AdminContent() {
         Utilize the tools and resources available to you to manage the platform
         efficiently. We are here to support you in your role as an administrator
         and ensure that TechPrep remains a leading destination for quality
-        mentorship and learning.
+        instructorship and learning.
       </p>
     </div>
   );

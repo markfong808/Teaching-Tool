@@ -1,15 +1,15 @@
-/* MeetingLocation.js
- * Last Edited: 3/9/24
+/* ProgramLocation.js
+ * Last Edited: 3/24/24
  *
- * Entry Field UI for the physical_location, virtual_link,
- * and class_recordings_link for programs
+ * Entry Field UI for the physical_location, meeting_url,
+ * and course_recordings_link for programs
  *
  * Known bugs:
- * - Set Office Location label for the object is outdated
+ * -
  *
  */
 
-export default function MeetingLocation({
+export default function ProgramLocation({
   isCourseInfoProgram,
   functions,
   data,
@@ -34,7 +34,7 @@ export default function MeetingLocation({
   ////////////////////////////////////////////////////////
 
   // HTML for webpage
-  // conditional rendering of boxes if isClassLocation is true or not
+  // conditional rendering of boxes if isCourseLocation is true or not
   return (
     <div className={isCourseInfoProgram ? "w-2/3 m-auto" : "w-full m-auto"}>
       <div
@@ -83,8 +83,8 @@ export default function MeetingLocation({
           <label className={"whitespace-nowrap"}>Virtual Meeting Link:</label>
           <input
             className="border border-light-gray ml-2 w-40 hover:bg-gray"
-            name={"virtual_link"}
-            value={data.virtual_link ?? ""}
+            name={"meeting_url"}
+            value={data.meeting_url ?? ""}
             onChange={handleInputChange}
             onBlur={functions.saveChangeFunction}
           />
@@ -95,8 +95,8 @@ export default function MeetingLocation({
             <label className="whitespace-nowrap">Course Recordings Link:</label>
             <input
               className="border border-light-gray ml-2 w-40 hover:bg-gray"
-              name="class_recordings_link"
-              value={data.class_recordings_link ?? ""}
+              name="course_recordings_link"
+              value={data.course_recordings_link ?? ""}
               onChange={handleInputChange}
               onBlur={functions.saveChangeFunction}
             />

@@ -1,12 +1,12 @@
-/* ScheduleMeetingPopup.js
- * Last Edited: 3/11/24
+/* ScheduleAppointmentPopup.js
+ * Last Edited: 3/24/24
  *
  * UI Popup shown when student presses "Schedule New Meeting"
  * in their "Courses" tab. Gives the student access to see
  * their courses and respective programs
  *
  * Known bugs:
- * - Sizing bugs when cancelling appointments and other actions
+ * -
  *
  */
 
@@ -14,10 +14,10 @@ import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext.js";
 import { ScheduleMeeting } from "react-schedule-meeting";
 import { format } from "date-fns";
-import { getCookie } from "../utils/GetCookie";
-import Appointment from "./Appointment";
+import { getCookie } from "../utils/GetCookie.js";
+import Appointment from "./Appointment.js";
 
-const ScheduleMeetingPopup = ({ onClose, functions }) => {
+const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // General Variables
   const { user } = useContext(UserContext);
   const [selectedProgramId, setSelectedProgramId] = useState("");
@@ -37,12 +37,12 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
   const [showAppointmentPanel, setShowAppointmentPanel] = useState(false);
   const [showPopup, setShowPopup] = useState(true);
 
-  // Class Data Variables
+  // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedCourseData, setSelectedCourseData] = useState({
     id: "",
-    class_name: "",
+    course_name: "",
     programs: [],
   });
 
@@ -55,7 +55,7 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
     if (user.account_type !== "student") return;
 
     try {
-      const response = await fetch(`/student/get/appointment-programs`, {
+      const response = await fetch(`/student/programs/appointment-based`, {
         credentials: "include",
       });
 
@@ -71,7 +71,7 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
     if (!user) return;
     try {
       const response = await fetch(
-        `/programs/${encodeURIComponent(selectedCourseId)}`,
+        `/course/programs/${encodeURIComponent(selectedCourseId)}`,
         {
           credentials: "include",
         }
@@ -93,7 +93,7 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
   useEffect(() => {
     if (selectedProgramId && selectedCourseId !== "") {
       fetch(
-        `/student/appointments-available/${encodeURIComponent(
+        `/student/appointments/available/${encodeURIComponent(
           selectedProgramId
         )}/${encodeURIComponent(selectedCourseId)}`
       )
@@ -340,15 +340,15 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
       <Appointment
         program_name={
           selectedCourseData.programs.find(
-            (type) => type.id === selectedProgramId
-          )?.type || ""
+            (name) => name.id === selectedProgramId
+          )?.name || ""
         }
         selectedTimeslot={selectedTimeslot}
         notes={appointmentNotes}
         meetingURL={
           selectedCourseData.programs.find(
             (meeting_url) => meeting_url.id === selectedProgramId
-          )?.virtual_link || "No URL for this meeting."
+          )?.meeting_url || "No URL for this meeting."
         }
         location={
           selectedCourseData.programs.find(
@@ -390,7 +390,7 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
             </option>
             {allCourseData.map((course) => (
               <option key={course.id} value={course.id}>
-                {course.class_name}
+                {course.course_name}
               </option>
             ))}
           </select>
@@ -412,7 +412,7 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
                 </option>
                 {selectedCourseData.programs.map((program) => (
                   <option key={program.id} value={program.id}>
-                    {program.type}
+                    {program.name}
                   </option>
                 ))}
               </select>
@@ -450,8 +450,8 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
                     <p className="pb-2">
                       <b>Name</b>:{" "}
                       {selectedCourseData.programs.find(
-                        (type) => type.id === selectedProgramId
-                      )?.type || ""}
+                        (name) => name.id === selectedProgramId
+                      )?.name || ""}
                     </p>
                     <p className="pb-2">
                       <b>Date</b>: {format(selectedTimeslot.startTime, "PPPP")}
@@ -464,7 +464,7 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
                     <p className="pb-2">
                       <b>Duration:</b> {selectedTimeDuration} minutes
                     </p>
-                    <label htmlFor="appointmentNotes">
+                    <label>
                       <b>Notes</b> (optional):
                     </label>
                     <textarea
@@ -502,4 +502,4 @@ const ScheduleMeetingPopup = ({ onClose, functions }) => {
   );
 };
 
-export default ScheduleMeetingPopup;
+export default ScheduleAppointmentPopup;

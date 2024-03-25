@@ -1,28 +1,26 @@
 /* Login.js
- * Last Edited: 3/1/24
+ * Last Edited: 3/24/24
  *
- * Login Tab for students, mentors, admins, (later just student and instructors)
+ * Login Tab for students, instructors, admins, (later just student and instructors)
  * to enter email and password for login,
  * or reset password, or create account
- * 
+ *
  * Known Bugs:
- * - None found
- * - NOTE: may have to change backend get_user_profile function in profile.py
- * -       based on the user account type, i.e. students dont have option for meeeting_url
-*/
+ * -
+ */
 
-import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { UserContext } from '../context/UserContext';
+import React, { useState, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 
 export default function Login() {
   // General Variables
   const { setUser } = useContext(UserContext);
 
   // Login Data Variables
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   // Webpage Navigate Variable
   const navigate = useNavigate();
@@ -35,27 +33,27 @@ export default function Login() {
   const login = async (userData) => {
     // validate if the user's email and password exist in the database
     try {
-      const response = await fetch('/login', {
-        method: 'POST',
+      const response = await fetch("/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(userData),
-        credentials: 'include', // include the HTTP-only cookies
+        credentials: "include", // include the HTTP-only cookies
       });
 
       if (!response.ok) {
         const errorResponse = await response.json();
-        setLoginError(errorResponse.error); 
+        setLoginError(errorResponse.error);
       }
 
       // fetch profile information associated with user
-      const profileResponse = await fetch('/profile', {
-        credentials: 'include', // include the HTTP-only cookies
+      const profileResponse = await fetch("/profile", {
+        credentials: "include", // include the HTTP-only cookies
       });
 
       if (!profileResponse.ok) {
-        throw new Error('Failed to retrieve user profile.');
+        throw new Error("Failed to retrieve user profile.");
       }
 
       const userProfile = await profileResponse.json();
@@ -63,19 +61,17 @@ export default function Login() {
       // set user based on user profile
       setUser(userProfile);
       navigate(`/${userProfile.account_type}`); // navigate to appropriate webpage view based on account type
-    } catch (error) {
-
-    }
+    } catch (error) {}
   };
 
   ////////////////////////////////////////////////////////
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  // handle login data once user clicks submit button 
+  // handle login data once user clicks submit button
   const handleSubmit = (e) => {
     // prevent submit event from happening if email, password, or both are invalid
-    e.preventDefault(); 
+    e.preventDefault();
     login({ email, password });
   };
 
@@ -89,29 +85,34 @@ export default function Login() {
       <h1 className="text-xl text-center pb-5">Login</h1>
       <form className="" onSubmit={handleSubmit}>
         <div className="flex flex-col pb-2">
-          <label htmlFor="email">Email</label>
-          <input className="border-b"
-            id='email'
+          <label>Email</label>
+          <input
+            className="border-b"
+            id="email"
             value={email}
             type="email"
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="flex flex-col">
-          <label htmlFor="password">Password</label>
-          <input className="border-b"
-            id='password'
+          <label>Password</label>
+          <input
+            className="border-b"
+            id="password"
             value={password}
             type="password"
             onChange={(e) => setPassword(e.target.value)}
           />
           <div className="text-purple pb-5">Forgot password?</div>
-          <button className="bg-purple text-white h-10 w-full hover:text-gold hover:bg-purple rounded-lg" type="submit">
+          <button
+            className="bg-purple text-white h-10 w-full hover:text-gold hover:bg-purple rounded-lg"
+            type="submit"
+          >
             Login
           </button>
           {loginError && (
             <p>
-              <span role="img" aria-label="error-icon" style={{ color: 'red' }}>
+              <span role="img" aria-label="error-icon" style={{ color: "red" }}>
                 ❌&nbsp;&nbsp;&nbsp;
               </span>
               {loginError}
@@ -119,7 +120,12 @@ export default function Login() {
           )}
           <strong className="p-5 text-center">OR</strong>
           <div className="p-1 text-center">
-            New user? <Link to="/registerform"><span className="text-purple hover:text-gold underline">Create Account</span></Link>
+            New user?{" "}
+            <Link to="/registerform">
+              <span className="text-purple hover:text-gold underline">
+                Create Account
+              </span>
+            </Link>
           </div>
         </div>
       </form>

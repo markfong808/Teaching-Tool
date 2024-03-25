@@ -1,5 +1,5 @@
-/* CreateAvailability.js
- * Last Edited: 3/3/24
+/* CreateAppointmentBlock.js
+ * Last Edited: 3/24/24
  *
  * Popup menu to create a appointment block for a specific date
  *
@@ -19,13 +19,13 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SingleInputTimeRangeField } from "@mui/x-date-pickers-pro/SingleInputTimeRangeField";
 import dayjs from "dayjs";
 
-export default function CreateAvailability({
+export default function CreateAppointmentBlock({
   id,
   program_id,
   program_name,
   duration,
   physical_location,
-  virtual_link,
+  meeting_url,
   isDropins,
   onClose,
 }) {
@@ -52,19 +52,19 @@ export default function CreateAvailability({
         availabilities: [
           {
             id: program_id,
-            type: program_name,
+            name: program_name,
             date: date,
             start_time: timeRange[0],
             end_time: timeRange[1],
           },
         ],
-        duration: local_duration,
+        duration: parseInt(local_duration),
         physical_location: physical_location,
-        virtual_link: virtual_link,
+        meeting_url: meeting_url,
         isDropins: isDropins,
       };
 
-      fetch(`/mentor/add-all-availability/${encodeURIComponent(id)}`, {
+      fetch(`/instructor/availability/${encodeURIComponent(id)}`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -141,7 +141,7 @@ export default function CreateAvailability({
 
     // if name is duration check the duration provided by instructor
     if (Number(duration) > 0) {
-      let maxRecommendedTimeSplit = 1440;
+      let maxRecommendedDuration = 1440;
 
       // iterate through selectedProgramTimesData
       const startDate = new Date(`1970-01-01T${timeRange[0]}`);
@@ -152,12 +152,12 @@ export default function CreateAvailability({
       const minutes = Math.floor(timeDifference / (1000 * 60));
 
       // if maxsplit larger than minutes, set maxsplit to minutes
-      if (minutes < maxRecommendedTimeSplit) {
-        maxRecommendedTimeSplit = minutes;
+      if (minutes < maxRecommendedDuration) {
+        maxRecommendedDuration = minutes;
       }
 
-      // inform instructor that timesplit is too long
-      if (duration > maxRecommendedTimeSplit) {
+      // inform instructor that Duration is too long
+      if (duration > maxRecommendedDuration) {
         setTimeout(() => {
           window.alert("Time Split value is too large. Lower your time split");
         }, 10);

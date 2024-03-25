@@ -1,12 +1,11 @@
 /* WeeklyCalendar.js
- * Last Edited: 3/11/24
+ * Last Edited: 3/24/24
  *
  * Sets the general weekdays time blocks used
  * to populate the ProgramTimes table
  *
  * Known bugs:
- * - Cannot simultaneously create two time blocks at the same time
- * - Cancel button does not properly restore time blocks to original state (issue with Program.js)
+ * -
  *
  */
 
@@ -126,7 +125,17 @@ export default function WeeklyCalendar({
           updatedShowTimeEntries[day] = true;
         }
       }
-      setShowTimeEntryField(updatedShowTimeEntries);
+
+      // show time fields
+      setShowTimeEntryField((prevState) => ({
+        ...prevState,
+        ...Object.keys(updatedShowTimeEntries).reduce((acc, key) => {
+          if (updatedShowTimeEntries[key]) {
+            acc[key] = true;
+          }
+          return acc;
+        }, {}),
+      }));
 
       // set the times
       const updatedLocalTimes = {
@@ -170,7 +179,7 @@ export default function WeeklyCalendar({
   const renderWeekdayHeader = (day) => {
     return (
       <th
-        className={`border-r w-1/5 ${
+        className={`border-r w-1/5 hover:cursor-pointer ${
           showTimeEntryField[day] ? "bg-light-gray" : "bg-white"
         }`}
         name={day}

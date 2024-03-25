@@ -1,9 +1,9 @@
 /* ManageTimes.js
- * Last Edited: 3/11/24
+ * Last Edited: 3/24/24
  *
- * Manage Times tab for the Instructor role.
+ * Manage Times tab for the Instructor account_type.
  * Allows teacher to see availibility table and
- * Manage Availability for global and per class program types.
+ * Manage Availability for global and per course programs.
  * In addition, the Teacher can see a table of Upcoming, Pending, and Past meetings and
  * cancel any meetings that are upcoming.
  *
@@ -13,11 +13,11 @@
  */
 
 import React, { useEffect, useState, useContext } from "react";
-import MeetingInformation from "../components/MeetingInformation.js";
-import ManageAvailability from "../components/ManageAvailability.js";
+import AppointmentsTable from "../components/AppointmentsTable.js";
+import ManageAvailabilityTable from "../components/ManageAvailabilityTable.js";
 import { UserContext } from "../context/UserContext.js";
 
-export default function ManageTimes() {
+export default function Times() {
   // General Variables
   const { user } = useContext(UserContext);
 
@@ -34,10 +34,10 @@ export default function ManageTimes() {
 
   // fetch all courses the instructor is associated with
   const fetchAllInstructorCourses = async () => {
-    if (user.account_type !== "mentor") return;
+    if (user.account_type !== "instructor") return;
 
     try {
-      const response = await fetch(`/student/courses`, {
+      const response = await fetch(`/user/courses`, {
         credentials: "include",
       });
 
@@ -92,7 +92,7 @@ export default function ManageTimes() {
           <strong>Course:</strong>
         </h1>
         <select
-          className="border border-light-gray rounded ml-2"
+          className="border border-light-gray rounded ml-2 hover:cursor-pointer"
           id="course-dropdown"
           value={selectedCourseId}
           onChange={(e) => handleCourseChange(e)}
@@ -102,16 +102,16 @@ export default function ManageTimes() {
           </option>
           {allCourseData.map((course) => (
             <option key={course.id} value={course.id}>
-              {course.class_name}
+              {course.course_name}
             </option>
           ))}
         </select>
       </div>
       <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md">
-        <ManageAvailability courseId={selectedCourseId} />
+        <ManageAvailabilityTable courseId={selectedCourseId} />
       </div>
       <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
-        <MeetingInformation courseId={selectedCourseId} reloadTable={false} />
+        <AppointmentsTable courseId={selectedCourseId} reloadTable={false} />
       </div>
       {/* Empty Space at bottom of webpage */}
       <div className="p-10"></div>

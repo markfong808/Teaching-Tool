@@ -1,5 +1,5 @@
-/* MeetingInformation.js
- * Last Edited: 3/11/24
+/* AppointmentsTable.js
+ * Last Edited: 3/24/24
  *
  * Table UI to show appointment history for Students and Instructors.
  * Students and Instructors can sort, edit, and cancel appointments.
@@ -7,13 +7,12 @@
  * can edit appointment details.
  *
  * Known bugs:
- * - Save and Discard Changes shows up twice after providing feedback.
- * - Redo feeback UI
+ * - Redo feedback UI
  *
  */
 
 import React, { useEffect, useState, useContext } from "react";
-import { UserContext } from "../context/UserContext";
+import { UserContext } from "../context/UserContext.js";
 import {
   formatTime,
   formatDate,
@@ -21,14 +20,13 @@ import {
   capitalizeFirstLetter,
 } from "../utils/FormatDatetime.js";
 import { getCookie } from "../utils/GetCookie.js";
-import { Tooltip } from "../components/Tooltip.js";
-import Comment from "../components/Comment.js";
+import { Tooltip } from "./Tooltip.js";
+import Comment from "./Comment.js";
 
-export default function MeetingInformation({ courseId, reloadTable }) {
+export default function AppointmentsTable({ courseId, reloadTable }) {
   // General Variables
   const { user } = useContext(UserContext);
   const csrfToken = getCookie("csrf_access_token");
-  const [changesMade, setChangesMade] = useState(false);
 
   // Load Variables
   const [initialLoad, setInitialLoad] = useState(true);
@@ -36,7 +34,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   // Appointment Table Variables
   const [activeTab, setActiveTab] = useState("upcoming");
   const [showTable, setShowTable] = useState(true);
-  const [sortedBy, sortBy] = useState("Type");
+  const [sortedBy, sortBy] = useState("Name");
   const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
 
   // Appointment Data Variables
@@ -47,7 +45,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   const [data, setData] = useState([]);
   const [formData, setFormData] = useState({
     notes: "",
-    appointment_url: "",
+    meeting_url: "",
   });
   const [feedbackData, setFeedbackData] = useState({
     satisfaction: "",
@@ -64,23 +62,20 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     if (!user || courseId === "") return;
 
     const apiEndpoint =
-      user.account_type === "mentor"
-        ? `/mentor/appointments`
+      user.account_type === "instructor"
+        ? `/instructor/appointments`
         : `/student/appointments`;
 
     try {
-      const response = await fetch(
-        `${apiEndpoint}/${encodeURIComponent(courseId)}?type=${activeTab}`,
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${apiEndpoint}?type=${activeTab}`, {
+        credentials: "include",
+      });
 
       const fetchedData = await response.json();
 
       const key =
-        user.account_type === "mentor"
-          ? "mentor_appointments"
+        user.account_type === "instructor"
+          ? "instructor_appointments"
           : "student_appointments";
 
       // sort the appointment
@@ -107,9 +102,9 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     // If there's no user, we can't fetch program details
     if (!user) return;
     const apiEndpoint =
-      user.account_type === "mentor"
-        ? `/instructor/programs`
-        : `/student/programs`;
+      user.account_type === "instructor"
+        ? `/instructor/programs/descriptions`
+        : `/student/programs/descriptions`;
 
     try {
       const response = await fetch(apiEndpoint, {
@@ -117,17 +112,20 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       });
 
       const fetchedData = await response.json();
+
       // create program details array
       // store id, program, and description into an object
       // store object into array
-      const programDetails = fetchedData.map((program) => ({
-        id: program.id,
-        type: program.type,
-        description: program.description,
-      }));
+      if (fetchedData.length > 0) {
+        const programDetails = fetchedData.map((program) => ({
+          id: program.id,
+          name: program.name,
+          description: program.description,
+        }));
 
-      // set type descriptions to program details
-      setProgramDescriptions(programDetails);
+        // set program descriptions to program details
+        setProgramDescriptions(programDetails);
+      }
     } catch (error) {
       console.error("Error fetching program descriptions:", error);
     }
@@ -149,10 +147,10 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       let feedbackExists = false;
       // if the account type is student, store the student rating or notes in to feedbackExists
       if (user.account_type === "student") {
-        feedbackExists = apiData.student_rating || apiData.student_notes;
-      } else if (user.account_type === "mentor") {
+        feedbackExists = apiData.attendee_rating || apiData.attendee_notes;
+      } else if (user.account_type === "instructor") {
         // else if the account type is instructor, store the instructor rating or notes in to feedbackExists
-        feedbackExists = apiData.mentor_rating || apiData.mentor_notes;
+        feedbackExists = apiData.instructor_rating || apiData.instructor_notes;
       }
 
       // set feedbackPresent to feedbackExists
@@ -166,7 +164,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  // called when instructor clicks on save changes button after providing feedback
+  // called when user clicks on save changes button after providing feedback
   // posts appointment notes, appointment url, or both to the Appointment table
   const handleSaveChanges = async () => {
     if (!selectedAppointment) return;
@@ -177,7 +175,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     };
 
     try {
-      const response = await fetch(`/meetings/update`, {
+      const response = await fetch(`/appointment/update`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -190,11 +188,6 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       if (response.ok) {
         // update the selected appointment with the new formData
         setSelectedAppointment({ ...selectedAppointment, ...formData });
-        setChangesMade(false);
-        // QOL delay
-        setTimeout(() => {
-          alert("Appointment updated successfully!");
-        }, 10);
         fetchAppointments(); // re-fetch appointments
       } else {
         throw new Error("Failed to update the appointment");
@@ -213,7 +206,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       status: newStatus,
     };
     try {
-      const response = await fetch(`/meeting/update/status`, {
+      const response = await fetch(`/appointment/update/status`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -260,7 +253,6 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         alert("Thank you for your feedback!");
         // reset feedback data
         setIsProvidingFeedback(false);
-        setChangesMade(false);
         setFeedbackData({
           satisfaction: "",
           additional_comments: "",
@@ -281,8 +273,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     if (window.confirm("Are your sure you want to cancel this appointment?")) {
       // Construct the endpoint based on account type
       const cancelEndpoint =
-        user.account_type === "mentor"
-          ? `/mentor/appointments/cancel/${appointmentId}`
+        user.account_type === "instructor"
+          ? `/instructor/appointments/cancel/${appointmentId}`
           : `/student/appointments/cancel/${appointmentId}`;
 
       try {
@@ -315,11 +307,15 @@ export default function MeetingInformation({ courseId, reloadTable }) {
 
   // called when instructor wants to enter appointment URL Link or appointment notes
   const handleInputChange = (e) => {
-    if (user.account_type !== "mentor") return;
+    if (
+      (user.account_type !== "instructor" && e.target.name === "meeting_url") ||
+      (user.account_type !== "student" && e.target.name === "notes")
+    ) {
+      return;
+    }
 
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    setChangesMade(true);
   };
 
   // called when instructor or student clicks on upcoming, pending, or past tab
@@ -338,7 +334,6 @@ export default function MeetingInformation({ courseId, reloadTable }) {
   const handleFeedbackInputChange = (e) => {
     const { name, value } = e.target;
     setFeedbackData({ ...feedbackData, [name]: value }); // update feedbackData with comments/satisfaction rating
-    setChangesMade(true);
   };
 
   // called when instrucor or student clicks on cancel changes button
@@ -348,7 +343,6 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       satisfaction: "",
       additional_comments: "",
     });
-    setChangesMade(false);
   };
 
   // called when instructor or student clicks on provide feedback button
@@ -362,18 +356,6 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         ? selectedAppointment.appointment_id
         : null,
     });
-    setChangesMade(false);
-  };
-
-  // called when instructor wanted to cancel changes made
-  const handleCancelChanges = () => {
-    // Reset form data to initial appointment data
-    setFormData({
-      notes: selectedAppointment.notes || "",
-      appointment_url: selectedAppointment.meeting_url || "",
-      status: selectedAppointment.status || "",
-    });
-    setChangesMade(false); // Reset changes made
   };
 
   // sort appointments
@@ -391,10 +373,10 @@ export default function MeetingInformation({ courseId, reloadTable }) {
       switch (sort) {
         // sort based on appointment name
         case "Name":
-          return a.type.localeCompare(b.type);
+          return a.name.localeCompare(b.name);
         // sort based on course_name
-        case "class_name":
-          return a.class_name.localeCompare(b.class_name);
+        case "course_name":
+          return a.course_name.localeCompare(b.course_name);
         // sort based on day
         case "Day":
           return (
@@ -436,14 +418,13 @@ export default function MeetingInformation({ courseId, reloadTable }) {
     if (selectedAppointment) {
       setFormData({
         notes: selectedAppointment.notes || "",
-        appointment_url: selectedAppointment.meeting_url || "",
+        meeting_url: selectedAppointment.meeting_url || "",
         status: selectedAppointment.status || "",
       });
-      setChangesMade(false);
     }
   }, [selectedAppointment]);
 
-  // fetch appointments and program type details when use, activeTab, or reloadTable updates
+  // fetch appointments and program details when use, activeTab, or reloadTable updates
   useEffect(() => {
     if (!initialLoad || reloadTable) {
       fetchAppointments();
@@ -499,13 +480,13 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         </div>
         <div>
           <div className="flex flex-col">
-            <label htmlFor="rating" className="font-bold pt-5">
+            <label className="font-bold pt-5">
               How satisfied are you with the appointment?
             </label>
             <div className="flex flex-row justify-between">
               {satisfactionLevels.map((level) => (
                 <div key={level} className="flex flex-col">
-                  <label htmlFor={level}>{level}</label>
+                  <label>{level}</label>
                   <input
                     type="radio"
                     name="satisfaction" // This should match the key in feedbackData
@@ -518,9 +499,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
               ))}
             </div>
             <div id="additional-comments" className="mt-5">
-              <label htmlFor="explanation" className="font-bold">
-                Please Explain
-              </label>
+              <label className="font-bold">Please Explain</label>
               <textarea
                 className="w-full border border-light-gray h-20"
                 name="additional_comments" // This should match the key in feedbackData
@@ -530,23 +509,6 @@ export default function MeetingInformation({ courseId, reloadTable }) {
             </div>
           </div>
         </div>
-        <br />
-        {changesMade && (
-          <div className="flex flex-row justify-end pb-10">
-            <button
-              className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md"
-              onClick={handleProvideFeedback}
-            >
-              Save Changes
-            </button>
-            <button
-              className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md"
-              onClick={handleCancelFeedbackChanges}
-            >
-              Cancel Changes
-            </button>
-          </div>
-        )}
       </div>
     );
   };
@@ -578,7 +540,8 @@ export default function MeetingInformation({ courseId, reloadTable }) {
         <div className="flex justify-end">
           <div className="flex">
             {((user.account_type === "student" && activeTab !== "past") ||
-              (user.account_type === "mentor" && activeTab === "upcoming")) && (
+              (user.account_type === "instructor" &&
+                activeTab === "upcoming")) && (
               <button
                 className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                 onClick={() =>
@@ -588,7 +551,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                 Cancel Appointment
               </button>
             )}
-            {user.account_type === "mentor" && activeTab === "pending" && (
+            {user.account_type === "instructor" && activeTab === "pending" && (
               <div>
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
@@ -613,7 +576,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                 </button>
               </div>
             )}
-            {user.account_type === "mentor" && activeTab === "past" && (
+            {user.account_type === "instructor" && activeTab === "past" && (
               <div className="flex flex-row">
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
@@ -661,9 +624,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           {/*Left Side */}
           <div className="flex flex-col">
             <div className="flex flex-row">
-              <label htmlFor="type" className="font-bold">
-                Program&nbsp;
-              </label>
+              <label className="font-bold">Program&nbsp;</label>
               <Tooltip
                 text={
                   programDescriptions.find(
@@ -675,22 +636,18 @@ export default function MeetingInformation({ courseId, reloadTable }) {
               </Tooltip>
             </div>
 
-            <label htmlFor="type">
+            <label>
               {programDescriptions.find(
                 (desc) => desc.id === Number(selectedAppointment.program_id)
-              )?.type || "No name for this program"}
+              )?.name || "No name for this program"}
             </label>
 
-            <label htmlFor="date" className="font-bold pt-2">
-              Date
-            </label>
+            <label className="font-bold pt-2">Date</label>
             {getDayFromDate(selectedAppointment.date) +
               ", " +
               formatDate(selectedAppointment.date)}
 
-            <label htmlFor="time" className="font-bold pt-2">
-              Time
-            </label>
+            <label className="font-bold pt-2">Time</label>
             {`${formatTime(selectedAppointment.start_time)} - ${formatTime(
               selectedAppointment.end_time
             )} (PST)`}
@@ -699,7 +656,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
           {/*Right Side */}
           <div className="flex flex-col justify-self-end">
             <label className="font-bold pt-2">Course</label>
-            {selectedAppointment.class_name}
+            {selectedAppointment.course_name}
 
             {selectedAppointment.physical_location ? (
               <>
@@ -712,85 +669,77 @@ export default function MeetingInformation({ courseId, reloadTable }) {
               <>
                 <label className="font-bold pt-2">Your Appointment URL</label>
                 <input
-                  className="w-full border border-light-gray bg-gray"
+                  className={`w-full ${
+                    user.account_type !== "instructor"
+                      ? ""
+                      : "border border-light-gray bg-gray"
+                  }`}
                   type="text"
-                  name="appointment_url"
-                  value={formData.appointment_url}
+                  name="meeting_url"
+                  value={formData.meeting_url}
                   onChange={handleInputChange}
                   disabled={
                     activeTab === "past" || user.account_type === "student"
                   }
+                  onBlur={handleSaveChanges}
                 />
               </>
             ) : null}
 
-            <label htmlFor="status" className="font-bold pt-2">
-              Current Status
-            </label>
+            <label className="font-bold pt-2">Current Status</label>
             {capitalizeFirstLetter(selectedAppointment.status)}
           </div>
         </div>
         <div className="flex flex-col">
-          <label htmlFor="notes" className="font-bold pt-2">
-            Appointment Notes
-          </label>
+          <label className="font-bold pt-2">Appointment Notes</label>
           <textarea
-            className="w-full border border-light-gray h-20"
+            className={`w-full h-20 ${
+              user.account_type !== "student" ? "" : "border border-light-gray"
+            }`}
             name="notes"
             value={formData.notes}
             onChange={handleInputChange}
+            onBlur={handleSaveChanges}
+            disabled={user.account_type !== "student"}
           />
-          {/* display student details if mentor view */}
-          {user.account_type === "mentor" && selectedAppointment.student && (
-            <div className="flex flex-col pt-5">
-              <h2 className="text-2xl font-bold">Student Info</h2>
-              <label className="font-bold pt-2">Name</label>
-              {selectedAppointment.student.first_name}
+          {/* display student details if instructor view */}
+          {user.account_type === "instructor" &&
+            selectedAppointment.student && (
+              <div className="flex flex-col pt-5">
+                <h2 className="text-2xl font-bold">Student Info</h2>
+                <label className="font-bold pt-2">Name</label>
+                {selectedAppointment.student.name}
 
-              <label className="font-bold pt-2">Pronouns</label>
-              {selectedAppointment.student.pronouns}
+                <label className="font-bold pt-2">Pronouns</label>
+                {selectedAppointment.student.pronouns}
 
-              <label className="font-bold pt-2">Email</label>
-              {selectedAppointment.student.email}
-            </div>
-          )}
+                <label className="font-bold pt-2">Email</label>
+                {selectedAppointment.student.email}
+              </div>
+            )}
 
-          {/* display mentor details if student view */}
+          {/* display instructor details if student view */}
           {user.account_type === "student" &&
-            selectedAppointment.mentor &&
+            selectedAppointment.instructor &&
             activeTab !== "pending" && (
               <div className="flex flex-col pt-5">
                 <h2 className="text-2xl font-bold">Instructor Info</h2>
                 <label className="font-bold pt-2">Name</label>
-                {selectedAppointment.mentor.title +
+                {selectedAppointment.instructor.title +
                   " " +
-                  selectedAppointment.mentor.first_name}
+                  selectedAppointment.instructor.name}
 
                 <label className="font-bold pt-2">Pronouns</label>
-                {selectedAppointment.mentor.pronouns}
+                {selectedAppointment.instructor.pronouns}
 
                 <label className="font-bold pt-2">Email</label>
-                {selectedAppointment.mentor.email}
+                {selectedAppointment.instructor.email}
               </div>
             )}
         </div>
-        {changesMade && (
-          <div className="flex justify-end">
-            <button
-              className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md"
-              onClick={handleSaveChanges}
-            >
-              Save Changes
-            </button>
-            <button
-              className="bg-purple hover:bg-gold p-2 mt-3 ml-2 text-white rounded-md"
-              onClick={handleCancelChanges}
-            >
-              Cancel Changes
-            </button>
-          </div>
-        )}
+
         <br />
+
         <Comment appointmentId={selectedAppointment.appointment_id} />
       </div>
     );
@@ -850,7 +799,7 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                     </th>
                     <th
                       className="border-r w-14% cursor-pointer hover:bg-gold"
-                      onClick={() => sortBy("class_name")}
+                      onClick={() => sortBy("course_name")}
                     >
                       Course Name
                     </th>
@@ -904,10 +853,10 @@ export default function MeetingInformation({ courseId, reloadTable }) {
                         className="cursor-pointer hover:bg-gray border-b"
                       >
                         <td className="border-r">
-                          {appointment.type || "-------"}
+                          {appointment.name || "-------"}
                         </td>
                         <td className="border-r">
-                          {appointment.class_name || "-------"}
+                          {appointment.course_name || "-------"}
                         </td>
                         <td className="border-r">
                           {getDayFromDate(appointment.date) || "-------"}
