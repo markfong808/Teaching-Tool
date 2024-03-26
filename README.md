@@ -23,7 +23,7 @@ git clone https://dev.azure.com/software-engineering-studio/studio-course/_git/m
    In your terminal, change to the frontend directory:
 
 ```bash
-cd scheduling-tools/frontend/mentorweb
+cd scheduling-tools/frontend/
 ```
 
 3. **Install the frontend dependencies**:
