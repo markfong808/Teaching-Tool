@@ -20,7 +20,7 @@ export default function ProgramLocation({
 
   // passing entry of location and links for programs
   // back to Program.js
-  const handleInputChange = async (e) => {
+  const handleInputChange = (e) => {
     functions.inputChangeFunction({
       target: {
         name: e.target.name,

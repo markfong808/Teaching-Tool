@@ -146,7 +146,7 @@ export default function CourseDetails({ courseId }) {
 
   // load Course Details and Course Times from database into local variables
   const loadData = async () => {
-    await fetchCourseDetails();
+    fetchCourseDetails();
     fetchTimesData();
   };
 
@@ -209,6 +209,7 @@ export default function CourseDetails({ courseId }) {
   // on initial page load, select default tab
   useEffect(() => {
     if (!load) {
+      console.log("DWADAWD");
       loadData();
     }
     setLoad(false);
@@ -234,14 +235,6 @@ export default function CourseDetails({ courseId }) {
   useEffect(() => {
     setSelectedCourseId(courseId);
   }, [courseId]);
-
-  useEffect(() => {
-    console.log(courseData);
-  }, [courseData]);
-
-  useEffect(() => {
-    console.log(times);
-  }, [times]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //

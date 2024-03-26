@@ -10,7 +10,7 @@
  *
  */
 import React, { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -46,12 +46,18 @@ const ChooseAppointmentDatesPopup = ({
 
   // posts added availbility data to the Availability table
   const createTimeSlot = async () => {
+    console.log("STEP 1");
     try {
       const csrfToken = getCookie("csrf_access_token");
       let convertedAvailability = [];
+      console.log("STEP 2");
 
       // iterate from the start date till the end date
-      for (let date = new Date(startDate); date <= endDate; ) {
+      for (
+        let date = new Date(startDate);
+        date <= endDate;
+        date = addDays(date, 1)
+      ) {
         // obtain day of week based on date
         const dayOfWeek = format(date, "EEEE");
 
@@ -70,6 +76,7 @@ const ChooseAppointmentDatesPopup = ({
           });
         }
       }
+      console.log("STEP 3");
 
       // if no duration set to 0
       if (!duration || duration === "") {
@@ -88,6 +95,8 @@ const ChooseAppointmentDatesPopup = ({
         program_id: program_id,
       };
 
+      console.log(convertedAvailability);
+
       await fetch(`/instructor/availability/${encodeURIComponent(course_id)}`, {
         method: "POST",
         credentials: "include",
@@ -97,6 +106,8 @@ const ChooseAppointmentDatesPopup = ({
         },
         body: JSON.stringify(convertedAvailability),
       });
+
+      console.log("COMPLETED");
 
       window.alert("Availabilities created successfully!");
       setShowPopup(false);
