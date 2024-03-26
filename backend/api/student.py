@@ -257,80 +257,89 @@ def get_student_dropins(course_id):
 @student.route('/student/appointments', methods=['GET'])
 @jwt_required()
 def get_student_appointments_for_course():
-    student_id = get_jwt_identity()
-    meeting_type = request.args.get('type', 'all')
-    current_time_pst = datetime.utcnow() - timedelta(hours=8)
-    current_date_str = current_time_pst.strftime('%Y-%m-%d')
-    current_time_str = current_time_pst.strftime('%H:%M')
+    try:
+        student_id = get_jwt_identity()
+        meeting_type = request.args.get('type', 'all')
+        current_time_pst = datetime.utcnow() - timedelta(hours=8)
+        current_date_str = current_time_pst.strftime('%Y-%m-%d')
+        current_time_str = current_time_pst.strftime('%H:%M')
 
-    appointments_query = Appointment.query.filter(Appointment.attendee_id == student_id)
+        appointments_query = Appointment.query.filter(Appointment.attendee_id == student_id)
 
-    if meeting_type in ['upcoming', 'past', 'pending']:
-        if meeting_type == 'upcoming':
-            appointments_query = appointments_query.filter(
-                or_(
-                    Appointment.appointment_date > current_date_str,
-                    and_(
-                        Appointment.appointment_date == current_date_str,
-                        Appointment.start_time >= current_time_str
-                    )
-                ),
-                Appointment.status == 'reserved'
-            )
-        elif meeting_type == 'past':
-            appointments_query = appointments_query.filter(
-                or_(
-                    Appointment.appointment_date < current_date_str,
-                    and_(
-                        Appointment.appointment_date == current_date_str,
-                        Appointment.start_time < current_time_str
-                    )
-                ),
-                Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
-            )
-        elif meeting_type == 'pending':
-            appointments_query = appointments_query.filter(
-                or_(
-                    Appointment.appointment_date > current_date_str,
-                    and_(
-                        Appointment.appointment_date == current_date_str,
-                        Appointment.start_time >= current_time_str
-                    )
-                ),
-                Appointment.status == 'pending'
-            )
+        if meeting_type in ['upcoming', 'past', 'pending']:
+            if meeting_type == 'upcoming':
+                appointments_query = appointments_query.filter(
+                    or_(
+                        Appointment.appointment_date > current_date_str,
+                        and_(
+                            Appointment.appointment_date == current_date_str,
+                            Appointment.start_time >= current_time_str
+                        )
+                    ),
+                    Appointment.status == 'reserved'
+                )
+            elif meeting_type == 'past':
+                appointments_query = appointments_query.filter(
+                    or_(
+                        Appointment.appointment_date < current_date_str,
+                        and_(
+                            Appointment.appointment_date == current_date_str,
+                            Appointment.start_time < current_time_str
+                        )
+                    ),
+                    Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
+                )
+            elif meeting_type == 'pending':
+                appointments_query = appointments_query.filter(
+                    or_(
+                        Appointment.appointment_date > current_date_str,
+                        and_(
+                            Appointment.appointment_date == current_date_str,
+                            Appointment.start_time >= current_time_str
+                        )
+                    ),
+                    Appointment.status == 'pending'
+                )
 
-    student_appointments = []
-    appointments = appointments_query.all()
+        student_appointments = []
+        appointments = appointments_query.all()
 
-    for appt in appointments:
-        instructor = User.query.get(appt.host_id) if appt.host_id else None
-        instructor_info = {
-            "name": instructor.name,
-            "title": instructor.title,
-            "pronouns": instructor.pronouns,
-            "email": instructor.email,
-        } if instructor else {}
+        for appt in appointments:
+            instructor = User.query.get(appt.host_id) if appt.host_id else None
+            instructor_info = {
+                "name": instructor.name,
+                "title": instructor.title,
+                "pronouns": instructor.pronouns,
+                "email": instructor.email,
+            } if instructor else {}
 
-        program_name = get_program_type(appt.availability.program_details.id)
-        course_name = get_course_name(appt.course_id)
+            program_name = get_program_type(appt.availability.program_details.id)
+            course_name = get_course_name(appt.course_id)
 
-        student_appointments.append({
-            "appointment_id": appt.id,
-            "program_id": appt.availability.program_details.id,
-            "name": program_name,
-            "course_name": course_name,
-            "date": appt.appointment_date,
-            "start_time": appt.start_time,
-            "end_time": appt.end_time,
-            "status": appt.status,
-            "notes": appt.notes,
-            "physical_location": appt.physical_location,
-            "meeting_url": appt.meeting_url,
-            "instructor": instructor_info
-        })
+            print(appt.availability.program_details.id)
+            print(program_name)
+            print(appt.course_id)
+            print(course_name)
 
-    return jsonify(student_appointments=student_appointments), 200
+            student_appointments.append({
+                "appointment_id": appt.id,
+                "program_id": appt.availability.program_details.id,
+                "name": program_name,
+                "course_name": course_name,
+                "date": appt.appointment_date,
+                "start_time": appt.start_time,
+                "end_time": appt.end_time,
+                "status": appt.status,
+                "notes": appt.notes,
+                "physical_location": appt.physical_location,
+                "meeting_url": appt.meeting_url,
+                "instructor": instructor_info
+            })
+
+        return jsonify(student_appointments=student_appointments), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
     
 # fetch all of the programs for each course a student is enrolled in
 @student.route('/student/programs/descriptions', methods=['GET'])

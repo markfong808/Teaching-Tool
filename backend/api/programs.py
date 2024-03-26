@@ -44,7 +44,7 @@ def get_course_name(course_id):
         course = CourseDetails.query.filter_by(id=course_id).first()
 
         if course:
-            return course.course_name
+            return course.name
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

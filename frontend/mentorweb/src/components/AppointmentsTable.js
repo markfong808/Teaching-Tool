@@ -79,6 +79,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           : "student_appointments";
 
       // sort the appointment
+
+      console.log(fetchedData);
       const sortedData = (fetchedData[key] || []).sort((a, b) => {
         const dateComparison = new Date(a.date) - new Date(b.date);
         if (dateComparison === 0) {
