@@ -59,9 +59,9 @@ def add_feedback():
             feedback.attendee_rating = data.get('satisfaction')
             feedback.attendee_notes = data.get('additional_comments')
         else:
-            feedback.instructor_id = user_id
-            feedback.instructor_rating = data.get('satisfaction')
-            feedback.instructor_notes = data.get('additional_comments')
+            feedback.host_id = user_id
+            feedback.host_rating = data.get('satisfaction')
+            feedback.host_notes = data.get('additional_comments')
         return feedback
 
     try:
@@ -92,7 +92,7 @@ def get_all_feedback():
     feedback_list = []
     for feedback in feedbacks:
         student = User.query.get(feedback.attendee_id)
-        instructor = User.query.get(feedback.instructor_id)
+        host = User.query.get(feedback.host_id)
         appointment = Appointment.query.get(feedback.appointment_id)
         feedback_data = {
             "id": feedback.id,
@@ -100,9 +100,9 @@ def get_all_feedback():
             "attendee_id": student.name,
             "attendee_rating": feedback.attendee_rating,
             "attendee_notes": feedback.attendee_notes,
-            "instructor_id": instructor.name,
-            "instructor_rating": feedback.instructor_rating,
-            "instructor_notes": feedback.instructor_notes,
+            "host_id": host.name,
+            "host_rating": feedback.host_rating,
+            "host_notes": feedback.host_notes,
             "appointment_id": feedback.appointment_id,
             "appointment_data": {
                 "start_time": appointment.start_time,
@@ -111,7 +111,7 @@ def get_all_feedback():
                 "meeting_url": appointment.meeting_url,
                 "notes": appointment.notes,                
                 "attendee_id": appointment.attendee_id,
-                "instructor_id": appointment.instructor_id,
+                "host_id": appointment.host_id,
                 "type": appointment.type,
                 "status": appointment.status
             }
@@ -133,9 +133,9 @@ def get_feedback(appointment_id):
         "attendee_id": feedback.attendee_id,
         "attendee_rating": feedback.attendee_rating,
         "attendee_notes": feedback.attendee_notes,
-        "instructor_id": feedback.instructor_id,
-        "instructor_rating": feedback.instructor_rating,
-        "instructor_notes": feedback.instructor_notes
+        "host_id": feedback.host_id,
+        "host_rating": feedback.host_rating,
+        "host_notes": feedback.host_notes
     }
 
     return jsonify(feedback_data), 200

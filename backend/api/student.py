@@ -83,7 +83,7 @@ def get_global_programs(instructor_id):
 # Helper function to send confirmation email to student and instructor
 def send_confirmation_email(appointment):
     student = User.query.get(appointment.attendee_id)
-    instructor = User.query.get(appointment.instructor_id)
+    instructor = User.query.get(appointment.host_id)
 
     if student and instructor:
         student_email_subject = f'{appointment.availability.program_details.id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
@@ -128,37 +128,37 @@ def get_week_range(date_str):
     end_of_week = start_of_week + timedelta(days=6)
     return start_of_week.strftime('%Y-%m-%d'), end_of_week.strftime('%Y-%m-%d')
 
-def update_appointments_status(instructor_id, appointment_date, scope):
+def update_appointments_status(host_id, appointment_date, scope):
     parsed_appointment_date = datetime.strptime(appointment_date, '%Y-%m-%d')
     if scope == 'daily':
         # Update appointments for the day
         appointments = Appointment.query.filter(
-            Appointment.instructor_id == instructor_id,
+            Appointment.host_id == host_id,
             func.date(Appointment.appointment_date) == appointment_date,
             Appointment.status == 'posted'
         ).all()
         # Update the availability for the day
         availabilities = Availability.query.filter(
-            Availability.user_id == instructor_id,
+            Availability.user_id == host_id,
             func.date(Availability.date) == appointment_date
         ).all()
     elif scope == 'weekly':
         start_of_week, end_of_week = get_week_range(appointment_date)
         # Update appointments for the week
         appointments = Appointment.query.filter(
-            Appointment.instructor_id == instructor_id,
+            Appointment.host_id == host_id,
             func.date(Appointment.appointment_date).between(start_of_week, end_of_week),
             Appointment.status == 'posted'
         ).all()
         # Update availabilities for the week
         availabilities = Availability.query.filter(
-            Availability.user_id == instructor_id,
+            Availability.user_id == host_id,
             func.date(Availability.date).between(start_of_week, end_of_week)
         ).all()
     elif scope == 'monthly':
         #Your code here
         appointments = Appointment.query.filter(
-            Appointment.instructor_id == instructor_id,
+            Appointment.host_id == host_id,
             extract('month', func.date(Appointment.appointment_date)) == parsed_appointment_date.month,
             extract('year', func.date(Appointment.appointment_date)) == parsed_appointment_date.year,
             Appointment.status == 'posted'
@@ -166,7 +166,7 @@ def update_appointments_status(instructor_id, appointment_date, scope):
 
         # Update availabilities for the month
         availabilities = Availability.query.filter(
-            Availability.user_id == instructor_id,
+            Availability.user_id == host_id,
             extract('month', func.date(Availability.date)) == parsed_appointment_date.month,
             extract('year', func.date(Availability.date)) == parsed_appointment_date.year
         ).all()
@@ -304,7 +304,7 @@ def get_student_appointments_for_course():
     appointments = appointments_query.all()
 
     for appt in appointments:
-        instructor = User.query.get(appt.instructor_id) if appt.instructor_id else None
+        instructor = User.query.get(appt.host_id) if appt.host_id else None
         instructor_info = {
             "name": instructor.name,
             "title": instructor.title,
@@ -420,7 +420,7 @@ def get_appointment_programs():
         
         if student:
             all_student_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=user_id).all()
-            course_info = [{'course_id': course.id, 'course_name': course.course_name} for course in all_student_courses]
+            course_info = [{'course_id': course.id, 'course_name': course.name} for course in all_student_courses]
 
             if all_student_courses:
 
@@ -540,14 +540,14 @@ def reserve_appointment(appointment_id, course_id):
 
         # Count current reserved and pending appointments for the day
         daily_count = Appointment.query.filter(
-            Appointment.instructor_id == appointment.instructor_id,
+            Appointment.host_id == appointment.host_id,
             func.date(Appointment.appointment_date) == appointment.appointment_date,
             Appointment.status.in_(['reserved', 'pending'])
         ).count()
 
         # Count current reserved and pending appointments for the week
         weekly_count = Appointment.query.filter(
-            Appointment.instructor_id == appointment.instructor_id,
+            Appointment.host_id == appointment.host_id,
             func.date(Appointment.appointment_date).between(start_of_week, end_of_week),
             Appointment.status.in_(['reserved', 'pending'])
         ).count()
@@ -556,7 +556,7 @@ def reserve_appointment(appointment_id, course_id):
 
         # Count current reserved and pending appointments for the month
         monthly_count = Appointment.query.filter(
-            Appointment.instructor_id == appointment.instructor_id,
+            Appointment.host_id == appointment.host_id,
             extract('month', func.date(Appointment.appointment_date)) == parsed_appointment_date.month,
             extract('year', func.date(Appointment.appointment_date)) == parsed_appointment_date.year,
             Appointment.status.in_(['reserved', 'pending'])
@@ -582,11 +582,11 @@ def reserve_appointment(appointment_id, course_id):
                 db.session.commit()
                 
                 if hits_daily_limit:
-                    update_appointments_status(appointment.instructor_id, appointment.appointment_date, 'daily')
+                    update_appointments_status(appointment.host_id, appointment.appointment_date, 'daily')
                 elif hits_weekly_limit:
-                    update_appointments_status(appointment.instructor_id, appointment.appointment_date, 'weekly')
+                    update_appointments_status(appointment.host_id, appointment.appointment_date, 'weekly')
                 elif hits_monthly_limit:
-                    update_appointments_status(appointment.instructor_id, appointment.appointment_date, 'monthly')
+                    update_appointments_status(appointment.host_id, appointment.appointment_date, 'monthly')
 
                 
                 if appointment.status == 'reserved':
@@ -604,9 +604,9 @@ def reserve_appointment(appointment_id, course_id):
         else:
             # Update remaining slots if limits are reached
             if daily_count >= instructor_limits.max_daily_meetings:
-                update_appointments_status(appointment.instructor_id, appointment.appointment_date, 'daily')
+                update_appointments_status(appointment.host_id, appointment.appointment_date, 'daily')
             elif weekly_count >= instructor_limits.max_weekly_meetings:
-                update_appointments_status(appointment.instructor_id, appointment.appointment_date, 'weekly')
+                update_appointments_status(appointment.host_id, appointment.appointment_date, 'weekly')
             return jsonify({"message": "Meeting limit reached"}), 409
     except Exception as e:
         print(f"ERM: {str(e)}")

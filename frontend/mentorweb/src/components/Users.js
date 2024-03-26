@@ -1,13 +1,30 @@
+/* Users.js
+ * Last Edited: 3/25/24
+ *
+ * Manage Users tab where admins can see registered instructor,
+ * student, and admin accounts. Admins can manage
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React, { useEffect, useState } from "react";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import UserProfile from "./UserProfile";
 
 export default function Users() {
+  // User Data Variables
   const [users, setUsers] = useState([]);
   const [selectedUserType, setSelectedUserType] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [query, setQuery] = useState("");
 
+  ////////////////////////////////////////////////////////
+  //               Fetch Get Functions                  //
+  ////////////////////////////////////////////////////////
+
+  //
   const fetchUsers = () => {
     fetch("/admin/all-users")
       .then((response) => {
@@ -25,14 +42,11 @@ export default function Users() {
       });
   };
 
-  useEffect(() => {
-    fetchUsers(); // Call fetchUsers inside useEffect
-  }, []);
+  ////////////////////////////////////////////////////////
+  //               Fetch Post Functions                 //
+  ////////////////////////////////////////////////////////
 
-  const handleUserNameClick = (user) => {
-    setSelectedUser(user); // Set the selected user when name is clicked
-  };
-
+  //
   const handleAccountTypeChange = (user_id, new_account_type, userName) => {
     if (
       !new_account_type ||
@@ -67,6 +81,7 @@ export default function Users() {
       });
   };
 
+  //
   const handleAccountStatusChange = (user_id, new_account_status, userName) => {
     if (
       !new_account_status ||
@@ -101,10 +116,21 @@ export default function Users() {
       });
   };
 
+  ////////////////////////////////////////////////////////
+  //                 Handler Functions                  //
+  ////////////////////////////////////////////////////////
+
+  //
+  const handleUserNameClick = (user) => {
+    setSelectedUser(user); // Set the selected user when name is clicked
+  };
+
+  //
   const handleUserTypeChange = (event) => {
     setSelectedUserType(event.target.value);
   };
 
+  //
   const handleFilter = (event) => {
     setQuery(event.target.value);
   };
@@ -119,6 +145,20 @@ export default function Users() {
     return acc;
   }, {});
 
+  ////////////////////////////////////////////////////////
+  //                 UseEffect Functions                //
+  ////////////////////////////////////////////////////////
+
+  //
+  useEffect(() => {
+    fetchUsers(); // Call fetchUsers inside useEffect
+  }, []);
+
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
   return (
     <div className="flex flex-col w-2/3 m-auto">
       {selectedUser ? (

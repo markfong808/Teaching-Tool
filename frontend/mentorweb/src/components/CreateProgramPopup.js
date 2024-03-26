@@ -2,7 +2,7 @@
  * Last Edited: 3/24/24
  *
  * UI popup shown when instructor clicks on the create program button
- * in the "Programs" tab. Allows teacher to enter name of program,
+ * in the "Programs" tab. Allows instructor to enter name of program,
  * and whether it's drop-in or appointment based
  *
  * Known Bugs:
@@ -33,9 +33,9 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
 
   // posts the program to the Program table
   const createProgram = async () => {
-    if (programTitle === "Course Times" && courseId === -2) {
+    if (programTitle === "Course Details") {
       alert(
-        'Program Name: "Course Name" is not allowed for All Course Programs. For Course Times use Single Course Programs.'
+        'Program Name: "Course Details" is not allowed for All Course Programs. For "Course Details" select it in your Single Course Programs.'
       );
       return;
     }

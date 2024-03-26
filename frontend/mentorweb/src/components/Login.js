@@ -1,9 +1,8 @@
 /* Login.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/25/24
  *
- * Login Tab for students, instructors, admins, (later just student and instructors)
- * to enter email and password for login,
- * or reset password, or create account
+ * Login for students, instructors, admins, (later just student and instructors)
+ * to enter email and password, or reset password, or create account
  *
  * Known Bugs:
  * -

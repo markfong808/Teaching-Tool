@@ -2,7 +2,7 @@
  * Last Edited: 3/24/24
  *
  * Entry Field UI for the physical_location, meeting_url,
- * and course_recordings_link for programs
+ * and recordings_link for programs
  *
  * Known bugs:
  * -
@@ -20,7 +20,7 @@ export default function ProgramLocation({
 
   // passing entry of location and links for programs
   // back to Program.js
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     functions.inputChangeFunction({
       target: {
         name: e.target.name,
@@ -36,7 +36,7 @@ export default function ProgramLocation({
   // HTML for webpage
   // conditional rendering of boxes if isCourseLocation is true or not
   return (
-    <div className={isCourseInfoProgram ? "w-2/3 m-auto" : "w-full m-auto"}>
+    <div className={"w-full m-auto"}>
       <div
         className={
           isCourseInfoProgram
@@ -46,9 +46,41 @@ export default function ProgramLocation({
       >
         <div className="flex">
           <label className="whitespace-nowrap font-bold text-2xl mb-2">
-            Set Program Location:
+            {isCourseInfoProgram
+              ? "Set Course Details:"
+              : "Set Program Location:"}
           </label>
         </div>
+
+        {isCourseInfoProgram && (
+          <div className="flex flex-row items-center mb-2">
+            <label className="whitespace-nowrap">Quarter:</label>
+            <select
+              className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
+              name={"quarter"}
+              value={data.quarter ?? ""}
+              onChange={handleInputChange}
+              onBlur={functions.saveChangeFunction}
+            >
+              <option className="bg-white" key="" value="">
+                Select...
+              </option>
+              <option className="bg-white" key="Fall" value="Fall">
+                Fall
+              </option>
+              <option className="bg-white" key="Winter" value="Winter">
+                Winter
+              </option>
+              <option className="bg-white" key="Spring" value="Spring">
+                Spring
+              </option>
+              <option className="bg-white" key="Summer" value="Summer">
+                Summer
+              </option>
+            </select>
+          </div>
+        )}
+
         <div
           className={
             isCourseInfoProgram
@@ -91,16 +123,31 @@ export default function ProgramLocation({
         </div>
 
         {isCourseInfoProgram && (
-          <div>
-            <label className="whitespace-nowrap">Course Recordings Link:</label>
-            <input
-              className="border border-light-gray ml-2 w-40 hover:bg-gray"
-              name="course_recordings_link"
-              value={data.course_recordings_link ?? ""}
-              onChange={handleInputChange}
-              onBlur={functions.saveChangeFunction}
-            />
-          </div>
+          <>
+            <div className="flex flex-row items-center mb-2">
+              <label className="whitespace-nowrap">
+                Course Recordings Link:
+              </label>
+              <input
+                className="border border-light-gray ml-2 w-40 hover:bg-gray"
+                name="recordings_link"
+                value={data.recordings_link ?? ""}
+                onChange={handleInputChange}
+                onBlur={functions.saveChangeFunction}
+              />
+            </div>
+
+            <div className="flex flex-row items-center mb-2">
+              <label className="whitespace-nowrap">Discord Link:</label>
+              <input
+                className="border border-light-gray ml-2 w-40 hover:bg-gray"
+                name="discord_link"
+                value={data.discord_link ?? ""}
+                onChange={handleInputChange}
+                onBlur={functions.saveChangeFunction}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>

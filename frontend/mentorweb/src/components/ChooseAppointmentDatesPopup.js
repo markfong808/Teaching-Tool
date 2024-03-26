@@ -2,7 +2,7 @@
  * Last Edited: 3/24/24
  *
  * UI popup shown when Instructor clicks on choose meeting dates button
- * in the "Programs" tab. Allows teacher to set availabilities
+ * in the "Programs" tab. Allows instructor to set availabilities
  * based on what days times they have scheduled for program already
  *
  * Known Bugs:
@@ -15,7 +15,6 @@ import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css";
-import { addDays } from "date-fns";
 
 const ChooseAppointmentDatesPopup = ({
   onClose,
@@ -36,6 +35,7 @@ const ChooseAppointmentDatesPopup = ({
   // Load Variables
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [dateSelected, setDateSelected] = useState(false);
+  const [showPopup, setShowPopup] = useState(true);
 
   // Course Variables
   const [course_id, setCourseId] = useState();
@@ -51,11 +51,7 @@ const ChooseAppointmentDatesPopup = ({
       let convertedAvailability = [];
 
       // iterate from the start date till the end date
-      for (
-        let date = new Date(startDate);
-        date <= endDate;
-        date = addDays(date, 1)
-      ) {
+      for (let date = new Date(startDate); date <= endDate; ) {
         // obtain day of week based on date
         const dayOfWeek = format(date, "EEEE");
 
@@ -89,6 +85,7 @@ const ChooseAppointmentDatesPopup = ({
         physical_location: physical_location,
         meeting_url: meeting_url,
         isDropins: isDropins,
+        program_id: program_id,
       };
 
       await fetch(`/instructor/availability/${encodeURIComponent(course_id)}`, {
@@ -102,6 +99,7 @@ const ChooseAppointmentDatesPopup = ({
       });
 
       window.alert("Availabilities created successfully!");
+      setShowPopup(false);
     } catch (error) {
       console.error("Error creating availability:", error);
     }
@@ -136,6 +134,14 @@ const ChooseAppointmentDatesPopup = ({
     setCourseId(id);
   }, [id]);
 
+  // when the availability is set, close out of CreateAppointmentBlock
+  useEffect(() => {
+    if (!showPopup) {
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPopup]);
+
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
@@ -161,9 +167,9 @@ const ChooseAppointmentDatesPopup = ({
               {dateSelected && (
                 <>
                   <label>
-                    {format(addDays(startDate, 1), "MMMM do, yyyy") +
+                    {format(startDate, "MMMM do, yyyy") +
                       " -- " +
-                      format(addDays(endDate, 1), "MMMM do, yyyy")}
+                      format(endDate, "MMMM do, yyyy")}
                   </label>
                 </>
               )}

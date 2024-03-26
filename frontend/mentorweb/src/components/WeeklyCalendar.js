@@ -167,7 +167,9 @@ export default function WeeklyCalendar({
     );
 
     // Call param.showDuration based on the condition
-    functions.setShowDuration(anyDayHasData);
+    if (functions.setShowDuration) {
+      functions.setShowDuration(anyDayHasData);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localTimes]);
 

@@ -1,18 +1,18 @@
-/* CourseInformationPopup.js
+/* CourseDetailsPopup.js
  * Last Edited: 3/24/24
  *
  * UI Popup shown when student clicks on one of the course details buttons
- * inside the "Courses" tab. Allows student to see information about
+ * inside the "Courses" tab. Allows student to see details about
  * a course they're registered in
  *
  * Known Bugs:
- * - Padding issue for the information depending on course times and office hours times
+ * - Padding issue for the details depending on course times and office hours times
  * -
  *
  */
 import React from "react";
 
-const CourseInformationPopup = ({ onClose, courseData, instructorData }) => {
+const CourseDetailsPopup = ({ onClose, courseData, instructorData }) => {
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
@@ -32,37 +32,41 @@ const CourseInformationPopup = ({ onClose, courseData, instructorData }) => {
           <label>
             {" "}
             Course Times:{" "}
-            <span className="font-normal">{courseData.course_times}</span>
+            <span className="font-normal">{courseData.course_times.times}</span>
           </label>
           <label>
             {" "}
             Course Location:{" "}
-            <span className="font-normal">{courseData.course_location}</span>
+            <span className="font-normal">{courseData.physical_location}</span>
           </label>
           <label>
             {" "}
             Course Recordings Link:{" "}
-            <span className="font-normal">
-              {" "}
-              {courseData.course_recordings_link}
-            </span>
+            <span className="font-normal"> {courseData.recordings_link}</span>
           </label>
           <label>
             {" "}
             Comments: &nbsp;{" "}
-            <p className="font-normal">{courseData.course_comment}</p>
+            <p className="font-normal">{courseData.comments}</p>
           </label>
         </div>
         <div className="flex flex-col justify-self-end">
           <label>
             {" "}
             Office Hours:{" "}
-            <span className="font-normal">{courseData.office_hours}</span>
+            <span className="font-normal">{courseData.office_hours.times}</span>
           </label>
           <label>
             {" "}
             Office Hours Location:{" "}
-            <span className="font-normal"> UNDER CONSTRUCTION</span>
+            <span className="font-normal">
+              {courseData.office_hours.physical_location}
+            </span>
+          </label>
+          <label>
+            {" "}
+            Office Hours URL:{" "}
+            <span className="font-normal">{courseData.office_hours.link}</span>
           </label>
           <label>
             {" "}
@@ -74,7 +78,7 @@ const CourseInformationPopup = ({ onClose, courseData, instructorData }) => {
           </label>
           <label>
             {" "}
-            Discord:{" "}
+            Discord Link:{" "}
             <span className="font-normal">{courseData.discord_link}</span>
           </label>
         </div>
@@ -83,4 +87,4 @@ const CourseInformationPopup = ({ onClose, courseData, instructorData }) => {
   );
 };
 
-export default CourseInformationPopup;
+export default CourseDetailsPopup;

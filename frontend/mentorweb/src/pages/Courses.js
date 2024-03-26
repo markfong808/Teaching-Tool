@@ -15,7 +15,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext.js";
 import ScheduleAppointmentPopup from "../components/ScheduleAppointmentPopup.js";
 import AppointmentsTable from "../components/AppointmentsTable.js";
-import CourseInformationPopup from "../components/CourseInformationPopup.js";
+import CourseDetailsPopup from "../components/CourseDetailsPopup.js";
 import DropinsTable from "../components/DropinsTable.js";
 
 export default function Courses() {
@@ -28,7 +28,7 @@ export default function Courses() {
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
   const [isScheduleMeetingPopUpVisible, setScheduleMeetingPopUpVisible] =
     useState(false);
-  const [isCourseInformationPopupVisible, setCourseInformationPopupVisible] =
+  const [isCourseDetailsPopupVisible, setCourseDetailsPopupVisible] =
     useState(false);
 
   // Course Data Variables
@@ -71,22 +71,22 @@ export default function Courses() {
     }
   };
 
-  // fetch instructor information from a user based on their ID
-  const fetchInstructorInformation = async (teacherId) => {
+  // fetch instructor details from a user based on their ID
+  const fetchInstructorDetails = async (instructorId) => {
     try {
       const response = await fetch(
-        `/user/profile/${encodeURIComponent(teacherId)}`,
+        `/user/profile/${encodeURIComponent(instructorId)}`,
         {
           credentials: "include",
         }
       );
 
-      const fetchedInstructorInformation = await response.json();
+      const fetchedInstructorDetails = await response.json();
 
       // set instructor data with fetched data
-      setInstructorData(fetchedInstructorInformation);
+      setInstructorData(fetchedInstructorDetails);
     } catch (error) {
-      console.error("Error fetching instructor information:", error);
+      console.error("Error fetching instructor details:", error);
     }
   };
 
@@ -96,11 +96,11 @@ export default function Courses() {
 
   // called when a student clicks on one of the courses they're registered in
   const handleButtonClick = (course) => {
-    setCourseInformation(course.id);
+    setCourseDetails(course.id);
 
     // QOL delay
     setTimeout(() => {
-      setCourseInformationPopupVisible(true);
+      setCourseDetailsPopupVisible(true);
     }, 10);
   };
 
@@ -129,8 +129,8 @@ export default function Courses() {
     setReloadAppointmentsTable(true);
   };
 
-  // update the course information being displayed on the webpage
-  const setCourseInformation = (courseId) => {
+  // update the course details being displayed on the webpage
+  const setCourseDetails = (courseId) => {
     if (!courseId) {
       return;
     }
@@ -143,8 +143,8 @@ export default function Courses() {
       // update courseData with selectedCourse
       setCourseData(selectedCourse);
 
-      // fetch instructor information from selected course
-      fetchInstructorInformation(selectedCourse.instructor_id);
+      // fetch instructor details from selected course
+      fetchInstructorDetails(selectedCourse.instructor_id);
     }
   };
 
@@ -230,10 +230,10 @@ export default function Courses() {
         </div>
       </div>
 
-      {isCourseInformationPopupVisible && (
+      {isCourseDetailsPopupVisible && (
         <div className="fixed inset-0">
-          <CourseInformationPopup
-            onClose={() => setCourseInformationPopupVisible(false)}
+          <CourseDetailsPopup
+            onClose={() => setCourseDetailsPopupVisible(false)}
             courseData={courseData}
             instructorData={instructorData}
           />

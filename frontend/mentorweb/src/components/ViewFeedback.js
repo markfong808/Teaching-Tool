@@ -1,10 +1,27 @@
+/* ViewFeedback.js
+ * Last Edited: 3/25/24
+ *
+ * View Feedback tab for administrators to see feedback from students
+ * and instructors about an appointment. Administrators can download
+ * the feedback as a CSV file.
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React, { useEffect, useState } from "react";
 
 export default function ViewFeedback() {
+  // Feedback Data Variables
   const [feedbackList, setFeedbackList] = useState([]);
 
+  ////////////////////////////////////////////////////////
+  //               Fetch Get Functions                  //
+  ////////////////////////////////////////////////////////
+
+  // function to fetch feedback data from the backend
   useEffect(() => {
-    // Function to fetch feedback data from the backend
     const fetchFeedbackData = async () => {
       try {
         const response = await fetch("/feedback/all", {
@@ -28,6 +45,11 @@ export default function ViewFeedback() {
     fetchFeedbackData();
   }, []);
 
+  ////////////////////////////////////////////////////////
+  //                 Handler Functions                  //
+  ////////////////////////////////////////////////////////
+
+  //
   const downloadCSV = () => {
     let csvContent = "data:text/csv;charset=utf-8,";
     // Add CSV headers
@@ -41,16 +63,16 @@ export default function ViewFeedback() {
         feedback.attendee_id,
         feedback.attendee_rating,
         `"${feedback.attendee_notes.replace(/"/g, '""')}"`, // Escape quotes
-        feedback.instructor_id, // Assuming this is the instructor name
-        feedback.instructor_rating,
-        `"${feedback.instructor_notes.replace(/"/g, '""')}"`, // Escape quotes
+        feedback.host_id, // Assuming this is the instructor name
+        feedback.host_rating,
+        `"${feedback.host_notes.replace(/"/g, '""')}"`, // Escape quotes
         feedback.appointment_data.start_time,
         feedback.appointment_data.end_time,
         feedback.appointment_data.appointment_date,
         feedback.appointment_data.meeting_url,
         `"${feedback.appointment_data.notes.replace(/"/g, '""')}"`, // Escape quotes
         feedback.appointment_data.attendee_id,
-        feedback.appointment_data.instructor_id,
+        feedback.appointment_data.host_id,
         feedback.appointment_data.status,
       ].join(",");
       csvContent += row + "\r\n";
@@ -65,6 +87,11 @@ export default function ViewFeedback() {
     document.body.removeChild(link);
   };
 
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
   return (
     <div className="flex flex-col m-auto w-2/3">
       <h1 className="text-2xl font-bold text-center">View Feedback</h1>
@@ -94,10 +121,8 @@ export default function ViewFeedback() {
               </td>
               <td className="border-r text-start">{feedback.attendee_id}</td>
               <td className="border-r text-start">{feedback.attendee_notes}</td>
-              <td className="border-r text-start">{feedback.instructor_id}</td>
-              <td className="border-r text-start">
-                {feedback.instructor_notes}
-              </td>
+              <td className="border-r text-start">{feedback.host_id}</td>
+              <td className="border-r text-start">{feedback.host_notes}</td>
             </tr>
           ))}
         </tbody>

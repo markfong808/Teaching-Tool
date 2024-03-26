@@ -13,7 +13,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, \
     set_access_cookies, get_jwt, create_access_token
-from .models import User, Appointment, ProgramDetails, CourseDetails, CourseMembers, ProgramTimes
+from .models import User, Appointment, ProgramDetails, CourseDetails, CourseMembers, ProgramTimes, CourseTimes
 from . import db
 from .mail import send_email
 from ics import Calendar, Event
@@ -51,50 +51,86 @@ def convert_to_standard_time(military_time):
 # based on the given program id and name, print the times for the program in a string format
 def findStandardTimes(id, name):
     try:
-        times = (
-            ProgramTimes.query
-            .join(ProgramDetails, ProgramTimes.program_id == ProgramDetails.id)
-            .filter(ProgramDetails.course_id == id, ProgramDetails.name == name)
-            .all()
-        )
+        if name == "Course Details":
+            program = (
+                CourseTimes.query
+                .join(CourseDetails, CourseTimes.course_id == CourseDetails.id)
+                .filter(CourseDetails.id == id)
+            )
+            program_details = program.first().course_details if program.first() else None
+        else:
+            program = (
+                ProgramTimes.query
+                .join(ProgramDetails, ProgramTimes.program_id == ProgramDetails.id)
+                .filter(ProgramDetails.course_id == id, ProgramDetails.name == name)
+            )
+            program_details = program.first().program_details if program.first() else None
 
-        if len(times) > 0:
+        times = ""
+        physical_location = program_details.physical_location if program_details else None
+        link = program_details.meeting_url if program_details else None
+
+        if physical_location is None:
+            physical_location = "No Location"
+
+        if link is None:
+            link = "No URL"
+
+        program = program.all()
+
+        if program:
             tempString = ""
-            for obj in times:
-                if tempString != "":
+            for obj in program:
+                if tempString:
                     tempString += "/"
-                tempString += (obj.day + " " + convert_to_standard_time(obj.start_time) + "-" + convert_to_standard_time(obj.end_time))
+                tempString += (
+                    obj.day + " " + convert_to_standard_time(obj.start_time) + "-" +
+                    convert_to_standard_time(obj.end_time)
+                )
             times = tempString
         else:
-            times = "No Known " + name
+            times = "No Known Times"
 
-        return times
+        return {'times': times, 'physical_location': physical_location, 'link': link }
     except Exception as e:
-        return jsonify({"error": str(e)}), 500   
+        return {"error": str(e)}, 404
 
 # based on the given program name and instructor_id, print the times for their office hours in a string format
 def findInstructorOfficeHours(name, instructor_id):
     try:
-        times = (
+        program = (
             ProgramTimes.query
             .join(ProgramDetails, ProgramTimes.program_id == ProgramDetails.id)
-            .filter(ProgramDetails.course_id == "null", ProgramDetails.name == name, ProgramDetails.instructor_id == instructor_id)
-            .all()
+            .filter(ProgramDetails.course_id == None, ProgramDetails.name == name, ProgramDetails.instructor_id == instructor_id)
         )
 
-        if len(times) > 0:
+        program_details = program.first().program_details if program.first() else None
+
+        times = ""
+        physical_location = program_details.physical_location if program_details else None
+        link = program_details.meeting_url if program_details else None
+
+        if physical_location is None:
+            physical_location = "No Location"
+
+        if link is None:
+            link = "No URL"
+        
+        program = program.all()
+
+        if len(program) > 0:
             tempString = ""
-            for obj in times:
+            for obj in program:
                 if tempString != "":
                     tempString += "/"
                 tempString += (obj.day + " " + convert_to_standard_time(obj.start_time) + "-" + convert_to_standard_time(obj.end_time))
             times = tempString
         else:
-            times = "No Known " + name
+            times = "No Known Times"
 
-        return times
+        return {'times': times, 'physical_location': physical_location, 'link': link }
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 401
 
 # get all of the attributes of a user_id from the User table
 def get_user_data(user_id):
@@ -117,7 +153,7 @@ def get_user_data(user_id):
 # Helper function to send confirmation email to student and instructor
 def send_confirmation_email(appointment):
     student = User.query.get(appointment.attendee_id)
-    instructor = User.query.get(appointment.instructor_id)
+    instructor = User.query.get(appointment.host_id)
 
     if student and instructor:
         student_email_subject = f'{appointment.program_id} Status Update'
@@ -175,7 +211,7 @@ def get_user_courses():
 
             courses_list = []
             for course in user_courses_info:
-                courseTimes = findStandardTimes(course.id, "Course Times")
+                courseTimes = findStandardTimes(course.id, "Course Details")
                 
                 courseTuple = CourseDetails.query.filter(CourseDetails.id == course.id).first()
 
@@ -183,18 +219,18 @@ def get_user_courses():
 
                 courseOfficeHours = findStandardTimes(course.id, "Office Hours")
 
-                if courseOfficeHours != "No Known Office Hours":
+                if courseOfficeHours['times'] != "No Known Times":
                     officeHours = courseOfficeHours
                 else:
                     officeHours = globalOfficeHours
 
                 course_info = {
                     'id': course.id,
-                    'course_name': course.course_name,
-                    'course_comment': course.course_comment,
-                    'course_location': course.course_location,
-                    'course_link': course.course_link,
-                    'course_recordings_link': course.course_recordings_link,
+                    'course_name': course.name,
+                    'comments': course.comments,
+                    'physical_location': course.physical_location,
+                    'meeting_url': course.meeting_url,
+                    'recordings_link': course.recordings_link,
                     'discord_link': course.discord_link,
                     'instructor_id': course.instructor_id,
                     'course_times': courseTimes,

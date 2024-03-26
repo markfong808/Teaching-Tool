@@ -222,7 +222,7 @@ def generate_appointment_tuples(instructor_id, course_id, program_id, date, star
 
         if duration == 0 or not duration:
             new_appointment = Appointment(
-                instructor_id=instructor_id,
+                host_id=instructor_id,
                 appointment_date=date,
                 start_time=start_datetime.strftime("%H:%M"),
                 end_time=end_datetime.strftime("%H:%M"),
@@ -235,7 +235,7 @@ def generate_appointment_tuples(instructor_id, course_id, program_id, date, star
         else:
             while start_datetime + timedelta(minutes=duration) <= end_datetime:
                 new_appointment = Appointment(
-                    instructor_id=instructor_id,
+                    host_id=instructor_id,
                     appointment_date=date,
                     start_time=start_datetime.strftime("%H:%M"),
                     end_time=(start_datetime + timedelta(minutes=duration)).strftime("%H:%M"),
@@ -267,7 +267,7 @@ def get_courses():
         
         if instructor:
             all_instructor_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=user_id).all()
-            course_info = [{'course_id': course.id, 'course_name': course.course_name} for course in all_instructor_courses]
+            course_info = [{'course_id': course.id, 'course_name': course.name} for course in all_instructor_courses]
 
             if all_instructor_courses:
 
@@ -348,7 +348,7 @@ def get_instructor_appointments_for_course():
     current_date_str = current_time_pst.strftime('%Y-%m-%d')
     current_time_str = current_time_pst.strftime('%H:%M')
 
-    appointments_query = Appointment.query.filter(Appointment.instructor_id == instructor_id)
+    appointments_query = Appointment.query.filter(Appointment.host_id == instructor_id)
 
     if meeting_type in ['upcoming', 'past', 'pending']:
         if meeting_type == 'upcoming':
@@ -430,7 +430,7 @@ def cancel_appointment(appointment_id):
         
         # Check if the appointment was booked by this instructor 
         if appointment.status == 'reserved' or appointment.status == 'pending' \
-                and appointment.instructor_id == instructor.id:
+                and appointment.host_id == instructor.id:
             current_time = datetime.now() - timedelta(hours=8)
             appointment_datetime = datetime.strptime(appointment.appointment_date + ' ' + appointment.start_time, '%Y-%m-%d %H:%M')
             
@@ -571,7 +571,6 @@ def get_instructor_availabilities(course_id):
         else:
             return jsonify({"error": "course_id undefined for availability"}), 404
     except Exception as e:
-        print(e)
         return jsonify({"error": str(e)}), 500
     
 # post a set of availability tuples for a course to the Availability Table
@@ -586,6 +585,17 @@ def add_all_instructor_availability(course_id):
         physical_location = data.get('physical_location')
         meeting_url = data.get('meeting_url')
         isDropins = data.get('isDropins')
+        program_id = data.get('program_id')
+
+        availabilities_to_delete = Availability.query.filter_by(program_id=program_id).all()
+
+        for availability in availabilities_to_delete:
+            appointments_to_delete = Appointment.query.filter_by(availability_id=availability.id).all()
+
+            for appointment in appointments_to_delete:
+                db.session.delete(appointment)
+
+            db.session.delete(availability)
 
         for availabilityEntry in allAvailabilties:
             add_instructor_single_availability(course_id, instructor_id, availabilityEntry, physical_location, meeting_url, duration, isDropins)
@@ -622,20 +632,20 @@ def update_availability_status():
                 db.session.commit()
             elif status == 'active':
                 monthly_count = Appointment.query.filter(
-                    Appointment.instructor_id == user_id,
+                    Appointment.host_id == user_id,
                     extract('month', func.date(Appointment.appointment_date)) == parsed_appointment_date.month,
                     extract('year', func.date(Appointment.appointment_date)) == parsed_appointment_date.year,
                     Appointment.status.in_(['reserved', 'pending'])
                 ).count()
 
                 weekly_count = Appointment.query.filter(
-                    Appointment.instructor_id == user_id,
+                    Appointment.host_id == user_id,
                     func.date(Appointment.appointment_date).between(start_of_week, end_of_week),
                     Appointment.status.in_(['reserved', 'pending'])
                 ).count()
 
                 daily_count = Appointment.query.filter(
-                    Appointment.instructor_id == user_id,
+                    Appointment.host_id == user_id,
                     func.date(Appointment.appointment_date) == parsed_appointment_date,
                     Appointment.status.in_(['reserved', 'pending'])
                 ).count()

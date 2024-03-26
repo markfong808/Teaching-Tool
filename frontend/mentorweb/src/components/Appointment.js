@@ -1,3 +1,14 @@
+/* Appointment.js
+ * Last Edited: 3/25/24
+ *
+ * Appointment Confirmation UI for an appointment booked by student.
+ * Called in ScheduleAppointmentPopup.js.
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React from "react";
 import { format } from "date-fns";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
@@ -11,6 +22,11 @@ export default function Appointment({
   status,
   location,
 }) {
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
   return (
     <div className="fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-light-gray shadow-md p-5">
       <div className="flex flex-row justify-between">

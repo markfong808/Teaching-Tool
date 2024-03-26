@@ -1,34 +1,50 @@
+/* Logout.js
+ * Last Edited: 3/25/24
+ *
+ * Logout tab that handles instructor, student, and admin logout.
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from "../context/UserContext"; 
+import { UserContext } from "../context/UserContext";
 
 const Logout = () => {
+  // General Variables
+  const { setUser } = useContext(UserContext);
+  // Webpage Navigate Variables
   const navigate = useNavigate();
-  const { setUser } = useContext(UserContext); 
 
+  ////////////////////////////////////////////////////////
+  //               Fetch Post Functions                 //
+  ////////////////////////////////////////////////////////
+
+  // Function to handle the logout process
   useEffect(() => {
-    // Function to handle the logout process
     const handleLogout = () => {
-      fetch('/logout', {
-        method: 'POST',
-        credentials: 'include', // Necessary to include the HTTP-only cookies
+      fetch("/logout", {
+        method: "POST",
+        credentials: "include", // Necessary to include the HTTP-only cookies
       })
-      .then(response => {
-        if (response.ok) {
-          setUser(null);
-          navigate("/");
-        } else {
-          console.error('Logout failed');
-        }
-      })
-      .catch(error => {
-        console.error('Network error', error);
-      });
+        .then((response) => {
+          if (response.ok) {
+            setUser(null);
+            navigate("/");
+          } else {
+            console.error("Logout failed");
+          }
+        })
+        .catch((error) => {
+          console.error("Network error", error);
+        });
     };
 
     // Call the handleLogout function immediately on component mount
     handleLogout();
-  }, [navigate, setUser]);  // Dependencies for useEffect
+  }, [navigate, setUser]); // Dependencies for useEffect
 
   return <div>Logging out...</div>;
 };

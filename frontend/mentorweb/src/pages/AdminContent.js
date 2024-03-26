@@ -1,6 +1,22 @@
+/* AdminContent.js
+ * Last Edited: 3/25/24
+ *
+ * Displays information about the administrator role and functionality within
+ * the Canvas Meeting Scheduler under the Home tab of the admin view.
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React from "react";
 
 export default function AdminContent() {
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
   return (
     <div className="flex flex-col w-2/3 m-auto">
       <h1 className="text-center text-4xl font-headlines text-purple">

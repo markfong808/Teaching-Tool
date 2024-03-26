@@ -1,6 +1,6 @@
-# Backend API for TechPrep
+# Backend API for Canvas Meeting Scheduler
 
-This is the backend API for the TechPrep platform, which includes various blueprints for handling different aspects of the application, such as user management, appointment scheduling, and more.
+This is the backend API for the Canvas Meeting Scheduler platform, which includes various blueprints for handling different aspects of the application, such as user management, appointment scheduling, and more.
 
 ## Prerequisites
 
@@ -12,33 +12,34 @@ Before you begin, ensure you have met the following requirements:
 
 ## Configuring SendGrid for Email Functionality
 
-TechPrep requires SendGrid for handling email functionalities. Follow these steps to configure SendGrid:
+Canvas Meetings Scheduler requires SendGrid for handling email functionalities. Follow these steps to configure SendGrid:
 
 1. **Create a SendGrid Account**:
 
    - If you don't already have a SendGrid account, sign up at [SendGrid](https://sendgrid.com/).
+   - If SendGrid denies access for account creation, consult with Professor Kochanski for next steps.
    - Verify your account if required.
 
 2. **Generate a SendGrid API Key**:
 
    - Once logged in, go to the [API Keys section](https://app.sendgrid.com/settings/api_keys) in your SendGrid dashboard.
    - Click on 'Create API Key'. Give it a name and select 'Full Access'.
-   - Copy the API key generated. Keep it secure as you won't be able to see it again.
+   - Copy the public API key generated. Keep it secure as you won't be able to see it again.
 
 3. **Configure Your `.env` File**:
 
-   - In your `.env` file within the TechPrep backend project, set the `SENDGRID_API_KEY` variable to your newly created SendGrid API key.
+   - In your `.env` file within the Canvas Meeting Scheduler backend project, set the `SENDGRID_API_KEY` variable to your newly created public SendGrid API key.
    - For the `FROM_EMAIL` variable in `.env`, use the email address associated with your SendGrid account.
 
    Example `.env` entries:
 
 ## API Setup
 
-To set up the TechPrep backend API, follow these steps:
+To set up the Canvas Meeting Scheduler backend API, follow these steps:
 
 1. **Change Directory to the backend dir** (if you haven't already):
    ```bash
-   cd mentor-network/backend
+   cd scheduling-tools/backend
    ```
 2. **Create a virtual environment in the backend directory:**
    ```bash

@@ -1,9 +1,8 @@
 /* Signup.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/25/24
  *
- * Register Tab for students, instructors to enter
- * name, email, password, password verification, and usertype
- * to use the website
+ * Signup where students and instructors enter name, email, password,
+ * password verification, and usertype to use the website
  *
  * Known Bugs:
  * -

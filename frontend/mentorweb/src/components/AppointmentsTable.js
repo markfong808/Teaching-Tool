@@ -150,7 +150,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         feedbackExists = apiData.attendee_rating || apiData.attendee_notes;
       } else if (user.account_type === "instructor") {
         // else if the account type is instructor, store the instructor rating or notes in to feedbackExists
-        feedbackExists = apiData.instructor_rating || apiData.instructor_notes;
+        feedbackExists = apiData.host_rating || apiData.instructor_notes;
       }
 
       // set feedbackPresent to feedbackExists

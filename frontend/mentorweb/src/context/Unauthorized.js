@@ -1,7 +1,23 @@
+/* Unauthorized.js
+ * Last Edited: 3/25/24
+ *
+ * Message rendered for unauthorized use of Canvas Meeting Scheduler.
+ * User is redirected back to the home or login page.
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React from "react";
 import { Link } from "react-router-dom";
 
 const Unauthorized = () => {
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
   return (
     <div className="ua-container">
       <div class="gandalf">

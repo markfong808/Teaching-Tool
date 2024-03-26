@@ -12,7 +12,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import and_, or_
-from .models import ProgramDetails, User, Appointment, Availability, ProgramTimes, CourseDetails, CourseMembers, AppointmentComment, Feedback
+from .models import ProgramDetails, User, Appointment, Availability, ProgramTimes, CourseDetails, CourseMembers, AppointmentComment, Feedback, CourseTimes
 from . import db
 
 programs = Blueprint('programs', __name__)
@@ -51,6 +51,150 @@ def get_course_name(course_id):
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 ""               Endpoint Functions                ""
 """""""""""""""""""""""""""""""""""""""""""""""""""""
+
+@programs.route('/course/details/<course_id>', methods=['GET'])
+@jwt_required()
+def get_courses(course_id):
+    try:
+        user_id = get_jwt_identity()
+        instructor = User.query.get(user_id)
+        
+        if instructor and course_id is not None:
+            course = CourseDetails.query.filter_by(id=course_id).first()
+
+            course_info = {
+                'id': course.id,
+                'instructor_id': course.instructor_id,
+                'quarter': course.quarter,
+                'name': course.name,
+                'physical_location': course.physical_location,
+                'meeting_url': course.meeting_url,
+                'recordings_link': course.recordings_link,
+                'discord_link': course.discord_link,
+                'comments': course.comments,
+            }
+
+            return jsonify(course_info), 200
+        else:
+            return jsonify({"error": "instructor not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# set the course attributees of a already existing course
+@programs.route('/course/details', methods=['POST'])
+@jwt_required()
+def set_course_details():
+    try:
+        data = request.get_json()
+        course_id = data.get('id')
+        quarter = data.get('quarter')  
+        name = data.get('name')
+        physical_location = data.get('physical_location')
+        meeting_url = data.get('meeting_url')
+        recordings_link = data.get('recordings_link')
+        discord_link = data.get('discord_link')
+        comments = data.get('comments')
+
+        course = CourseDetails.query.get(course_id)
+
+        if course:
+            course.quarter = quarter
+            course.name = name
+            course.physical_location = physical_location
+            course.meeting_url = meeting_url
+            course.recordings_link = recordings_link
+            course.discord_link = discord_link
+            course.comments = comments
+
+            db.session.commit()
+            
+            return jsonify({"message": "Course details updated successfully"}), 200
+        else:
+            return jsonify({"error": "Course doesn't exist"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+    
+# get all of the times for a course
+@programs.route('/course/times/<course_id>', methods=['GET'])
+@jwt_required()
+def get_course_times(course_id):
+    try:
+        course = CourseDetails.query.get(course_id)
+
+        if course:
+            course_times = CourseTimes.query.filter_by(course_id=course_id).all()
+            
+            if course_times:
+                course_times_list = []
+
+                for tuple in course_times:
+                    course_time_info = {
+                        'course_id': tuple.course_id,
+                        'day': tuple.day,
+                        'start_time': tuple.start_time,
+                        'end_time': tuple.end_time,
+                    }
+
+                    course_times_list.append(course_time_info)
+                return jsonify(course_times_list), 200
+            else:
+                return jsonify(None), 200
+        else:
+            return jsonify({"error": "Course not found"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+    
+# set the times in a course
+@programs.route('/course/times/<course_id>', methods=['POST'])
+@jwt_required()
+def set_course_times(course_id):
+    try:
+        data = request.get_json()
+        courseTimesTuples = []
+
+        if data is not None:
+            # set times for course
+            courses = CourseTimes.query.filter_by(course_id=course_id).all()
+        
+            # if course already exists in the course times table, i.e. columns are populated
+            if courses:
+                for course in courses:
+                    db.session.delete(course)
+                db.session.commit()
+
+            if len(data) > 0:
+                converted_list = []
+                for course_id, schedule in data.items():
+                    for day, timings in schedule.items():
+                        start_time = timings['start_time']
+                        end_time = timings['end_time']
+                        converted_list.append((day, start_time, end_time, course_id))
+
+                for entry in converted_list:
+                    print(entry)
+                    new_time = CourseTimes(
+                        day=entry[0],
+                        start_time=entry[1],
+                        end_time=entry[2],
+                        course_id=entry[3],
+                    )
+                    courseTimesTuples.append(new_time)
+                
+                for courseTimesTuple in courseTimesTuples:
+                    db.session.add(courseTimesTuple)
+                db.session.commit()
+                return jsonify({"message": "Times updated successfully"}), 200
+            
+            # set no times for course
+            else:
+                return jsonify({"message": "Times updated successfully: No times for course"}), 200
+        else:
+            return jsonify({"error": "Times update failed"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
 
 # fetch all of the programs in a course, including global programs for the instructor of the course
 @programs.route('/course/programs/<course_id>', methods=['GET'])
@@ -206,12 +350,8 @@ def delete_program_type(program_id):
         if not is_instructor(user_id):
             return jsonify({"msg": "instructor access required"}), 401
 
-        # delete program
-        program = ProgramDetails.query.get_or_404(program_id)
-        db.session.delete(program)
-
         # delete appointments
-        appointments = Appointment.query.filter_by(program_id=program_id).all()
+        appointments = Appointment.query.join(Availability).filter_by(program_id=program_id).all()
         for appointment in appointments:
             comments = AppointmentComment.query.filter_by(appointment_id=appointment.id).all()
             feedbacks = Feedback.query.filter_by(appointment_id=appointment.id).all()
@@ -236,10 +376,14 @@ def delete_program_type(program_id):
         for time in times:
             db.session.delete(time)
 
+        # delete program
+        program = ProgramDetails.query.get_or_404(program_id)
+        db.session.delete(program)
+
         db.session.commit()
         return jsonify({"msg": "Program deleted"}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 500
     
 # set the program attributees of a already existing program
 @programs.route('/program/details', methods=['POST'])
@@ -294,60 +438,54 @@ def set_program_details():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-# WAS USED FOR TESTING 
-# Create a new course and adds the user who created it to CourseMembers
-@programs.route('/course/add-course', methods=['POST'])
-@jwt_required()
-def add_new_course():
+# create a new course and adds the user who created it to CourseMembers
+@programs.route('/course/create', methods=['POST'])
+def create_course():
     try:
         data = request.get_json()
-        course_name = data.get('course_name')
+        name = data.get('name')
         user_id = data.get('user_id')
-        account_type = data.get('account_type')
 
-        if data:
-            new_details = CourseDetails(
-                instructor_id=user_id,
-                course_name=course_name,
-            )
-            db.session.add(new_details)
-            db.session.commit()
-            
-            new_course_id = new_details.id
+        if not (user_id and name):
+            return jsonify({"error": "Instructor ID or Course Name is missing."}), 400
 
-            if new_course_id & user_id:
-                new_details = CourseMembers(
-                    course_id=new_course_id,
-                    user_id=user_id,
-                    account_type=account_type,
-                )
-                db.session.add(new_details)
-                db.session.commit()
-            
-                return jsonify({"message": "Added to course successfully"}), 200
-            else:
-                return jsonify({"error": "Insufficient details to add user to course"}), 404
-        else:
-            return jsonify({"error": "Teacher ID doesn't exist"}), 404
+        default_program_name = "Course Details"
+
+        new_course = CourseDetails(
+            instructor_id=user_id,
+            name=name,
+        )
+        db.session.add(new_course)
+        db.session.commit()
+
+        new_course_id = new_course.id
+
+        new_member = CourseMembers(
+            course_id=new_course_id,
+            user_id=user_id,
+        )
+        db.session.add(new_member)
+
+        db.session.commit()
+
+        return jsonify({"message": "Course created successfully"}), 200
+
     except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
     
-# WAS USED FOR TESTING 
-# Add user to course
-@programs.route('/course/add-user', methods=['POST'])
-@jwt_required()
+# add user to course
+@programs.route('/course/add/user', methods=['POST'])
 def add_user_to_course():
     try:
         data = request.get_json()
         course_id = data.get('course_id')  
         user_id = data.get('user_id')
-        account_type = data.get('account_type')
 
         if course_id & user_id:
             new_details = CourseMembers(
                 course_id=course_id,
                 user_id=user_id,
-                account_type=account_type,
             )
             db.session.add(new_details)
             db.session.commit()
@@ -356,4 +494,5 @@ def add_user_to_course():
         else:
             return jsonify({"error": "Insufficient details to add user to course"}), 404
     except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500

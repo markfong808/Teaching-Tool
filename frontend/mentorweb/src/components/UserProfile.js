@@ -1,52 +1,33 @@
+/* UserProfile.js
+ * Last Edited: 3/25/24
+ *
+ * Account Details UI inside Users.js that allows admin to
+ * view admin, instructor, and student account information and make changes to name.
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React, { useState, useEffect } from "react";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
 import { Tooltip } from "./Tooltip";
 
 export default function UserProfile({ user, onUserUpdate, onClose }) {
+  // Form Data Variables
   const [formData, setFormData] = useState({
     name: user?.name || "",
   });
+
+  // Load Variables
   const [changesMade, setChangesMade] = useState(false);
 
-  useEffect(() => {
-    // Update form data when user context updates
-    if (user) {
-      setFormData({
-        name: user.name || "",
-      });
-    }
-  }, [user]);
+  ////////////////////////////////////////////////////////
+  //               Fetch Post Functions                 //
+  ////////////////////////////////////////////////////////
 
-  const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-    let newValue = value;
-
-    // Handle the radio button specifically
-    if (type === "radio") {
-      newValue = value === "true"; // Convert the value to boolean
-    } else {
-      // For other inputs, just use the value
-      newValue = value;
-    }
-
-    setFormData({ ...formData, [name]: newValue });
-
-    // Check if changes were made
-    const formIsSameAsUser = name === "name" && value === user.name; // Use newValue for comparison
-
-    // Set changesMade to true if form data does not match initial user data
-    setChangesMade(!formIsSameAsUser);
-  };
-
-  const handleCancelChanges = () => {
-    // Reset form data to initial user data
-    setFormData({
-      name: user.name || "",
-    });
-    setChangesMade(false); // Reset changes made
-  };
-
+  //
   const handleSaveChanges = async () => {
     const updatedFormData = {
       ...(formData ? 1 : 0),
@@ -78,10 +59,63 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
     }
   };
 
+  ////////////////////////////////////////////////////////
+  //                 Handler Functions                  //
+  ////////////////////////////////////////////////////////
+
+  //
+  const handleInputChange = (e) => {
+    const { name, value, type } = e.target;
+    let newValue = value;
+
+    // Handle the radio button specifically
+    if (type === "radio") {
+      newValue = value === "true"; // Convert the value to boolean
+    } else {
+      // For other inputs, just use the value
+      newValue = value;
+    }
+
+    setFormData({ ...formData, [name]: newValue });
+
+    // Check if changes were made
+    const formIsSameAsUser = name === "name" && value === user.name; // Use newValue for comparison
+
+    // Set changesMade to true if form data does not match initial user data
+    setChangesMade(!formIsSameAsUser);
+  };
+
+  //
+  const handleCancelChanges = () => {
+    // Reset form data to initial user data
+    setFormData({
+      name: user.name || "",
+    });
+    setChangesMade(false); // Reset changes made
+  };
+
+  ////////////////////////////////////////////////////////
+  //                 UseEffect Functions                //
+  ////////////////////////////////////////////////////////
+
+  //
+  useEffect(() => {
+    // Update form data when user context updates
+    if (user) {
+      setFormData({
+        name: user.name || "",
+      });
+    }
+  }, [user]);
+
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
   if (!user) {
     return <div>Loading user data...</div>;
   }
-
+  // HTML for webpage
   return (
     <div className="flex flex-col p-5 w-2/3 m-auto border border-light-gray rounded-md shadow-md">
       <div className="flex flex-row">

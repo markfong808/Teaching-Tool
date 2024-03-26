@@ -1,48 +1,37 @@
+/* Comment.js
+ * Last Edited: 3/25/24
+ *
+ * Comment section UI within Appointment Details Popup
+ * where students and instructors can enter comments about an appointment.
+ *
+ * Known bugs:
+ * -
+ *
+ */
+
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { getCookie } from "../utils/GetCookie";
 
 export default function Comment({ appointmentId }) {
+  // General Variables
   const { user } = useContext(UserContext);
-  const [comment, setComment] = useState("");
-  const [comments, setComments] = useState([]);
+  const csrfToken = getCookie("csrf_access_token");
+
+  // Load Variables
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
-  const csrfToken = getCookie("csrf_access_token");
 
-  const handleInputChange = (e) => {
-    setComment(e.target.value);
-  };
+  // Comment Data Variables
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const payload = { appointment_comment: comment };
-    try {
-      const response = await fetch(
-        `/${user.account_type}/appointments/${appointmentId}/comment`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": csrfToken,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+  ////////////////////////////////////////////////////////
+  //               Fetch Get Functions                  //
+  ////////////////////////////////////////////////////////
 
-      if (response.ok) {
-        fetchComments(); // Fetch comments again to update the list
-      } else {
-        const errorText = await response.text();
-        alert("Error posting comment: " + errorText);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
+  //
   const fetchComments = async () => {
     setIsLoading(true);
     try {
@@ -72,14 +61,40 @@ export default function Comment({ appointmentId }) {
     }
   };
 
-  useEffect(() => {
-    if (!initialLoad) {
-      fetchComments();
-    }
-    setInitialLoad(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointmentId, initialLoad, user.account_type]);
+  ////////////////////////////////////////////////////////
+  //               Fetch Post Functions                 //
+  ////////////////////////////////////////////////////////
 
+  //
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const payload = { appointment_comment: comment };
+    try {
+      const response = await fetch(
+        `/${user.account_type}/appointments/${appointmentId}/comment`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrfToken,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        fetchComments(); // Fetch comments again to update the list
+      } else {
+        const errorText = await response.text();
+        alert("Error posting comment: " + errorText);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  //
   const handleDelete = async (id) => {
     try {
       // Replace this URL with the URL for your server's delete comment endpoint
@@ -100,6 +115,33 @@ export default function Comment({ appointmentId }) {
     }
   };
 
+  ////////////////////////////////////////////////////////
+  //                 Handler Functions                  //
+  ////////////////////////////////////////////////////////
+
+  //
+  const handleInputChange = (e) => {
+    setComment(e.target.value);
+  };
+
+  ////////////////////////////////////////////////////////
+  //                 UseEffect Functions                //
+  ////////////////////////////////////////////////////////
+
+  //
+  useEffect(() => {
+    if (!initialLoad) {
+      fetchComments();
+    }
+    setInitialLoad(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appointmentId, initialLoad, user.account_type]);
+
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
   return (
     <div className="flex flex-col mt-5">
       <h1 className="text-2xl font-bold">Comments</h1>

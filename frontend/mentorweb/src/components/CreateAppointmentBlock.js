@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -37,6 +37,7 @@ export default function CreateAppointmentBlock({
   const [local_duration, setDuration] = useState("");
   const [timeBlock, setTimeBlock] = useState({});
   const [dateSelected, setDateSelected] = useState(false);
+  const [showPopup, setShowPopup] = useState(true);
 
   const createTimeSlot = async () => {
     if (date && timeRange) {
@@ -62,6 +63,7 @@ export default function CreateAppointmentBlock({
         physical_location: physical_location,
         meeting_url: meeting_url,
         isDropins: isDropins,
+        program_id: program_id,
       };
 
       fetch(`/instructor/availability/${encodeURIComponent(id)}`, {
@@ -81,7 +83,14 @@ export default function CreateAppointmentBlock({
           alert("Failed to create availability");
         });
     }
-    window.alert("Availability created successfully!");
+
+    if (
+      !window.confirm(
+        "Availability created successfully! Do you want to create another?"
+      )
+    ) {
+      setShowPopup(false);
+    }
   };
 
   const handleCalendarChange = (event) => {
@@ -159,7 +168,7 @@ export default function CreateAppointmentBlock({
       // inform instructor that Duration is too long
       if (duration > maxRecommendedDuration) {
         setTimeout(() => {
-          window.alert("Time Split value is too large. Lower your time split");
+          window.alert("Duration value is too large. Lower your duration");
         }, 10);
       }
     }
@@ -169,6 +178,14 @@ export default function CreateAppointmentBlock({
   useEffect(() => {
     setDuration(duration);
   }, [duration]);
+
+  // when the availability is set, close out of CreateAppointmentBlock
+  useEffect(() => {
+    if (!showPopup) {
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPopup]);
 
   return (
     <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-calendar-popup-gray border border-gray-300 shadow-md pb-7 relative">
@@ -188,9 +205,7 @@ export default function CreateAppointmentBlock({
               minDate={new Date()} // disables past dates from being selected
             />
 
-            {dateSelected && (
-              <label>{format(addDays(date, 1), "MMMM do, yyyy")}</label>
-            )}
+            {dateSelected && <label>{format(date, "MMMM do, yyyy")}</label>}
 
             <br />
 

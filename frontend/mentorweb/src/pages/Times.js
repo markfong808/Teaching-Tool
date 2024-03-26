@@ -2,9 +2,9 @@
  * Last Edited: 3/24/24
  *
  * Manage Times tab for the Instructor account_type.
- * Allows teacher to see availibility table and
+ * Allows instructor to see availibility table and
  * Manage Availability for global and per course programs.
- * In addition, the Teacher can see a table of Upcoming, Pending, and Past meetings and
+ * In addition, the instructor can see a table of Upcoming, Pending, and Past meetings and
  * cancel any meetings that are upcoming.
  *
  * Known Bugs:

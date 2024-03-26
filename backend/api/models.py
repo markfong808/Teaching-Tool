@@ -30,18 +30,26 @@ class CourseDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     quarter = db.Column(db.String(50))
-    course_name = db.Column(db.String(255))
-    course_location = db.Column(db.String(255))
-    course_link = db.Column(db.String(255))
-    course_recordings_link = db.Column(db.String(255))
+    name = db.Column(db.String(255))
+    physical_location = db.Column(db.String(255))
+    meeting_url = db.Column(db.String(255))
+    recordings_link = db.Column(db.String(255))
     discord_link = db.Column(db.String(255))
-    course_comment = db.Column(db.Text)
+    comments = db.Column(db.Text)
+    times = db.relationship("CourseTimes", back_populates="course_details")
+
+class CourseTimes(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
+    day = db.Column(db.String(50))
+    start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
+    end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
+    course_details = db.relationship("CourseDetails", back_populates="times")
     
 class CourseMembers(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    account_type=db.Column(db.String(50)) # student, instructor, admin
 
 class ProgramDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -59,6 +67,7 @@ class ProgramDetails(db.Model):
     isDropins = db.Column(db.Boolean)
     isRangeBased = db.Column(db.Boolean)
     availability = db.relationship("Availability", back_populates="program_details")
+    program_times = db.relationship("ProgramTimes", back_populates="program_details")
 
 class ProgramTimes(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -66,6 +75,7 @@ class ProgramTimes(db.Model):
     day = db.Column(db.String(50))
     start_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
+    program_details = db.relationship("ProgramDetails", back_populates="program_times")
 
 class Availability(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -84,7 +94,7 @@ class Availability(db.Model):
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    host_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     course_id = db.Column(db.Integer, db.ForeignKey('course_details.id'))  
     attendee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     availability_id = db.Column(db.Integer, db.ForeignKey('availability.id'))
@@ -110,8 +120,8 @@ class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     appointment_id = db.Column(db.Integer, db.ForeignKey('appointment.id'))
     attendee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    host_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     attendee_rating = db.Column(db.String(255))
     attendee_notes = db.Column(db.Text)
-    instructor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    instructor_rating = db.Column(db.String(255))
-    instructor_notes = db.Column(db.Text)
+    host_rating = db.Column(db.String(255))
+    host_notes = db.Column(db.Text)
