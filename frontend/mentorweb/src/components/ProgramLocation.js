@@ -5,7 +5,7 @@
  * and recordings_link for programs
  *
  * Known bugs:
- * -
+ * - Redo UI when isCourseInfoProgram is true
  *
  */
 

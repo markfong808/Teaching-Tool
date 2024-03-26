@@ -190,7 +190,6 @@ export default function ProgramDetails() {
   // called in a UseEffect below
   const postProgramTimes = async () => {
     try {
-      console.log(allProgramTimesInCourse);
       await fetch(
         `/course/programs/times/${encodeURIComponent(selectedProgramData.id)}`,
         {
@@ -587,10 +586,6 @@ export default function ProgramDetails() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boxShown]);
-
-  useEffect(() => {
-    console.log(allCourseData);
-  }, [allCourseData]);
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //

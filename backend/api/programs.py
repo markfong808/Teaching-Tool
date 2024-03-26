@@ -173,7 +173,6 @@ def set_course_times(course_id):
                         converted_list.append((day, start_time, end_time, course_id))
 
                 for entry in converted_list:
-                    print(entry)
                     new_time = CourseTimes(
                         day=entry[0],
                         start_time=entry[1],

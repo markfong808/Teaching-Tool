@@ -46,11 +46,9 @@ const ChooseAppointmentDatesPopup = ({
 
   // posts added availbility data to the Availability table
   const createTimeSlot = async () => {
-    console.log("STEP 1");
     try {
       const csrfToken = getCookie("csrf_access_token");
       let convertedAvailability = [];
-      console.log("STEP 2");
 
       // iterate from the start date till the end date
       for (
@@ -76,7 +74,6 @@ const ChooseAppointmentDatesPopup = ({
           });
         }
       }
-      console.log("STEP 3");
 
       // if no duration set to 0
       if (!duration || duration === "") {
@@ -95,8 +92,6 @@ const ChooseAppointmentDatesPopup = ({
         program_id: program_id,
       };
 
-      console.log(convertedAvailability);
-
       await fetch(`/instructor/availability/${encodeURIComponent(course_id)}`, {
         method: "POST",
         credentials: "include",
@@ -106,8 +101,6 @@ const ChooseAppointmentDatesPopup = ({
         },
         body: JSON.stringify(convertedAvailability),
       });
-
-      console.log("COMPLETED");
 
       window.alert("Availabilities created successfully!");
       setShowPopup(false);

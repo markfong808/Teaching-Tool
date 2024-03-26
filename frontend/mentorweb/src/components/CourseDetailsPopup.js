@@ -6,7 +6,6 @@
  * a course they're registered in
  *
  * Known Bugs:
- * - Padding issue for the details depending on course times and office hours times
  * -
  *
  */

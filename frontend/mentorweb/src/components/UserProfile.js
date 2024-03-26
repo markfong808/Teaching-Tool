@@ -12,7 +12,6 @@
 import React, { useState, useEffect } from "react";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
-import { Tooltip } from "./Tooltip";
 
 export default function UserProfile({ user, onUserUpdate, onClose }) {
   // Form Data Variables

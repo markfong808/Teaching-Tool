@@ -6,7 +6,7 @@
  * information for the user
  *
  * Known bugs:
- * -
+ * - personal meeting url needs to be implemented and work with programs
  *
  */
 
@@ -278,6 +278,7 @@ export default function ProfileSettings() {
             disabled
           />
 
+          {/* NEEDS TO BE IMPLEMENTED */}
           {profileData.account_type === "instructor" && (
             <div className="flex flex-col">
               <div>

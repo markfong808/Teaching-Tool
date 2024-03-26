@@ -3,6 +3,7 @@
  *
  * Footer that displays name of author, year, and rights
  * at the bottom of a webpage.
+ *
  * Known bugs:
  * -
  *

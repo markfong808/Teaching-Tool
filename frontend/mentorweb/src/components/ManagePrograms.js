@@ -5,8 +5,7 @@
  * and modify existing programs.
  *
  * Known bugs:
- * - Doesn't load programs, but the admin as whole will be deprecated once
- *   Canvas Meeting Scheduler configured with Canvas API.
+ * - Doesnt load programs
  *
  */
 

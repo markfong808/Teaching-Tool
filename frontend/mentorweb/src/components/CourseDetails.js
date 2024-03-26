@@ -88,7 +88,6 @@ export default function CourseDetails({ courseId }) {
         }, {});
 
         // set allTimesData to tempData
-        console.log(tempData);
         setTimes(tempData);
       } else {
         setTimes({});
@@ -125,7 +124,6 @@ export default function CourseDetails({ courseId }) {
   // called in a UseEffect below
   const postCourseTimes = async () => {
     try {
-      console.log(times);
       await fetch(`/course/times/${encodeURIComponent(courseData.id)}`, {
         method: "POST",
         credentials: "include",
@@ -209,7 +207,6 @@ export default function CourseDetails({ courseId }) {
   // on initial page load, select default tab
   useEffect(() => {
     if (!load) {
-      console.log("DWADAWD");
       loadData();
     }
     setLoad(false);

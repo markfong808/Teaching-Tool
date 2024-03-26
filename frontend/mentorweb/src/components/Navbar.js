@@ -5,7 +5,6 @@
  * Once user clicks on a tab, they're redirected to a different webpage which
  * contains the contents of the tab.
  *
- *
  * Known Bugs:
  * -
  *
