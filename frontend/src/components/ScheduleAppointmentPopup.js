@@ -16,7 +16,7 @@ import { ScheduleMeeting } from "react-schedule-meeting";
 import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie.js";
 import Appointment from "./Appointment.js";
-import { isnt_Student } from "../utils/checkUser.js";
+import { isnt_Student } from "../utils/CheckUser.js";
 
 const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // General Variables
@@ -415,7 +415,6 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
           {/* Course selection */}
           <select
             className="border border-light-gray rounded ml-2 mt-1"
-            id="course-dropdown"
             value={selectedCourseId}
             onChange={(e) => handleCourseChange(e)}
           >
@@ -433,7 +432,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
         {/* Student picks Program once Course is selected */}
         {isCourseSelected && (
           <div className="flex flex-col mt-3">
-            <div id="dropdown" className="flex flex-row">
+            <div className="flex flex-row">
               {/* Program label */}
               <h1 className="whitespace-nowrap">
                 <strong>Program:</strong>
@@ -442,7 +441,6 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
               {/* Program selection */}
               <select
                 className="border border-light-gray rounded ml-2"
-                id="course-dropdown"
                 value={selectedProgramId}
                 onChange={(e) => handleProgramChange(e)}
               >
@@ -495,7 +493,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
                     <h3 className="text-center pb-5 font-bold">
                       Appointment Details
                     </h3>
-                  
+
                     {/* Program Name of Appointment */}
                     <p className="pb-2">
                       <b>Name</b>:{" "}
@@ -527,17 +525,13 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
                     </label>
                     <textarea
                       className="w-full border border-light-gray"
-                      id="appointmentNotes"
                       value={appointmentNotes}
                       onChange={(e) => setAppointmentNotes(e.target.value)}
                       placeholder="Please share anything that will help us prepare for the meeting."
                     />
-                    
+
                     {/* Button container */}
-                    <div
-                      id="button-container"
-                      className="flex flex-row justify-end"
-                    >
+                    <div className="flex flex-row justify-end">
                       {/* Confirm button */}
                       <button
                         onClick={bookAppointment}

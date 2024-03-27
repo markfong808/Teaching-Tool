@@ -13,7 +13,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import UserProfile from "./UserProfile";
 import { UserContext } from "../context/UserContext";
-import { isnt_Admin } from "../utils/checkUser";
+import { isnt_Admin } from "../utils/CheckUser";
 
 export default function ManageUsers() {
   // General Variables
@@ -199,7 +199,7 @@ export default function ManageUsers() {
             className="border border-light-gray"
             onChange={handleUserTypeChange}
           >
-          {/* User account type options */}
+            {/* User account type options */}
             <option value="">Select User Type</option>
             {Object.keys(groupUsersByAccountType).map((account_type) => (
               <option key={account_type} value={account_type}>
@@ -297,7 +297,7 @@ export default function ManageUsers() {
                                 )
                               }
                             >
-                            {/* Account status options: Active or Inactive */}
+                              {/* Account status options: Active or Inactive */}
                               <option value="">
                                 {capitalizeFirstLetter(user.status)}
                               </option>

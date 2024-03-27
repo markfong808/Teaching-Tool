@@ -25,5 +25,4 @@ export default function LoginSignup() {
   // HTML for webpage
   // Conditional rendering of Login or Signup component based on currentForm value
   return <div>{currentForm === "login" ? <Login /> : <Signup />}</div>;
-
 }

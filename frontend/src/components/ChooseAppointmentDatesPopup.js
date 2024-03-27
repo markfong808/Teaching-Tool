@@ -17,7 +17,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css";
 import { UserContext } from "../context/UserContext";
-import { isnt_Instructor } from "../utils/checkUser";
+import { isnt_Instructor } from "../utils/CheckUser";
 
 const ChooseAppointmentDatesPopup = ({
   onClose,
@@ -176,7 +176,7 @@ const ChooseAppointmentDatesPopup = ({
       <div className="flex flex-row py-5 m-auto">
         <div className="w-2/3 m-auto font-body">
           {/* Define Calendar Container */}
-          <div id="calendar-container">
+          <div>
             <div className="flex flex-col items-center">
               {/* Label to inform instructor on how to interact with the popup */}
               <h2 className="font-bold pt-5">Choose A Start And End Date:</h2>

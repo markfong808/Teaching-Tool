@@ -16,7 +16,7 @@ import {
   formatDate,
   getDayFromDate,
 } from "../utils/FormatDatetime";
-import { isnt_Student } from "../utils/checkUser";
+import { isnt_Student } from "../utils/CheckUser";
 
 export default function DropinsTable({ courseId, courseName }) {
   // General Variables
@@ -141,7 +141,7 @@ export default function DropinsTable({ courseId, courseName }) {
 
   // HTML for webpage
   return (
-    // Define Drop-Ins Table component 
+    // Define Drop-Ins Table component
     <div className="flex flex-col w-full m-auto items-center">
       {/* Course Drop-Ins header or if no Course selected, inform student to select a Course */}
       <div className="text-center font-bold text-2xl pb-5">
@@ -157,11 +157,11 @@ export default function DropinsTable({ courseId, courseName }) {
       </button>
 
       {/* Table to display Drop-Ins */}
-      <div id="table" className="w-11/12">
+      <div className="w-11/12">
         <table className="w-full border text-center">
           {dropinAvailabilties.length > 0 ? (
             <>
-             {/* Table headers to display Drop-In information categories and allow sorting */}
+              {/* Table headers to display Drop-In information categories and allow sorting */}
               <thead className="border-b border-light-gray bg-purple text-white">
                 {/* Name header */}
                 <th
@@ -210,7 +210,6 @@ export default function DropinsTable({ courseId, courseName }) {
                   dropinAvailabilties.map((availability) => (
                     // Table row to map each row to a Drop-In
                     <tr className="border" key={availability.id}>
-
                       {/* Table cell to display Drop-In Program name */}
                       <td className="border-r">{availability.name}</td>
 
@@ -234,7 +233,7 @@ export default function DropinsTable({ courseId, courseName }) {
               </tbody>
             </>
           ) : (
-              /* Show graphic to student if no Drop-Ins Available */
+            /* Show graphic to student if no Drop-Ins Available */
             <tbody>
               <tr>
                 <td colSpan="5">

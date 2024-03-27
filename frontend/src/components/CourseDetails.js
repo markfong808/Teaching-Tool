@@ -16,7 +16,7 @@ import { Tooltip } from "./Tooltip";
 import WeeklyCalendar from "./WeeklyCalendar";
 import { getCookie } from "../utils/GetCookie";
 import { UserContext } from "../context/UserContext";
-import { isnt_Instructor } from "../utils/checkUser";
+import { isnt_Instructor } from "../utils/CheckUser";
 
 export default function CourseDetails({ courseId }) {
   // General Variables

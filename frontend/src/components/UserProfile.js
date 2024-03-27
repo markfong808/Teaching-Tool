@@ -113,7 +113,7 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
 
   // HTML for webpage
   return (
-    // Define UserProfile component 
+    // Define UserProfile component
     <div className="flex flex-col p-5 w-2/3 m-auto border border-light-gray rounded-md shadow-md">
       <div className="flex flex-row">
         {/* Account Details label */}

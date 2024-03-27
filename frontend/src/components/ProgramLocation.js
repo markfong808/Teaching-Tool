@@ -36,7 +36,7 @@ export default function ProgramLocation({
   // HTML for webpage
   // conditional rendering of boxes if isCourseInfoProgram is true or not
   return (
-    // Define ProgramLocation component 
+    // Define ProgramLocation component
     <div className={"w-full m-auto"}>
       {/* Creating box for Program Location based on if instructor selected Course Details or not as Program */}
       <div
@@ -139,7 +139,7 @@ export default function ProgramLocation({
             />
           </div>
         </div>
-        
+
         {/* Display Course Recordings Link and Discord Link if instructor chooses Course Details as Program */}
         {isCourseInfoProgram && (
           <>
@@ -163,7 +163,7 @@ export default function ProgramLocation({
               <div className="absolute right-0">
                 {/* Discord Link label */}
                 <label className="whitespace-nowrap">Discord Link:</label>
-                
+
                 {/* Discord Link input field */}
                 <input
                   className="border border-light-gray ml-2 w-40 hover:bg-gray"

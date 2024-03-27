@@ -12,7 +12,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { getCookie } from "../utils/GetCookie";
-import { isnt_Student_Or_Instructor } from "../utils/checkUser";
+import { isnt_Student_Or_Instructor } from "../utils/CheckUser";
 
 export default function Comment({ appointmentId }) {
   // General Variables
@@ -175,7 +175,7 @@ export default function Comment({ appointmentId }) {
       </form>
 
       {/* Comments container for list of Comments */}
-      <div id="comments-container">
+      <div>
         {isLoading ? (
           <p>Loading comments...</p>
         ) : error ? (

@@ -25,7 +25,6 @@ export default function Navbar() {
   return (
     // Define Navbar component
     <nav className="bg-purple text-white flex flex-row justify-between align-middle items-stretch gap-8 px-4 py-1">
-      
       {/* Display UWTECHPREP on Navbar for all users with its CustomLink set */}
       <Link to="/" className="text-4xl hover:text-gold font-headlines">
         UWTechPrep
@@ -135,7 +134,6 @@ export default function Navbar() {
                 )}
               </>
             )}
-
 
             {/* Display PROFILE to admin, instructor, and student on Navbar with its CustomLink set */}
             <CustomLink

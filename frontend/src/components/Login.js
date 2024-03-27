@@ -60,7 +60,7 @@ export default function Login() {
       // set user based on user profile
       setUser(userProfile);
       navigate(`/${userProfile.account_type}`); // navigate to appropriate webpage view based on account type
-    } catch (error) { }
+    } catch (error) {}
   };
 
   ////////////////////////////////////////////////////////
@@ -85,12 +85,11 @@ export default function Login() {
       {/* Login header */}
       <h1 className="text-xl text-center pb-5">Login</h1>
       <form className="" onSubmit={handleSubmit}>
-       {/* Email input field*/}
-       <div className="flex flex-col pb-2">
+        {/* Email input field*/}
+        <div className="flex flex-col pb-2">
           <label>Email</label>
           <input
             className="border-b"
-            id="email"
             value={email}
             type="email"
             onChange={(e) => setEmail(e.target.value)}
@@ -102,7 +101,6 @@ export default function Login() {
           <label>Password</label>
           <input
             className="border-b"
-            id="password"
             value={password}
             type="password"
             onChange={(e) => setPassword(e.target.value)}

@@ -1,4 +1,4 @@
-/* checkUser.js
+/* CheckUser.js
  * Last Edited: 3/26/24
  *
  * Helper file to check if a user is valid

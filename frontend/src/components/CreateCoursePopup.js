@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie.js";
 import { UserContext } from "../context/UserContext.js";
-import { isnt_Instructor } from "../utils/checkUser.js";
+import { isnt_Instructor } from "../utils/CheckUser.js";
 
 const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   // General Variables
@@ -93,7 +93,7 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
         <div className="mb-1">
           <label className="font-bold text-lg">Course Name</label>
         </div>
-        
+
         {/* Course Name input field */}
         <div className="flex items-center">
           <input

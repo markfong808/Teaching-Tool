@@ -225,7 +225,7 @@ export default function WeeklyCalendar({
 
   // HTML for webpage
   return (
-    // Define WeeklyCalendar component 
+    // Define WeeklyCalendar component
     <div>
       {/* Set Program Times label */}
       <div className="font-bold text-2xl mb-4">

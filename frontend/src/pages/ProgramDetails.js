@@ -25,7 +25,7 @@ import CreateAppointmentBlock from "../components/CreateAppointmentBlock.js";
 import AutoAcceptAppointments from "../components/AutoAcceptAppointments.js";
 import CreateCoursePopup from "../components/CreateCoursePopup.js";
 import CourseDetails from "../components/CourseDetails.js";
-import { isnt_Instructor } from "../utils/checkUser.js";
+import { isnt_Instructor } from "../utils/CheckUser.js";
 
 export default function ProgramDetails() {
   // General Variables
@@ -730,7 +730,6 @@ export default function ProgramDetails() {
               {/* Program selection */}
               <select
                 className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
-                id="course-dropdown"
                 value={selectedProgramId}
                 onChange={(e) => handleProgramChange(e)}
                 disabled={!isCourseSelected}
@@ -953,7 +952,7 @@ export default function ProgramDetails() {
                                       program_id={selectedProgramData.id}
                                     />
                                   </div>
-                                  
+
                                   {/* Display Duration element for instructor to use if Appointment or Drop-In has duration */}
                                   {showDurationDetails && (
                                     <div className="flex flex-row items-center mt-4 p-5 border border-light-gray rounded-md shadow-md mt-5">

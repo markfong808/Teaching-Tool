@@ -20,7 +20,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SingleInputTimeRangeField } from "@mui/x-date-pickers-pro/SingleInputTimeRangeField";
 import dayjs from "dayjs";
 import { UserContext } from "../context/UserContext";
-import { isnt_Instructor } from "../utils/checkUser";
+import { isnt_Instructor } from "../utils/CheckUser";
 
 export default function CreateAppointmentBlock({
   id,
@@ -221,7 +221,7 @@ export default function CreateAppointmentBlock({
 
       {/* Define Calendar container */}
       <div className="w-11/12 m-auto font-body">
-        <div id="calendar-container" className="">
+        <div>
           <div className="flex flex-col items-center">
             {/* Label to inform instructor on how to interact with the popup */}
             <h2 className="font-bold pt-5">
@@ -233,7 +233,7 @@ export default function CreateAppointmentBlock({
               onChange={handleCalendarChange}
               minDate={new Date()} // disables past dates from being selected
             />
-            
+
             {/* Display date instructor has selected */}
             {dateSelected && <label>{format(date, "MMMM do, yyyy")}</label>}
 
@@ -267,12 +267,11 @@ export default function CreateAppointmentBlock({
             {/* Appointment duration checkbox */}
             <input
               type="checkbox"
-              id="myCheckbox"
               class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
               checked={showDurationInputField}
               onChange={showBox}
             ></input>
-           
+
             {/* Show duration input field if instructor clicks on checkbox */}
             {showDurationInputField && (
               // Appointment duration input field

@@ -75,7 +75,6 @@ export default function AutoAcceptAppointments({
             Auto-Accept Appointment Requests?
           </label>
           <br />
-
           {/* Yes label and input button */}
           <label className="ml-2">
             Yes
@@ -90,7 +89,6 @@ export default function AutoAcceptAppointments({
             />
           </label>
           &nbsp;&nbsp;
-
           {/* No label and input button */}
           <label>
             No
@@ -106,7 +104,7 @@ export default function AutoAcceptAppointments({
           </label>
         </div>
       )}
-      
+
       {/* Allow instructor to set daily, weekly, and monthly Appointment limits */}
       {userInstance?.account_type === "instructor" && (
         <div className="flex flex-col">
@@ -140,7 +138,7 @@ export default function AutoAcceptAppointments({
                 onBlur={functions.saveChangeFunction}
               />
             </div>
-            
+
             {/* Total Max label and input field */}
             <div className="flex flex-col">
               <label>Total Max</label>

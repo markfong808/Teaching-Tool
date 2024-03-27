@@ -18,7 +18,7 @@ import {
   capitalizeFirstLetter,
 } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
-import { isnt_Instructor } from "../utils/checkUser";
+import { isnt_Instructor } from "../utils/CheckUser";
 
 export default function ManageAvailabilityTable({ courseId }) {
   // General Variables
@@ -215,7 +215,7 @@ export default function ManageAvailabilityTable({ courseId }) {
 
   // HTML for webpage
   return (
-    // Define ManageAvailabilityTable component 
+    // Define ManageAvailabilityTable component
     <div className="flex flex-col w-full m-auto items-center">
       {/* Manage Availability header */}
       <div className="text-center font-bold text-2xl pb-5">
@@ -243,7 +243,7 @@ export default function ManageAvailabilityTable({ courseId }) {
               Program Name
             </th>
 
-            {/* Course Name header only shown if Course is associated with Availability */ }
+            {/* Course Name header only shown if Course is associated with Availability */}
             {courseId !== -1 && (
               <th className="border-r border-light-gray w-14%">Course Name</th>
             )}

@@ -26,7 +26,7 @@ import {
 import { getCookie } from "../utils/GetCookie.js";
 import { Tooltip } from "./Tooltip.js";
 import Comment from "./Comment.js";
-import { isnt_Student_Or_Instructor } from "../utils/checkUser.js";
+import { isnt_Student_Or_Instructor } from "../utils/CheckUser.js";
 
 export default function AppointmentsTable({ courseId, reloadTable }) {
   // General Variables
@@ -490,7 +490,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     // HTML for webpage
     return (
       // Define Feedback Form
-      <div id="feedback-form">
+      <div>
         {/* Define border and color of Feedback Form*/}
         <div className="border bg-gray mt-2 p-5 relative">
           <div className="flex flex-row justify-between mt-5">
@@ -534,7 +534,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
               </div>
 
               {/* Students and isntructors can provide in-depth feedback about satisfaction */}
-              <div id="additional-comments" className="mt-5">
+              <div className="mt-5">
                 {/* Please Explain label*/}
                 <label className="font-bold">Please Explain</label>
                 {/* Text area for student and instructor to write about satisfaction */}
@@ -588,7 +588,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {((user.account_type === "student" && activeTab !== "past") ||
               (user.account_type === "instructor" &&
                 activeTab === "upcoming")) && (
-              // Cancel Appointment button 
+              // Cancel Appointment button
               <button
                 className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                 onClick={() =>
@@ -632,7 +632,6 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {/* Allow instructor can indicate that appointment was attended or missed when appointment date passed */}
             {user.account_type === "instructor" && activeTab === "past" && (
               <div className="flex flex-row">
-
                 {/* Attended button */}
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
@@ -667,7 +666,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {activeTab === "past" && !feedbackPresent && (
               <div className="flex flex-row ml-2 mt-3">
                 <br />
-                {/* Provide Feedback button */ }
+                {/* Provide Feedback button */}
                 <button
                   className=" bg-purple text-white hover:bg-gold rounded-md p-2"
                   onClick={handleFeedbackClick}
@@ -741,7 +740,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
               <>
                 {/* Your Appointment URL label */}
                 <label className="font-bold pt-2">Your Appointment URL</label>
-               
+
                 {/* Your Appointment URL input field for instructors to change */}
                 <input
                   className={`w-full ${
@@ -840,17 +839,14 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   // Global HTML for webpage, Display appointment list
   return (
     // Define AppointmentsTable component
-    <div
-      id="content-container"
-      className="flex flex-col w-full m-auto items-center"
-    >
+    <div className="flex flex-col w-full m-auto items-center">
       {/* Appointments label */}
       <div className="font-bold text-center text-2xl">
         <h1>Your {capitalizeFirstLetter(activeTab)} Appointments</h1>
       </div>
 
       {/* Upcoming, Pending, and Past Tabs */}
-      <div id="tabs" className="p-2 m-2 rounded-md">
+      <div className="p-2 m-2 rounded-md">
         {/* Upcoming button */}
         <button
           className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold"
@@ -885,7 +881,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       </button>
 
       {/* Appointments table */}
-      <div id="table" className="w-11/12">
+      <div className="w-11/12">
         {selectedAppointment ? (
           renderAppointmentDetails()
         ) : (

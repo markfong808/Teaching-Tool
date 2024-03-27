@@ -17,7 +17,7 @@ import ScheduleAppointmentPopup from "../components/ScheduleAppointmentPopup.js"
 import AppointmentsTable from "../components/AppointmentsTable.js";
 import CourseDetailsPopup from "../components/CourseDetailsPopup.js";
 import DropinsTable from "../components/DropinsTable.js";
-import { isnt_Student } from "../utils/checkUser.js";
+import { isnt_Student } from "../utils/CheckUser.js";
 
 export default function Courses() {
   // General Variables
@@ -186,7 +186,7 @@ export default function Courses() {
         {/* Displays Course Details buttons of all Courses a student is enrolled in currently */}
         <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
           {allCoursesData.map((course) => (
-            // Course Details Button 
+            // Course Details Button
             <button
               key={course.id}
               className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
@@ -203,7 +203,7 @@ export default function Courses() {
           <h1>
             <strong>Course:</strong>
           </h1>
-          
+
           {/* Course Selection */}
           <select
             className="border border-light-gray rounded ml-2 hover:cursor-pointer"

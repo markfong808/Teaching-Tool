@@ -83,7 +83,6 @@ export default function Signup() {
           <label>Name</label>
           <input
             type="text"
-            id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -95,7 +94,6 @@ export default function Signup() {
           <label>Email</label>
           <input
             type="email"
-            id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -107,7 +105,6 @@ export default function Signup() {
           <label>Enter Password</label>
           <input
             type="password"
-            id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -119,7 +116,6 @@ export default function Signup() {
           <label>Verify Password</label>
           <input
             type="password"
-            id="verify-password"
             value={verifyPassword}
             onChange={(e) => setVerifyPassword(e.target.value)}
             required
@@ -136,7 +132,6 @@ export default function Signup() {
             <input
               className=""
               type="radio"
-              id="student"
               name="userType"
               value="student"
               checked={userType === "student"}
@@ -147,7 +142,6 @@ export default function Signup() {
             <label className="ml-3">Instructor&nbsp;</label>
             <input
               type="radio"
-              id="instructor"
               name="userType"
               value="instructor"
               checked={userType === "instructor"}

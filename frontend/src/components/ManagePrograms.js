@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie";
 import { UserContext } from "../context/UserContext";
-import { isnt_Admin } from "../utils/checkUser";
+import { isnt_Admin } from "../utils/CheckUser";
 
 const ManagePrograms = () => {
   // General Variables
@@ -230,7 +230,7 @@ const ManagePrograms = () => {
   }
 
   if (error) {
-    // display error message if Program can't be deleted or fetched, or form can't be submitted  
+    // display error message if Program can't be deleted or fetched, or form can't be submitted
     return <div>Error: {error}</div>;
   }
 
@@ -243,7 +243,7 @@ const ManagePrograms = () => {
     const isFormComplete =
       formData.name && formData.description && formData.duration;
 
-    // HTML for webpage 
+    // HTML for webpage
     return (
       // Define New Program Form for adding a new Program
       <div className="flex flex-col p-5 w-2/3 m-auto border border-light-gray rounded-md shadow-md">
@@ -319,7 +319,7 @@ const ManagePrograms = () => {
 
     // HTML for webpage
     return (
-      // Define Program Form for editing  
+      // Define Program Form for editing
       <div className="flex flex-col w-2/3 m-auto p-5 border border-light-gray rounded-md shadow-md">
         <div className="flex flex-row">
           {/* Details heading */}
@@ -375,7 +375,6 @@ const ManagePrograms = () => {
             value={formData.duration}
             onChange={handleInputChange}
           />
-
         </div>
 
         {/* If changes made to Program Name, Description, and Duration, admin can save or cancel changes */}
@@ -413,7 +412,7 @@ const ManagePrograms = () => {
         <div>
           {/* Manage Programs header */}
           <h1 className="text-center text-2xl font-bold">Manage Programs</h1>
-          
+
           {/* Admin can add new Program*/}
           <div className="flex justify-end my-5">
             {/* Add New Program button */}
@@ -425,7 +424,7 @@ const ManagePrograms = () => {
             </button>
           </div>
 
-         {/* Table to display Programs */}
+          {/* Table to display Programs */}
           <table className="border m-auto w-full">
             {/* Table headers to display Program information categories */}
             <thead className="bg-purple text-white">
