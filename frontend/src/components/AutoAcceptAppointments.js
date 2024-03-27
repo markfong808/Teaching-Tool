@@ -65,13 +65,18 @@ export default function AutoAcceptAppointments({
 
   // HTML for webpage
   return (
+    // Define AutoAcceptAppointments component for auto-accepting Appointment requests and setting Appointment limits
     <div className="flex flex-row p-4 border border-light-gray rounded-md shadow-md m-auto mt-5">
+      {/* Toggle for instructors to auto-accept Appointment requests */}
       {userInstance?.account_type === "instructor" && (
         <div className="w-1/2">
+          {/*Label for Auto-Accepting Appointment Requests */}
           <label className="font-bold text-lg">
             Auto-Accept Appointment Requests?
           </label>
           <br />
+
+          {/* Yes label and input button */}
           <label className="ml-2">
             Yes
             <input
@@ -85,6 +90,8 @@ export default function AutoAcceptAppointments({
             />
           </label>
           &nbsp;&nbsp;
+
+          {/* No label and input button */}
           <label>
             No
             <input
@@ -99,10 +106,14 @@ export default function AutoAcceptAppointments({
           </label>
         </div>
       )}
+      
+      {/* Allow instructor to set daily, weekly, and monthly Appointment limits */}
       {userInstance?.account_type === "instructor" && (
         <div className="flex flex-col">
+          {/* Set Appointment Limits label */}
           <h2 className="font-bold text-lg">Set Appointment Limits</h2>
           <div className="flex flex-row justify-between">
+            {/* Daily Max label and input field */}
             <div className="flex flex-col mr-5">
               <label>Daily Max</label>
               <input
@@ -115,6 +126,8 @@ export default function AutoAcceptAppointments({
                 onBlur={functions.saveChangeFunction}
               />
             </div>
+
+            {/* Weekly Max label and input field */}
             <div className="flex flex-col mr-5">
               <label>Weekly Max</label>
               <input
@@ -127,6 +140,8 @@ export default function AutoAcceptAppointments({
                 onBlur={functions.saveChangeFunction}
               />
             </div>
+            
+            {/* Total Max label and input field */}
             <div className="flex flex-col">
               <label>Total Max</label>
               <input

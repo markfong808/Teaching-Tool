@@ -469,9 +469,12 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
     // HTML for webpage
     return (
+      // Define Feedback Form 
       <div id="feedback-form">
+        {/* Define border and color of Feedback Form*/}
         <div className="border bg-gray mt-2 p-5 relative">
           <div className="flex flex-row justify-between mt-5">
+            {/* Feedback Form title and close button of Feedback Form */}
             <h2 className="m-auto text-2xl font-bold">Feedback Form</h2>
             <div
               className="absolute top-1 right-1 cursor-pointer"
@@ -480,7 +483,9 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
               <i className="fas fa-times"></i>
             </div>
           </div>
+
           <div>
+            {/* Feedback satisfaction scale for student and instructor */}
             <div className="flex flex-col">
               <label className="font-bold pt-5">
                 How satisfied are you with the appointment?
@@ -500,6 +505,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                   </div>
                 ))}
               </div>
+
+              {/* Text area for student and instructor to write about satisfaction */}
               <div id="additional-comments" className="mt-5">
                 <label className="font-bold">Please Explain</label>
                 <textarea
@@ -524,7 +531,9 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
     // HTML for webpage
     return (
+      // Define AppointmentDetails popup dimensions, color, and position for display
       <div className="fixed top-1/2 left-1/2 w-11/12 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-8 relative">
+        {/* Label for Appointment Details and close button for popup */}
         <div className="flex flex-row ">
           <h2 className="m-auto text-2xl font-body font-bold">
             Appointment Details
@@ -540,8 +549,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           </div>
         </div>
 
+        {/* Based on account type and when appointment happened, define buttons to approve or cancel appointment, 
+            if the appointment was attended or missed, and provide feedback for appointment */}
         <div className="flex justify-end">
           <div className="flex">
+            {/* Student and instructor can cancel appointments by clicking on Cancel Appointment button */}
             {((user.account_type === "student" && activeTab !== "past") ||
               (user.account_type === "instructor" &&
                 activeTab === "upcoming")) && (
@@ -554,6 +566,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 Cancel Appointment
               </button>
             )}
+
+            {/* Instructor can approve or cancel appointment */}
             {user.account_type === "instructor" && activeTab === "pending" && (
               <div>
                 <button
@@ -579,6 +593,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 </button>
               </div>
             )}
+
+            {/* Allow instructor can indicate that appointment was attended or missed when appointment date passed */}
             {user.account_type === "instructor" && activeTab === "past" && (
               <div className="flex flex-row">
                 <button
@@ -607,6 +623,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 </button>
               </div>
             )}
+
+            {/* Instructor and student can provide feedback if there isn't one and appointment date already passed */}
             {activeTab === "past" && !feedbackPresent && (
               <div className="flex flex-row ml-2 mt-3">
                 <br />
@@ -621,10 +639,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           </div>
         </div>
 
+        {/* Display the Appointment Details along with the Feedback Form */}
         {isProvidingFeedback && renderProvideFeedbackForm()}
         <br />
         <div className="grid grid-cols-2">
-          {/*Left Side */}
+          {/* Left Side of the Appointment Details showing program, date, and time */}
           <div className="flex flex-col">
             <div className="flex flex-row">
               <label className="font-bold">Program&nbsp;</label>
@@ -656,7 +675,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             )} (PST)`}
           </div>
 
-          {/*Right Side */}
+          {/* Right Side of the Appointment Details showing Course, Physical Location, and Current Status */}
           <div className="flex flex-col justify-self-end">
             <label className="font-bold pt-2">Course</label>
             {selectedAppointment.course_name}
@@ -693,7 +712,10 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {capitalizeFirstLetter(selectedAppointment.status)}
           </div>
         </div>
+
+        
         <div className="flex flex-col">
+          {/* Display text box for notes about Appointment */}
           <label className="font-bold pt-2">Appointment Notes</label>
           <textarea
             className={`w-full h-20 ${
@@ -705,55 +727,56 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             onBlur={handleSaveChanges}
             disabled={user.account_type !== "student"}
           />
-          {/* display student details if instructor view */}
+
+          {/* Display student details if instructor view */}
           {user.account_type === "instructor" &&
-            selectedAppointment.student && (
+            selectedAppointment.attendee && (
               <div className="flex flex-col pt-5">
                 <h2 className="text-2xl font-bold">Student Info</h2>
                 <label className="font-bold pt-2">Name</label>
-                {selectedAppointment.student.name}
+                {selectedAppointment.attendee.name}
 
                 <label className="font-bold pt-2">Pronouns</label>
-                {selectedAppointment.student.pronouns}
+                {selectedAppointment.attendee.pronouns}
 
                 <label className="font-bold pt-2">Email</label>
-                {selectedAppointment.student.email}
+                {selectedAppointment.attendee.email}
               </div>
             )}
 
-          {/* display instructor details if student view */}
+          {/* Display instructor details if student view */}
           {user.account_type === "student" &&
-            selectedAppointment.instructor &&
+            selectedAppointment.host &&
             activeTab !== "pending" && (
               <div className="flex flex-col pt-5">
                 <h2 className="text-2xl font-bold">Instructor Info</h2>
                 <label className="font-bold pt-2">Name</label>
-                {selectedAppointment.instructor.title +
+                {selectedAppointment.host.title +
                   " " +
-                  selectedAppointment.instructor.name}
+                  selectedAppointment.host.name}
 
                 <label className="font-bold pt-2">Pronouns</label>
-                {selectedAppointment.instructor.pronouns}
+                {selectedAppointment.host.pronouns}
 
                 <label className="font-bold pt-2">Email</label>
-                {selectedAppointment.instructor.email}
+                {selectedAppointment.host.email}
               </div>
             )}
         </div>
-
         <br />
-
+        
+        {/* Comment box for students and instructor to type into */}
         <Comment appointmentId={selectedAppointment.appointment_id} />
+
       </div>
     );
   };
 
   // Global HTML for webpage, Display appointment list
   return (
-    <div
-      id="content-container"
-      className="flex flex-col w-full m-auto items-center"
-    >
+    // Define AppointmentsTable component
+    <div id="content-container" className="flex flex-col w-full m-auto items-center">
+      {/* Appointments label with upcoming, pending, and past tabs */}
       <div className="font-bold text-center text-2xl">
         <h1>Your {capitalizeFirstLetter(activeTab)} Appointments</h1>
       </div>
@@ -778,6 +801,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         </button>
       </div>
 
+      {/* Button to show or hide Appointments table */}
       <button
         className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-end"
         onClick={() => setShowTable(!showTable)}
@@ -785,10 +809,12 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         {showTable ? "Hide Table" : "Show Table"}
       </button>
 
+      {/* Appointments table itself */}
       <div id="table" className="w-11/12">
         {selectedAppointment ? (
           renderAppointmentDetails()
         ) : (
+          // Table headers for Appointment table allows sorting by details relevant to Appointment
           <table className="w-full border text-center">
             {appointments.length > 0 ? (
               <>
@@ -847,6 +873,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                     </th>
                   </tr>
                 </thead>
+
+                {/* Table body showing Appointment and its details */}
                 <tbody>
                   {showTable &&
                     appointments.map((appointment) => (
@@ -889,6 +917,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 </tbody>
               </>
             ) : (
+
+              /* Show graphic to instructor and student if no appointments in all tabs */
               <tbody>
                 <tr>
                   <td colSpan="5">

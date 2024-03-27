@@ -19,6 +19,7 @@ const Unauthorized = () => {
 
   // HTML for webpage
   return (
+    // Container for Unauthorized user handling component
     <div className="ua-container">
       <div class="gandalf">
         <div class="fireball" />
@@ -33,6 +34,8 @@ const Unauthorized = () => {
           <div class="beard" />
         </div>
       </div>
+
+      {/* Message to Unauthorized user */}
       <div class="message">
         <h1>403 - You Shall Not Pass</h1>
         <p>
@@ -42,6 +45,8 @@ const Unauthorized = () => {
           location? Like...Hobbiton?
         </p>
       </div>
+
+      {/* Link unauthorized user back to Home or Login Webpage */}
       <p>
         <Link to="/">Back to Home</Link>
         <br />

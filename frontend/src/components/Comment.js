@@ -33,6 +33,10 @@ export default function Comment({ appointmentId }) {
 
   // fetches comments for the appointment
   const fetchComments = async () => {
+    // if not a user
+    if (user.account_type !== "instructor" || user.account_type !== "student")
+      return;
+
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -70,6 +74,10 @@ export default function Comment({ appointmentId }) {
 
   // posts a comment to the appointment
   const handleSubmit = async (e) => {
+    // if not a user
+    if (user.account_type !== "instructor" || user.account_type !== "student")
+      return;
+
     e.preventDefault();
     const payload = { appointment_comment: comment };
     try {
@@ -101,6 +109,10 @@ export default function Comment({ appointmentId }) {
 
   // delete the comment from the AppointmentComments Table
   const handleDelete = async (id) => {
+    // if not a user
+    if (user.account_type !== "instructor" || user.account_type !== "student")
+      return;
+
     try {
       await fetch(
         `/${user.account_type}/appointments/${appointmentId}/comment/${id}`,
@@ -140,9 +152,13 @@ export default function Comment({ appointmentId }) {
 
   // HTML for webpage
   return (
+    // Define Comments component which is called in AppointmentsTable.js
     <div className="flex flex-col mt-5">
+      {/* Comments label */}
       <h1 className="text-2xl font-bold">Comments</h1>
       <form className="flex" onSubmit={handleSubmit}>
+
+        {/* Comment input field */}
         <input
           className="border border-light-gray p-2 w-full"
           type="text"
@@ -151,6 +167,8 @@ export default function Comment({ appointmentId }) {
           onChange={(e) => setComment(e.target.value)}
           placeholder="Add a comment..."
         />
+
+        {/* Post button */}
         <button
           className="bg-purple text-white p-2 ml-2 rounded-md"
           type="submit"
@@ -158,6 +176,8 @@ export default function Comment({ appointmentId }) {
           Post
         </button>
       </form>
+
+      {/* Comments container for list of Comments */}
       <div id="comments-container">
         {isLoading ? (
           <p>Loading comments...</p>
@@ -171,6 +191,8 @@ export default function Comment({ appointmentId }) {
             >
               <div className="flex justify-between">
                 <p className="font-bold">
+
+                  {/* Display instructor or student information based on who left the Comment for the Appointment */}
                   {user.account_type === "student" ? (
                     <>
                       {comment.name} <i>({comment.pronouns})</i>
@@ -182,6 +204,7 @@ export default function Comment({ appointmentId }) {
                   )}
                 </p>
 
+                {/* Delete button for a Comment & date and time of listed Comment */}
                 <div className="flex relative">
                   <button onClick={() => handleDelete(comment.id)}>X</button>
                   <p className="text-xs absolute top-1 right-5 w-36">
@@ -189,6 +212,8 @@ export default function Comment({ appointmentId }) {
                   </p>
                 </div>
               </div>
+
+              {/* Appointment Comment itself left by instructor or student */}
               <p>{comment.appointment_comment}</p>
             </div>
           ))

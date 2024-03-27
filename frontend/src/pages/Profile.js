@@ -36,6 +36,14 @@ export default function Profile() {
 
   // fetch the profile data for a user
   const fetchProfileData = async () => {
+    // if not a user
+    if (
+      user.account_type !== "instructor" ||
+      user.account_type !== "student" ||
+      user.account_type !== "admin"
+    )
+      return;
+
     try {
       const response = await fetch(
         `/user/profile/${encodeURIComponent(user.id)}`,
@@ -62,6 +70,14 @@ export default function Profile() {
 
   // posts the profile data to the User Table
   const handleSaveChanges = async () => {
+    // if not a user
+    if (
+      user.account_type !== "instructor" ||
+      user.account_type !== "student" ||
+      user.account_type !== "admin"
+    )
+      return;
+
     try {
       const response = await fetch("/user/profile", {
         method: "POST",
@@ -158,11 +174,15 @@ export default function Profile() {
 
   // HTML for webpage
   return (
+    // Container for Profile webpage
     <div className="flex flex-col w-2/3 m-auto mt-8">
+      {/* Define box for Account Settings */}
       <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md">
+        {/* Heading inside Account Settings box */}
         <h2 className="pb-10 text-center font-bold text-2xl">
           Account Settings
         </h2>
+        {/* Name label and input field for students and instructors to view and edit */}
         <div className="flex flex-col">
           <div>
             <label className="font-bold">Name &nbsp;</label>
@@ -170,7 +190,6 @@ export default function Profile() {
               <span>ⓘ</span>
             </Tooltip>
           </div>
-
           <input
             className="border border-light-gray mb-3"
             name="name"
@@ -179,6 +198,7 @@ export default function Profile() {
             onBlur={handleSaveChanges}
           />
 
+          {/* Pronouns selection for student and instructors */}
           <div>
             <label className="font-bold inline-block">Pronouns</label>
             <select
@@ -220,6 +240,7 @@ export default function Profile() {
             )}
           </div>
 
+          {/* Title selection only for instructors  */}
           {profileData.account_type === "instructor" && (
             <div className="mt-3 mb-3">
               <label className="font-bold inline-block">Title</label>
@@ -252,6 +273,7 @@ export default function Profile() {
             </div>
           )}
 
+          {/* Email label and input field that shows student and instructor email */}
           <label className="font-bold">Email</label>
           <input
             className="bg-gray border border-light-gray mb-3"
@@ -260,6 +282,7 @@ export default function Profile() {
             disabled
           />
 
+          {/* Discord label and input field that shows student and instructor Discord ID and allows changes */}
           <label className="font-bold">Discord ID</label>
           <input
             className=" border border-light-gray mb-3"
@@ -269,6 +292,7 @@ export default function Profile() {
             onBlur={handleSaveChanges}
           />
 
+          {/* Account Type label and input field that shows student and instructor Account Type */}
           <label className="font-bold">Account Type</label>
           <input
             className="bg-gray border border-light-gray mb-3"
@@ -277,6 +301,7 @@ export default function Profile() {
             disabled
           />
 
+          {/* Personal Meeting URL for instructors to enter inside input field */}
           {/* NEEDS TO BE IMPLEMENTED FOR PROGRAMS */}
           {profileData.account_type === "instructor" && (
             <div className="flex flex-col">

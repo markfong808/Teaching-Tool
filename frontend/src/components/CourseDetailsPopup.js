@@ -18,14 +18,20 @@ const CourseDetailsPopup = ({ onClose, courseData, instructorData }) => {
 
   // HTML for webpage
   return (
+    // Define CourseDetailsPopup component dimensions, color, and position for display
     <div className="fixed top-1/2 left-1/2 w-5/12 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative">
+      {/* Close button of CourseDetailsPopup */}
       <button
         className="absolute top-1 right-1 cursor-pointer fas fa-times"
         onClick={onClose}
       ></button>
+
+      {/* Header for Course name*/}
       <h2 className="pb-10 text-center font-bold text-4xl">
         {courseData.course_name}
       </h2>
+
+      {/* Grid showing selected Course and its details*/}
       <div className="grid grid-cols-2 font-bold">
         <div className="flex flex-col">
           <label>

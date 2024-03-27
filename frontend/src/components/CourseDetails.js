@@ -258,9 +258,11 @@ export default function CourseDetails({ courseId }) {
   // HTML for webpage
   return (
     <>
+      {/* Define CourseDetails container size and positioning for display */}
       <div className="flex flex-col w-3/4 px-5 m-auto py-42">
         <div className="py-5 border border-light-gray rounded-md shadow-md">
           <div className="relative">
+            {/* Auto-generate details button for Course */}
             <button
               className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 hover:bg-gray z-10`}
             >
@@ -268,6 +270,7 @@ export default function CourseDetails({ courseId }) {
             </button>
           </div>
 
+          {/* Display Course name and allow for it to change with input field */}
           <div className="pb-10 flex justify-center relative">
             <input
               className="text-center font-bold text-2xl px-2"
@@ -281,20 +284,29 @@ export default function CourseDetails({ courseId }) {
               onChange={handleInputChange}
               onBlur={handleSaveChanges}
             />
+
+            {/* Tooltip to help instructor change name of course if they want */}
             <Tooltip text="Click Course Name To Change Value." position="top">
               <span className="absolute transform">ⓘ</span>
             </Tooltip>
-          </div>
 
+          </div>
+          
+          {/* Container for UI Course Comments box and below */}
           <div className="flex flex-col">
             <div className="w-3/4 m-auto">
+              {/* Box encompassing Course Comments */}
               <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                 <div>
+                  {/* Course Comments label and Tooltip to help instructors understand purpose */}
                   <label className="font-bold">Course Comments &nbsp;</label>
                   <Tooltip text="Description of the program related to meetings for a course.">
                     <span>ⓘ</span>
                   </Tooltip>
+
                 </div>
+
+                {/* Text area for instructor to enter in Comments about Course */}
                 <textarea
                   className="border border-light-gray mt-3 hover:bg-gray"
                   name="comments"
@@ -304,6 +316,7 @@ export default function CourseDetails({ courseId }) {
                 />
               </div>
 
+              {/* Call Program Location Component for instructors to enter location information and about Course */}
               <ProgramLocation
                 isCourseInfoProgram={true}
                 functions={{
@@ -313,6 +326,7 @@ export default function CourseDetails({ courseId }) {
                 data={courseData}
               />
 
+              {/* Call WeeklyCalendar component where instructors can enter Course Times */}
               <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                 <WeeklyCalendar
                   functions={{

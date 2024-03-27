@@ -180,7 +180,9 @@ export default function Courses() {
   // HTML for webpage
   return (
     <div>
+      {/* Container for Courses webpage */}
       <div className="flex flex-col m-auto relative justify-center items-center">
+        {/* Displays Course Details buttons of all Courses a student is enrolled in currently */}
         <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
           {allCoursesData.map((course) => (
             <button
@@ -193,6 +195,7 @@ export default function Courses() {
           ))}
         </div>
 
+        {/* Container that allows students to choose which Course they want to see Drop-Ins for */}
         <div className="flex w-2/3">
           <h1>
             <strong>Course:</strong>
@@ -213,6 +216,7 @@ export default function Courses() {
           </select>
         </div>
 
+        {/* Drop-Ins table when an instructor has set Drop-In Availabilities for their courses */}
         <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <DropinsTable
             courseId={selectedCourseId}
@@ -220,13 +224,15 @@ export default function Courses() {
           />
         </div>
 
+        {/* Appointments Table so a student can see Appointments they booked */}
         <div className="flex flex-col w-2/3 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <AppointmentsTable
             courseId={selectedCourseId}
             reloadTable={reloadAppointmentsTable}
           />
         </div>
-
+        
+        {/* Button students can interact with to schedule a new appointment for a Course */}
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <button
             className={`bg-purple p-2 rounded-md text-white ${
@@ -244,7 +250,9 @@ export default function Courses() {
         </div>
       </div>
 
+      {/* Call CourseDetailsPopup component if student clicks on a Course Details button */}
       {isCourseDetailsPopupVisible && (
+        // Display the details of the chosen course
         <div className="fixed inset-0">
           <CourseDetailsPopup
             onClose={() => setCourseDetailsPopupVisible(false)}
@@ -254,7 +262,9 @@ export default function Courses() {
         </div>
       )}
 
+      {/* Call ScheduleAppointmentPopup component if student clicks on the Schedule New Meeting button */ }
       {isScheduleAppointmentPopUpVisible && (
+        // Display ScheduleAppointmentPopup where student can schedule an appointment for a Program in a Course
         <div className="fixed inset-0">
           <ScheduleAppointmentPopup
             onClose={() => setScheduleAppointmentPopUpVisible(false)}

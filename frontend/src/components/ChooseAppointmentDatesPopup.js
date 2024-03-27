@@ -9,12 +9,15 @@
  *  -
  *
  */
+
+import React, { useContext, useEffect, useState } from "react";
 import React, { useEffect, useState } from "react";
 import { addDays, format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css";
+import { UserContext } from "../context/UserContext";
 
 const ChooseAppointmentDatesPopup = ({
   onClose,
@@ -27,6 +30,9 @@ const ChooseAppointmentDatesPopup = ({
   program_name,
   isDropins,
 }) => {
+  // General Variables
+  const { user } = useContext(UserContext);
+
   // Calendar Data Variables
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -46,6 +52,9 @@ const ChooseAppointmentDatesPopup = ({
 
   // posts added availbility data to the Availability table
   const createTimeSlot = async () => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
     try {
       const csrfToken = getCookie("csrf_access_token");
       let convertedAvailability = [];
@@ -156,22 +165,30 @@ const ChooseAppointmentDatesPopup = ({
 
   // HTML for webpage
   return (
+    // Define ChooseAppointmentDatesPopup component dimensions, color, and position for display
     <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-calendar-popup-gray border border-gray-300 shadow-md pb-7 relative">
+      {/* Button to close out of ChooseAppointmentDatesPopup */}
       <button
         className="absolute top-1 right-1 cursor-pointer fas fa-times"
         onClick={onClose}
       ></button>
+
       <div className="flex flex-row py-5 m-auto">
         <div className="w-2/3 m-auto font-body">
+          {/* Define Calendar Container */}
           <div id="calendar-container">
             <div className="flex flex-col items-center">
+              {/* Label to inform instructor on how to interact with the popup */}
               <h2 className="font-bold pt-5">Choose A Start And End Date:</h2>
+              {/* Call Calendar component which instructor interacts with to pick a date or range of dates */}
               <Calendar
                 onChange={handleCalendarChange}
                 selectRange={true} // Enable range selection
                 value={[startDate, endDate]}
                 minDate={new Date()} // disables past dates from being selected
               />
+
+              {/* Start and end date labels shown once selected */}
               {dateSelected && (
                 <>
                   <label>
@@ -183,6 +200,7 @@ const ChooseAppointmentDatesPopup = ({
               )}
               <br />
 
+              {/* Create button at the bottom of the popup once dates chosen */}
               {showTimePicker && (
                 <div className="flex flex-col py-5">
                   <button

@@ -18,6 +18,8 @@ export default function RegisterForm() {
 
   // HTML for webpage
   return (
+    // Calling child component Signup for rendering where user 
+    // can sign up to use Canvas Meeting Scheduler
     <div>
       <Signup />
     </div>

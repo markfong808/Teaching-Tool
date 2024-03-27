@@ -24,6 +24,7 @@ export const UserProvider = ({ children }) => {
 
   // HTML for webpage
   return (
+    // Provide Child components with access to values user and setUser and their data
     <UserContext.Provider value={{ user, setUser }}>
       {children}
     </UserContext.Provider>

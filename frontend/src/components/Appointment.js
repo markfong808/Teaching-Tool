@@ -28,7 +28,9 @@ export default function Appointment({
 
   // HTML for webpage
   return (
+    // Define Appointment popup component's dimensions, color, and position for display
     <div className="fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-light-gray shadow-md p-5">
+      {/* Define label for Appointment status and Appointment popup close button */}
       <div className="flex flex-row justify-between">
         <h2 className="text-2xl">
           Appointment Status: {capitalizeFirstLetter(status)}!
@@ -38,6 +40,7 @@ export default function Appointment({
         </div>
       </div>
 
+      {/* Messages for reservation status that's reserved or pending */}
       {status === "reserved" && (
         <p>
           Your appointment has been successfully booked! Here are the details of
@@ -50,6 +53,8 @@ export default function Appointment({
           the appointment:
         </p>
       )}
+
+      {/* Appointment details for student to view after reservation */}
       <div>
         <p>
           <strong>Name:</strong> {program_name}

@@ -369,6 +369,7 @@ export default function ProgramDetails() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
+    // exit if invalid char for duration
     if (!e || (name === "duration" && value.includes("a"))) {
       return;
     }
@@ -621,9 +622,11 @@ export default function ProgramDetails() {
 
   // HTML for webpage
   return (
+    // Container for the Program Details webpage
     <div>
       <div className="flex flex-col m-auto">
         <div className="flex w-full cursor-pointer justify-center">
+          {/* Left Half of Course Program Bar where instructor can select All Course Programs */}
           <div
             className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 hover:border-green ${
               isAllCoursesSelected
@@ -638,6 +641,8 @@ export default function ProgramDetails() {
           >
             All Course Programs
           </div>
+
+          {/* Right Half of Course Program Bar where instructor can select Single Course Programs */}
           <div
             className={`w-1/2 text-center text-white text-lg font-bold p-1 border-2 ${
               isAllCoursesSelected
@@ -654,10 +659,13 @@ export default function ProgramDetails() {
           </div>
         </div>
 
+        {/* Container for UI elements below Course Program Bar */}
         <div className="w-3/4 p-5 m-auto">
           <div className="flex justify-between">
             <div className="ml-10">
+              {/* Render Courses Selection and Create Course button if Single Course Programs chosen */}
               {!isAllCoursesSelected && (
+                // UI guide for instructor to select or create a Course
                 <div
                   className={`flex ${
                     !isCourseSelected
@@ -665,6 +673,7 @@ export default function ProgramDetails() {
                       : "p-5"
                   }`}
                 >
+                  {/* Course selection menu */}
                   <h1>
                     <strong>Course:</strong>
                   </h1>
@@ -690,6 +699,8 @@ export default function ProgramDetails() {
                         )
                     )}
                   </select>
+
+                  {/* Create Course button */}
                   <button
                     className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 hover:bg-gray`}
                     onClick={() => setCreateCoursePopup(!isCreateCoursePopup)}
@@ -700,6 +711,7 @@ export default function ProgramDetails() {
               )}
             </div>
 
+            {/* UI guide for instructor to select or create a Course */}
             <div
               className={`flex items-center mr-10 ${
                 isCourseSelected && !isProgramSelected
@@ -707,9 +719,13 @@ export default function ProgramDetails() {
                   : "p-5"
               }`}
             >
+
+              {/* Program header */}
               <h1>
                 <strong>Program:</strong>
               </h1>
+              
+              {/* Program selection for instructors*/}
               <select
                 className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
                 id="course-dropdown"
@@ -720,11 +736,14 @@ export default function ProgramDetails() {
                 <option className="bg-white" key="" value="">
                   Select...
                 </option>
+
+                {/* Show default Course Details as option for each Course in Single Course Programs */}
                 {!isAllCoursesSelected && (
                   <option className="bg-white" key={-2} value={-2}>
                     Course Details
                   </option>
                 )}
+
                 {selectedCourseData.programs.map((program) => (
                   <option
                     className="bg-white"
@@ -735,6 +754,8 @@ export default function ProgramDetails() {
                   </option>
                 ))}
               </select>
+              
+              {/* Create Program button for instructors to create new Programs */}
               <button
                 className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 hover:bg-gray ${
                   !isCourseSelected ? "opacity-50" : ""
@@ -744,12 +765,15 @@ export default function ProgramDetails() {
               >
                 Create Program
               </button>
+
+              {/* Tooltip to aid instructors in viewing Office Hours and Course Details Programs*/}
               <Tooltip
                 text={`For Office Hours programs, please use the title "Office Hours". To view your Courses' details, select the "Course Details" program.`}
                 flip={true}
               >
                 <span>ⓘ</span>
               </Tooltip>
+
             </div>
           </div>
         </div>
@@ -758,10 +782,12 @@ export default function ProgramDetails() {
           <>
             {isProgramSelected ? (
               <>
+                {/* Call Course Details component if instructor selects Course Details as Program */}
                 {isCourseDetails ? (
                   <CourseDetails courseId={selectedCourseId} />
                 ) : (
                   <>
+                    {/* Display if Program is Drop-Ins or Appointment and Range Based or Specific Dates */}
                     <div className="flex justify-center items-center">
                       <button
                         className="w-12% font-bold border border-light-gray bg-gray rounded-md shadow-md px-1 py-1 mb-2 mr-1"
@@ -777,14 +803,18 @@ export default function ProgramDetails() {
                       </button>
                     </div>
 
+                    {/* Container for UI elements below the Drop-Ins or Appointment and Range Based or Specific Dates buttons */}
                     <div className="flex flex-col w-3/4 px-5 m-auto">
                       <div className="py-5 border border-light-gray rounded-md shadow-md">
+                        {/* Auto Generate Details button */}
                         <div className="relative">
                           <button
                             className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 left-0 flex justify-center items-center ml-6 hover:bg-gray z-10`}
                           >
                             Auto Generate Details
                           </button>
+
+                            {/* Delete Program button */}
                           <button
                             className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray z-10`}
                             onClick={handleDeleteProgram}
@@ -793,7 +823,9 @@ export default function ProgramDetails() {
                           </button>
                         </div>
 
+                        {/* Container for Program Name and Tooltip UI element */}
                         <div className="pb-10 flex justify-center relative">
+                          {/* Display Course name and allow for it to change with input field */}
                           <input
                             className="text-center font-bold text-2xl px-2"
                             style={{
@@ -807,15 +839,20 @@ export default function ProgramDetails() {
                             value={selectedProgramData.name}
                             onChange={handleInputChange}
                             onBlur={handleSaveChanges}
+
                           />
+                          
+                          {/* Tooltip to aid instructors in viewing and editing the selected Program Name*/}
                           <Tooltip
                             text="Click Program Name To Change Value."
                             position="top"
                           >
                             <span className="absolute transform">ⓘ</span>
                           </Tooltip>
+
                         </div>
 
+                        {/* Container for UI elements Program Description and below */}
                         <div className="flex flex-col">
                           <div className="w-3/4 m-auto">
                             <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
@@ -823,10 +860,14 @@ export default function ProgramDetails() {
                                 <label className="font-bold">
                                   Program Description &nbsp;
                                 </label>
+
+                              {/* Tooltip to aid instructors in viewing and editing the selected Program description */}
                                 <Tooltip text="Description of the program related to meetings for a course.">
                                   <span>ⓘ</span>
                                 </Tooltip>
                               </div>
+
+                              {/* Text area for instructors to enter program description */}
                               <textarea
                                 className="border border-light-gray mt-3 hover:bg-gray"
                                 name="description"
@@ -836,6 +877,7 @@ export default function ProgramDetails() {
                               />
                             </div>
 
+                            {/* Call ProgramLocation component for instructors to enter physical location and virtual meeting link */}
                             <ProgramLocation
                               isCourseInfoProgram={false}
                               functions={{
@@ -845,7 +887,9 @@ export default function ProgramDetails() {
                               data={selectedProgramData}
                             />
 
+                            {/* Call AutoAcceptAppointments component if Program is Appointment based */}
                             {!isDropinsLayout && (
+                              // Instructors can choose to AutoAcceptAppointments and set Appointment limits 
                               <AutoAcceptAppointments
                                 functions={{
                                   setSelectedProgramData:
@@ -858,6 +902,7 @@ export default function ProgramDetails() {
                               />
                             )}
 
+                            {/* Inform instructor to enter a location or virtual meeting link if both aren't entered*/}
                             {!locationChecker ? (
                               <div className="flex flex-row p-5 m-auto mt-5 justify-center">
                                 <label className="font-bold text-xl">
@@ -866,6 +911,7 @@ export default function ProgramDetails() {
                                 </label>
                               </div>
                             ) : (
+                              // If Drop-Ins or Appointments for specific Dates, render Create Appointment Block button
                               !isRangedBasedLayout && (
                                 <button
                                   className="flex flex-row p-5 m-auto mt-5 justify-center font-bold border border-light-gray rounded-md shadow-md text-xl px-5 py-3 hover:bg-gray"
@@ -880,9 +926,11 @@ export default function ProgramDetails() {
                               )
                             )}
 
+
                             {locationChecker === true &&
                               (isRangedBasedLayout ? (
                                 <>
+                                  {/* Call WeeklyCalendar component where instructors can enter Program Times */}
                                   <div className="flex-1 flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                                     <WeeklyCalendar
                                       functions={{
@@ -901,11 +949,16 @@ export default function ProgramDetails() {
                                       program_id={selectedProgramData.id}
                                     />
                                   </div>
+
+                                  
                                   {showDurationDetails && (
                                     <div className="flex flex-row items-center mt-4 p-5 border border-light-gray rounded-md shadow-md mt-5">
+                                      {/* Appointment duration label */}
                                       <label className="whitespace-nowrap font-bold text-2xl">
                                         Define Appointment Duration?
                                       </label>
+
+                                      {/* Appointment duration checkbox */}
                                       <input
                                         type="checkbox"
                                         class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1 hover:cursor-pointer"
@@ -913,8 +966,10 @@ export default function ProgramDetails() {
                                         onChange={showBox}
                                       ></input>
 
+                                      
                                       {showDurationInputField && (
                                         <div className="flex items-end">
+                                          {/* Appointment duration input field */}
                                           <input
                                             className="border border-light-gray ml-3 mt-1 w-20 hover:bg-gray"
                                             name="duration"
@@ -936,11 +991,15 @@ export default function ProgramDetails() {
                                             }}
                                             onBlur={handleSaveChanges}
                                           />
+
+                                          {/* Minutes label once instructor clicks on checkbox to enter duration */}
                                           <label className="whitespace-nowrap font-bold text-sm ml-1">
                                             minutes
                                           </label>
                                         </div>
                                       )}
+                                      
+                                      {/* Choose Appointment Dates button for instructor to make availability based on date */}
                                       <button
                                         className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 hover:bg-gray`}
                                         onClick={() =>
@@ -955,8 +1014,11 @@ export default function ProgramDetails() {
                                   )}
                                 </>
                               ) : (
+                                  // Call CreateAppointmentBlockPopup component if instructor clicks on the Create Appointment Block button
                                 isCreateAvailabilityPopUpVisible && (
                                   <div className="fixed inset-0 z-10">
+                                    {/* Display CreateAppointmentBlockPopup where instructor can create time-blocks 
+                                        for an Appointment or Drop-In based Program */}
                                     <CreateAppointmentBlock
                                       id={selectedCourseId}
                                       program_id={selectedProgramData.id}
@@ -984,6 +1046,7 @@ export default function ProgramDetails() {
                 )}
               </>
             ) : (
+              // Inform instructor to select a Program to view its details
               <div className="m-auto mt-40 py-10 px-16 border border-light-gray rounded-3xl shadow-md">
                 <label className="font-bold text-3xl">
                   Please Select A Program
@@ -992,13 +1055,16 @@ export default function ProgramDetails() {
             )}
           </>
         ) : (
+          // Inform instructor to select a course to view Programs and their details
           <div className="m-auto mt-40 py-10 px-16 border border-light-gray rounded-3xl shadow-md">
             <label className="font-bold text-3xl">Please Select A Course</label>
           </div>
         )}
       </div>
 
+      {/* Call ChooseAppointmentDatesPopup component if instructor clicks on the Choose Appointment Dates button */}
       {isChooseAppointmentDatesPopUpVisible && (
+        // Display ChooseAppointmentDatesPopup where instructor can choose dates of Availability for an Appointment or Drop-In
         <div className="fixed inset-0 z-10">
           <ChooseAppointmentDatesPopup
             onClose={() => setChooseAppointmentDatesPopUpVisible(false)}
@@ -1014,7 +1080,9 @@ export default function ProgramDetails() {
         </div>
       )}
 
+      {/* Call CreateCoursePopup component if instructor clicks on the Create Course button */}
       {isCreateCoursePopup && (
+        // Display CreateCoursePopup where instructor can create a Course
         <div className="fixed inset-0 z-10">
           <CreateCoursePopup
             onClose={() => setCreateCoursePopup(false)}
@@ -1024,7 +1092,9 @@ export default function ProgramDetails() {
         </div>
       )}
 
+      {/* Call CreateProgramPopup component if instructor clicks on the Create Program button */}
       {isCreateProgramPopup && (
+        // Display CreateProgramPopup where instructor can create a Program for a Course
         <div className="fixed inset-0 z-10">
           <CreateProgramPopup
             onClose={() => setCreateProgramPopup(false)}

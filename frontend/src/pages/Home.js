@@ -1,5 +1,5 @@
 /* Home.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Home Tab that Displays information about Canvas Meeting Scheduler
  * from a general, admin, instructor, and student perspective.
@@ -27,7 +27,9 @@ export default function Home() {
 
   // HTML for webpage
   return (
+    // Container for the Home webpage
     <div className="flex flex-col w-2/3 m-auto items-center">
+      {/* Home display message for user who's not signed into Canvas Meeting Scheduler */}
       {!user && (
         <>
           <h1 className="text-purple text-center text-4xl font-headlines p-5">
@@ -110,8 +112,10 @@ export default function Home() {
         </>
       )}
 
+      {/* Home display message for user who's signed into Canvas Meeting Scheduler */}
       {user && (
         <>
+          {/* Home display message for user who's account status is pending in Canvas Meeting Scheduler */ }
           {user.status === "inactive" && (
             <div className="">
               <p>Account Status: {capitalizeFirstLetter(user.status)}</p>
@@ -122,6 +126,8 @@ export default function Home() {
               </p>
             </div>
           )}
+
+          {/* Home display message for user who's account status is pending in Canvas Meeting Scheduler */}
           {user.status === "pending" && (
             <div className="">
               <p>Account Status: {capitalizeFirstLetter(user.status)}</p>
@@ -132,6 +138,7 @@ export default function Home() {
             </div>
           )}
 
+          {/* Home display message for admin type in Canvas Meeting Scheduler */}
           {user.account_type === "admin" && (
             <>
               <h1 className="text-center text-4xl font-headlines text-purple p-5">
@@ -221,6 +228,7 @@ export default function Home() {
             </>
           )}
 
+          {/* Home display message for instructor type in Canvas Meeting Scheduler */}
           {user.account_type === "instructor" && (
             <>
               <h1 className="text-center text-4xl font-bold font-headlines text-purple p-5">
@@ -308,6 +316,7 @@ export default function Home() {
             </>
           )}
 
+          {/* Home display message for student type in Canvas Meeting Scheduler */}
           {user.account_type === "student" && (
             <>
               <h1 className="text-purple text-4xl font-headlines p-5">
