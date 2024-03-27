@@ -47,6 +47,12 @@ const Logout = () => {
     handleLogout();
   }, [navigate, setUser]); // Dependencies for useEffect
 
+  ////////////////////////////////////////////////////////
+  //                 Render Functions                   //
+  ////////////////////////////////////////////////////////
+
+  // HTML for webpage
+  // Display logging out while logging out the admin, instructor, or student
   return <div>Logging out...</div>;
 };
 

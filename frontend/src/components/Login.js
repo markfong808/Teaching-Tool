@@ -60,7 +60,7 @@ export default function Login() {
       // set user based on user profile
       setUser(userProfile);
       navigate(`/${userProfile.account_type}`); // navigate to appropriate webpage view based on account type
-    } catch (error) {}
+    } catch (error) { }
   };
 
   ////////////////////////////////////////////////////////
@@ -80,10 +80,13 @@ export default function Login() {
 
   // HTML for webpage
   return (
+    // Define Login component
     <div className="flex flex-col m-auto w-1/4 p-5 border shadow-lg border-light-gray rounded-md mt-8">
+      {/* Login header */}
       <h1 className="text-xl text-center pb-5">Login</h1>
       <form className="" onSubmit={handleSubmit}>
-        <div className="flex flex-col pb-2">
+       {/* Email input field*/}
+       <div className="flex flex-col pb-2">
           <label>Email</label>
           <input
             className="border-b"
@@ -93,6 +96,8 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
+
+        {/* Password input field*/}
         <div className="flex flex-col">
           <label>Password</label>
           <input
@@ -102,14 +107,21 @@ export default function Login() {
             type="password"
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          {/* Forgot password label */}
           <div className="text-purple pb-5">Forgot password?</div>
+
+          {/* Login button */}
           <button
             className="bg-purple text-white h-10 w-full hover:text-gold hover:bg-purple rounded-lg"
             type="submit"
           >
             Login
           </button>
+
+          {/* Notify user of login error */}
           {loginError && (
+            // Logo to indicate login error
             <p>
               <span role="img" aria-label="error-icon" style={{ color: "red" }}>
                 ❌&nbsp;&nbsp;&nbsp;
@@ -117,6 +129,8 @@ export default function Login() {
               {loginError}
             </p>
           )}
+
+          {/* Link user to Register tab if they're not signed up to use Canvas Meetig Scheduler */}
           <strong className="p-5 text-center">OR</strong>
           <div className="p-1 text-center">
             New user?{" "}

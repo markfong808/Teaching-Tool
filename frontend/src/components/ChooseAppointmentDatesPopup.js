@@ -11,7 +11,6 @@
  */
 
 import React, { useContext, useEffect, useState } from "react";
-import React, { useEffect, useState } from "react";
 import { addDays, format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
