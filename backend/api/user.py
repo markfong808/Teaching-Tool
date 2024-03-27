@@ -1,6 +1,6 @@
 """ 
  * user.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains functions which are applicable to
  * students and instructor user types
@@ -40,6 +40,16 @@ def refresh_expiring_jwts(response):
 ""             Backend Only Functions              ""
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
+# check if user is an instructor
+def is_instructor(user_id):
+    instructor = User.query.get(user_id)
+    return instructor.account_type == 'instructor' if instructor else False
+
+# check if user is an student
+def is_student(user_id):
+    student = User.query.get(user_id)
+    return student.account_type == 'student' if student else False
+
 # convert a military time object to a standard time object
 def convert_to_standard_time(military_time):
     military_time_obj = datetime.strptime(military_time, "%H:%M")
@@ -51,36 +61,35 @@ def convert_to_standard_time(military_time):
 # based on the given program id and name, print the times for the program in a string format
 def findStandardTimes(id, name):
     try:
+        # search through CourseTimes
         if name == "Course Details":
-            program = (
+            tuples = (
                 CourseTimes.query
                 .join(CourseDetails, CourseTimes.course_id == CourseDetails.id)
                 .filter(CourseDetails.id == id)
             )
-            program_details = program.first().course_details if program.first() else None
+            details = tuples.first().course_details if tuples.first() else None
+
+        # search through ProgramTimes
         else:
-            program = (
+            tuples = (
                 ProgramTimes.query
                 .join(ProgramDetails, ProgramTimes.program_id == ProgramDetails.id)
                 .filter(ProgramDetails.course_id == id, ProgramDetails.name == name)
             )
-            program_details = program.first().program_details if program.first() else None
+            details = tuples.first().program_details if tuples.first() else None
 
+        # set physical_location and link
         times = ""
-        physical_location = program_details.physical_location if program_details else None
-        link = program_details.meeting_url if program_details else None
+        physical_location = details.physical_location if details else "No Location"
+        link = details.meeting_url if details else "No URL"
 
-        if physical_location is None:
-            physical_location = "No Location"
+        tuples = tuples.all()
 
-        if link is None:
-            link = "No URL"
-
-        program = program.all()
-
-        if program:
+        if tuples:
+            # convert the times to a string format
             tempString = ""
-            for obj in program:
+            for obj in tuples:
                 if tempString:
                     tempString += "/"
                 tempString += (
@@ -98,6 +107,7 @@ def findStandardTimes(id, name):
 # based on the given program name and instructor_id, print the times for their office hours in a string format
 def findInstructorOfficeHours(name, instructor_id):
     try:
+        # search through ProgramTimes
         program = (
             ProgramTimes.query
             .join(ProgramDetails, ProgramTimes.program_id == ProgramDetails.id)
@@ -106,19 +116,15 @@ def findInstructorOfficeHours(name, instructor_id):
 
         program_details = program.first().program_details if program.first() else None
 
+        # set physical_location and link
         times = ""
-        physical_location = program_details.physical_location if program_details else None
-        link = program_details.meeting_url if program_details else None
-
-        if physical_location is None:
-            physical_location = "No Location"
-
-        if link is None:
-            link = "No URL"
+        physical_location = program_details.physical_location if program_details else "No Location"
+        link = program_details.meeting_url if program_details else "No URL"
         
         program = program.all()
 
         if len(program) > 0:
+            # convert the times to a string format
             tempString = ""
             for obj in program:
                 if tempString != "":
@@ -134,37 +140,41 @@ def findInstructorOfficeHours(name, instructor_id):
 
 # get all of the attributes of a user_id from the User table
 def get_user_data(user_id):
-    user = User.query.get(user_id)
-    
-    if user:
-        return {
-            'id': user.id,
-            'name': user.name,
-            'pronouns': user.pronouns,
-            'title': user.title,
-            'discord_id': user.discord_id,
-            'email': user.email,
-            'account_type': user.account_type,
-            'status': user.status,
-        }
-    else:
-        return {'error': 'User does not exist'}
-    
-# Helper function to send confirmation email to student and instructor
-def send_confirmation_email(appointment):
-    student = User.query.get(appointment.attendee_id)
-    instructor = User.query.get(appointment.host_id)
+    try:
+        user = User.query.get(user_id)
 
-    if student and instructor:
-        student_email_subject = f'{appointment.program_id} Status Update'
-        if appointment.status == 'reserved':
-            student_email_content = f'Your {appointment.program_id} appointment with {instructor.name} has been reserved for {appointment.appointment_date} at {appointment.start_time}.'
+        if user:
+            return {
+                'id': user.id,
+                'name': user.name,
+                'pronouns': user.pronouns,
+                'title': user.title,
+                'discord_id': user.discord_id,
+                'email': user.email,
+                'account_type': user.account_type,
+                'status': user.status,
+                'calendar_link': user.calendar_link,
+            }
         else:
-            student_email_content = f'Your {appointment.program_id} appointment has been rejected for unknown reason {appointment.appointment_date} at {appointment.start_time}.'
-        student_email_content = f'Your {appointment.program_id} appointment with {instructor.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+            return {'error': 'User does not exist'}
+    except Exception as e:
+        return jsonify({"error": str(e)}), 401
+    
+# Helper function to send confirmation email to attendee and host
+def send_confirmation_email(appointment):
+    attendee = User.query.get(appointment.attendee_id)
+    host = User.query.get(appointment.host_id)
 
-        instructor_email_subject = f'{appointment.program_id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
-        instructor_email_content = f'Your {appointment.program_id} appointment with {student.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+    if attendee and host:
+        attendee_email_subject = f'{appointment.program_id} Status Update'
+        if appointment.status == 'reserved':
+            attendee_email_content = f'Your {appointment.program_id} appointment with {host.name} has been reserved for {appointment.appointment_date} at {appointment.start_time}.'
+        else:
+            attendee_email_content = f'Your {appointment.program_id} appointment has been rejected for unknown reason {appointment.appointment_date} at {appointment.start_time}.'
+        attendee_email_content = f'Your {appointment.program_id} appointment with {host.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+
+        host_email_subject = f'{appointment.program_id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
+        host_email_content = f'Your {appointment.program_id} appointment with {attendee.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
 
         # Create datetime objs for ics file
         timezone_offset = "-08:00"  # PST timezone offset
@@ -190,7 +200,7 @@ def send_confirmation_email(appointment):
         ics_data = cal.serialize()
         
         # Attach the .ics file to the email
-        send_email(student.email, student_email_subject, student_email_content, ics_data)
+        send_email(attendee.email, attendee_email_subject, attendee_email_content, ics_data)
         return True
     return False
 
@@ -211,19 +221,22 @@ def get_user_courses():
 
             courses_list = []
             for course in user_courses_info:
+                # get the course times
                 courseTimes = findStandardTimes(course.id, "Course Details")
-                
-                courseTuple = CourseDetails.query.filter(CourseDetails.id == course.id).first()
 
-                globalOfficeHours = findInstructorOfficeHours("Office Hours", courseTuple.instructor_id)
+                # get the office hours attached to the instructor
+                globalOfficeHours = findInstructorOfficeHours("Office Hours", course.instructor_id)
 
+                # get the office hours attached to the course
                 courseOfficeHours = findStandardTimes(course.id, "Office Hours")
 
+                # set the office hours to the course office hours if they exist, otherwise set them to the global office hours
                 if courseOfficeHours['times'] != "No Known Times":
                     officeHours = courseOfficeHours
                 else:
                     officeHours = globalOfficeHours
 
+                # convert attributes to a object
                 course_info = {
                     'id': course.id,
                     'course_name': course.name,
@@ -236,6 +249,8 @@ def get_user_courses():
                     'course_times': courseTimes,
                     'office_hours': officeHours
                 }
+                
+                # append object to return list
                 courses_list.append(course_info)
             return jsonify(courses_list), 200
         else:
@@ -257,6 +272,7 @@ def get_user_profile(user_id):
             'pronouns': user.pronouns,
             'discord_id': user.discord_id,
             'account_type': user.account_type,
+            'calendar_link': user.calendar_link,
         }), 200
     else:
         return jsonify({'error': 'User does not exist'}), 404
@@ -270,7 +286,6 @@ def update_user_profile():
         user_id = get_jwt_identity()
         user = User.query.filter_by(id=user_id).first()
         
-
         if not user:
             return jsonify({"error": "User doesn't exist"}), 404
 
@@ -286,8 +301,9 @@ def update_user_profile():
        
 
         db.session.commit()
-        response = get_user_data(user_id)
-        return jsonify(response), 200
+
+        # return updated user data
+        return jsonify(get_user_data(user_id)), 200
 
     except Exception as e:
         db.session.rollback()
@@ -299,10 +315,13 @@ def update_user_profile():
 def update_meeting():
     try:
         data = request.get_json()
+
         appointment_id = data.get('appointment_id')
         notes = data.get('notes', None)  # Default to None if not provided
         meeting_url = data.get('meeting_url', None)  # Default to None if not provided
+
         appointment = Appointment.query.filter_by(id=appointment_id).first()
+
         if appointment:
             if notes is not None:
                 appointment.notes = notes
@@ -321,9 +340,12 @@ def update_meeting():
 def update_meeting_status():
     try:
         data = request.get_json()
+        
         appointment_id = data.get('appointment_id')
         status = data.get('status')
+
         appointment = Appointment.query.get(appointment_id)
+
         if appointment:
             appointment.status = status
             db.session.commit()

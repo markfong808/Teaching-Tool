@@ -1,6 +1,6 @@
 """ 
  * mail.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains functions used to send emails when appointments are booked
  *

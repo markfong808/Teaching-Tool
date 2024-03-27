@@ -127,15 +127,14 @@ export default function WeeklyCalendar({
       }
 
       // show time fields
-      setShowTimeEntryField((prevState) => ({
-        ...prevState,
+      setShowTimeEntryField({
         ...Object.keys(updatedShowTimeEntries).reduce((acc, key) => {
           if (updatedShowTimeEntries[key]) {
             acc[key] = true;
           }
           return acc;
         }, {}),
-      }));
+      });
 
       // set the times
       const updatedLocalTimes = {

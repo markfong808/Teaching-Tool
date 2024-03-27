@@ -5,16 +5,20 @@
  * and modify existing programs.
  *
  * Known bugs:
- * - Doesnt load programs
+ * - get rid of save buttons like the rest of the system?
+ * - not updated to work in general
+ *    - Doesnt load programs
  *
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie";
+import { UserContext } from "../context/UserContext";
 
 const ManagePrograms = () => {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
+  const { user } = useContext(UserContext);
 
   // Program Data Variables
   const [programs, setPrograms] = useState([]);
@@ -37,9 +41,13 @@ const ManagePrograms = () => {
   //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
-  // Fetch programs from the backend
+  // fetch all programs in system
   const fetchPrograms = async () => {
+    // user isn't an admin
+    if (user.account_type !== "admin") return;
+
     setLoading(true);
+
     try {
       const response = await fetch("/course/programs", {
         method: "GET",
@@ -59,6 +67,7 @@ const ManagePrograms = () => {
     } catch (error) {
       setError(error.message);
     } finally {
+      // success or fail, set loading to false
       setLoading(false);
     }
   };
@@ -67,8 +76,11 @@ const ManagePrograms = () => {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  //
+  // Add a new program to the ProgramDetails Table
   const handleAddProgram = async () => {
+    // user isn't an admin
+    if (user.account_type !== "admin") return;
+
     const url = "/program";
     try {
       const response = await fetch(url, {
@@ -82,8 +94,6 @@ const ManagePrograms = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // setSelectedProgramType(data);
         setIsAddingNewProgram(false);
         setChangesMade(false);
         alert("Program added successfully!");
@@ -98,7 +108,8 @@ const ManagePrograms = () => {
 
   // Submit form for creating or updating a program
   const handleSaveChanges = async (e) => {
-    if (!selectedProgram) return;
+    // user isn't an admin or no program selected
+    if (user.account_type !== "admin" || !selectedProgram) return;
 
     const url = `/program/${selectedProgram.id}`;
     try {
@@ -125,8 +136,11 @@ const ManagePrograms = () => {
     }
   };
 
-  // Delete a program
+  // Delete a program from the ProgramDetails Table
   const handleDelete = async (id) => {
+    // user isn't an admin
+    if (user.account_type !== "admin") return;
+
     if (window.confirm("Are you sure you want to delete this program?")) {
       try {
         const response = await fetch(`/program/${id}`, {
@@ -154,26 +168,26 @@ const ManagePrograms = () => {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  // Handle input changes
+  // handle input changes for formData
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setChangesMade(true);
   };
 
-  //
+  // when user clicks "Add New Program", reset formData
   const handleNewProgramClick = () => {
     setIsAddingNewProgram(true);
     setSelectedProgram(null);
     setFormData({ name: "", description: "", duration: "" });
   };
 
-  //
+  // select a new program
   const handleProgramClick = (program) => {
     setSelectedProgram(program);
   };
 
-  //
+  // cancel formData changes
   const handleCancelChanges = () => {
     // Reset form data to initial meeting data
     setFormData({
@@ -188,7 +202,7 @@ const ManagePrograms = () => {
   //                 UseEffect Functions                //
   ////////////////////////////////////////////////////////
 
-  //
+  // when a new program is selected, update formData
   useEffect(() => {
     if (selectedProgram) {
       setFormData({
@@ -217,7 +231,7 @@ const ManagePrograms = () => {
     return <div>Error: {error}</div>;
   }
 
-  //
+  // render the form for adding a new program
   const renderNewProgramForm = () => {
     if (!isAddingNewProgram) {
       return null;
@@ -279,7 +293,7 @@ const ManagePrograms = () => {
     );
   };
 
-  //
+  // render the form for editing an existing program
   const renderProgramDetails = () => {
     if (!selectedProgram) {
       return null;
@@ -349,6 +363,7 @@ const ManagePrograms = () => {
     );
   };
 
+  // HTML for webpage
   return (
     <div className="w-2/3 m-auto">
       {selectedProgram ? renderProgramDetails() : renderNewProgramForm()}

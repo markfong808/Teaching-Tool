@@ -1,6 +1,6 @@
 """ 
  * __init__.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains initialization of the Flask App
  *
@@ -24,9 +24,11 @@ jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
+
     # Allow requests from localhost (React app during development)
     CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+
     from .auth import auth
     from .admin import admin
     from .student import student
@@ -38,7 +40,9 @@ def create_app():
     
     ##create MySQL database##    
     load_dotenv()
+
     connection_string = os.environ.get('SQLALCHEMY_DATABASE_URI')
+
     # Set the app's database connection string
     app.config['SQLALCHEMY_DATABASE_URI'] = connection_string
     app.config["JWT_COOKIE_SECURE"] = False  # Set to True in production with HTTPS
@@ -46,6 +50,7 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=3)
     jwt.init_app(app)  # Initialize the JWTManager with the Flask app
+    
     # Bind the SQLAlchemy instance to this Flask app
     db.init_app(app)
     migrate = Migrate(app, db)

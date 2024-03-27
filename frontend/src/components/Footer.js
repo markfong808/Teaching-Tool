@@ -1,5 +1,5 @@
 /* Footer.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Footer that displays name of author, year, and rights
  * at the bottom of a webpage.

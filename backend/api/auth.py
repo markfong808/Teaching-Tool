@@ -1,6 +1,6 @@
 """ 
  * auth.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains functions used to signup, login, and logout of the application.
  * Account system to be deprecated when merged with Teaching Tools/Canvas API
@@ -13,7 +13,7 @@
 from flask import Blueprint, request, jsonify
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from . import db   ##means from __init__.py import db
+from . import db
 from email_validator import EmailNotValidError, validate_email
 from flask_jwt_extended import create_access_token, unset_jwt_cookies, \
     get_jwt_identity, jwt_required, set_access_cookies, get_jwt
@@ -39,9 +39,9 @@ def refresh_expiring_jwts(response):
 ""             Backend Only Functions              ""
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
-# add a new user to the User Table
-def create_account(email, name, account_type, status, password1):
-    new_user = User(email=email, name=name, account_type=account_type, status=status, password=generate_password_hash(password1, method='scrypt', salt_length=2))
+# add a new user tuple to the User Table
+def create_account(email, name, account_type, status, password):
+    new_user = User(email=email, name=name, account_type=account_type, status=status, password=generate_password_hash(password, method='scrypt', salt_length=2))
     db.session.add(new_user)
     db.session.commit()
     return new_user.id

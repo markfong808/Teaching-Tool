@@ -1,6 +1,6 @@
 """ 
  * programs.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains functions used to CRUD programs for students and instructors
  *
@@ -14,6 +14,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import and_, or_
 from .models import ProgramDetails, User, Appointment, Availability, ProgramTimes, CourseDetails, CourseMembers, AppointmentComment, Feedback, CourseTimes
 from . import db
+from .user import is_instructor
 
 programs = Blueprint('programs', __name__)
 
@@ -21,15 +22,8 @@ programs = Blueprint('programs', __name__)
 ""             Backend Only Functions              ""
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
-# check if user_id is an instructor
-def is_instructor(user_id):
-    user = User.query.filter_by(id=user_id).first()
-    if user.account_type != 'instructor':
-        return False
-    return True
-
 # return the program name for a given program ID
-def get_program_type(program_id): 
+def get_program_name(program_id): 
     try: 
         program = ProgramDetails.query.filter_by(id=program_id).first()
 
@@ -54,14 +48,15 @@ def get_course_name(course_id):
 
 @programs.route('/course/details/<course_id>', methods=['GET'])
 @jwt_required()
-def get_courses(course_id):
+def get_courses_details(course_id):
     try:
         user_id = get_jwt_identity()
-        instructor = User.query.get(user_id)
+        user = User.query.get(user_id)
         
-        if instructor and course_id is not None:
+        if user and course_id is not None:
             course = CourseDetails.query.filter_by(id=course_id).first()
 
+            # convert attributes to a object
             course_info = {
                 'id': course.id,
                 'instructor_id': course.instructor_id,
@@ -80,11 +75,17 @@ def get_courses(course_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# set the course attributees of a already existing course
+# set the course attributes of a already existing course
 @programs.route('/course/details', methods=['POST'])
 @jwt_required()
 def set_course_details():
     try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({"error": "user not found"}), 404
+
         data = request.get_json()
         course_id = data.get('id')
         quarter = data.get('quarter')  
@@ -97,6 +98,7 @@ def set_course_details():
 
         course = CourseDetails.query.get(course_id)
 
+        # if course exists, update the course details
         if course:
             course.quarter = quarter
             course.name = name
@@ -125,17 +127,20 @@ def get_course_times(course_id):
         if course:
             course_times = CourseTimes.query.filter_by(course_id=course_id).all()
             
+            # if course has defined times
             if course_times:
                 course_times_list = []
 
                 for tuple in course_times:
+                    # convert attributes to a object
                     course_time_info = {
                         'course_id': tuple.course_id,
                         'day': tuple.day,
                         'start_time': tuple.start_time,
                         'end_time': tuple.end_time,
                     }
-
+                    
+                    # append the object to the list
                     course_times_list.append(course_time_info)
                 return jsonify(course_times_list), 200
             else:
@@ -158,29 +163,36 @@ def set_course_times(course_id):
             # set times for course
             courses = CourseTimes.query.filter_by(course_id=course_id).all()
         
-            # if course already exists in the course times table, i.e. columns are populated
+            # if course already exists, delete the existing times
             if courses:
                 for course in courses:
                     db.session.delete(course)
                 db.session.commit()
 
+            # add the new times
             if len(data) > 0:
                 converted_list = []
                 for course_id, schedule in data.items():
+
+                    # get attributes
                     for day, timings in schedule.items():
                         start_time = timings['start_time']
                         end_time = timings['end_time']
                         converted_list.append((day, start_time, end_time, course_id))
 
                 for entry in converted_list:
+                    # create a new CourseTimes tuple
                     new_time = CourseTimes(
                         day=entry[0],
                         start_time=entry[1],
                         end_time=entry[2],
                         course_id=entry[3],
                     )
+
+                    # append the new tuple to the list
                     courseTimesTuples.append(new_time)
                 
+                # for each tuple, add it to the CourseTimes Table
                 for courseTimesTuple in courseTimesTuples:
                     db.session.add(courseTimesTuple)
                 db.session.commit()
@@ -190,7 +202,7 @@ def set_course_times(course_id):
             else:
                 return jsonify({"message": "Times updated successfully: No times for course"}), 200
         else:
-            return jsonify({"error": "Times update failed"}), 404
+            return jsonify({"error": "Times data not found"}), 404
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 500
@@ -203,6 +215,8 @@ def get_programs(course_id):
 
         if course:
             programs = ProgramDetails.query.filter(and_(or_(ProgramDetails.course_id==course_id, ProgramDetails.course_id==None), ProgramDetails.instructor_id==course.instructor_id)).all()
+
+            # return the id, name, description, and duration of each program
             return jsonify([{
                 "id": program.id,
                 "name": program.name,
@@ -217,23 +231,34 @@ def get_programs(course_id):
 # get all of the program times for a course
 @programs.route('/course/programs/times/<course_id>', methods=['GET'])
 @jwt_required()
-def get_times(course_id):
+def get_program_times_in_course(course_id):
     try:
+        user_id = get_jwt_identity()
+
+        if not is_instructor(user_id):
+            return jsonify({"msg": "instructor access required"}), 401
+        
+        instructor = User.query.get(user_id)
+
+        # all courses programs
         if course_id == "null":
-            programs = ProgramDetails.query.filter(ProgramDetails.course_id.is_(None)).all()
+            programs = ProgramDetails.query.filter(ProgramDetails.course_id.is_(None), ProgramDetails.instructor_id==instructor.id).all()
+        # single course programs
         else:
-            programs = ProgramDetails.query.filter_by(course_id=course_id).all()
+            programs = ProgramDetails.query.filter_by(course_id=course_id, instructor_id=instructor.id).all()
         
         if programs:
+            # return list of program times
             course_times_list = []
 
             for program in programs:
 
                 program_times = ProgramTimes.query.filter_by(program_id=program.id).all()
 
-                program_name = get_program_type(program.id)
+                program_name = get_program_name(program.id)
 
                 for tuple in program_times:
+                    # convert attributes to a object
                     program_time_info = {
                         'program_id': tuple.program_id,
                         'name': program_name,
@@ -242,9 +267,11 @@ def get_times(course_id):
                         'end_time': tuple.end_time,
                     }
 
+                    # append the object to the list
                     course_times_list.append(program_time_info)
             return jsonify(course_times_list), 200
         else:
+            # no programs found
             return jsonify(None), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -254,6 +281,11 @@ def get_times(course_id):
 @jwt_required()
 def set_program_times(program_id):
     try:
+        user_id = get_jwt_identity()
+
+        if not is_instructor(user_id):
+            return jsonify({"msg": "instructor access required"}), 401
+        
         data = request.get_json()
         program_id = program_id
         courseTimesTuples = []
@@ -262,30 +294,36 @@ def set_program_times(program_id):
             # set times for course
             courses = ProgramTimes.query.filter_by(program_id=program_id).all()
         
-            # if course already exists in the course times table, i.e. columns are populated
+            # if course already exists, delete the existing times
             if courses:
                 for course in courses:
                     db.session.delete(course)
                 db.session.commit()
 
+            # add the new times
             if len(data) > 0:
                 converted_list = []
 
                 for program_id, schedule in data.items():
+                    # get attributes
                     for day, timings in schedule.items():
                         start_time = timings['start_time']
                         end_time = timings['end_time']
                         converted_list.append((day, start_time, end_time, program_id))
 
                 for entry in converted_list:
+                    # create a new ProgramTimes tuple
                     new_time = ProgramTimes(
                         day=entry[0],
                         start_time=entry[1],
                         end_time=entry[2],
                         program_id=entry[3],
                     )
+
+                    # append the new tuple to the list
                     courseTimesTuples.append(new_time)
                 
+                # for each tuple, add it to the CourseTimes Table
                 for courseTimesTuple in courseTimesTuples:
                     db.session.add(courseTimesTuple)
                 db.session.commit()
@@ -295,57 +333,62 @@ def set_program_times(program_id):
             else:
                 return jsonify({"message": "Times updated successfully: No times for course"}), 200
         else:
-            return jsonify({"error": "Times update failed"}), 404
+            return jsonify({"error": "Times data not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 # create a new program
 @programs.route('/program/create', methods=['POST'])
 @jwt_required()
-def add_new_program():
+def create_program():
     try:
-        data = request.get_json()
         user_id = get_jwt_identity()
-        instructor = User.query.get(user_id)
 
-        if instructor:
-            if data:
-                name = data.get('name')
-                course_id = data.get('course_id')
-                isDropins = data.get('isDropins')
-                isRangeBased = data.get('isRangeBased')
+        if not is_instructor(user_id):
+            return jsonify({"msg": "instructor access required"}), 401
+        
+        data = request.get_json()
 
-                program = ProgramDetails.query.filter(and_(ProgramDetails.name == name, ProgramDetails.course_id == course_id)).first()
+        # if program details found
+        if data:
+            name = data.get('name')
+            course_id = data.get('course_id')
+            isDropins = data.get('isDropins')
+            isRangeBased = data.get('isRangeBased')
 
-                if program:
-                    return jsonify({"error": "Program name already exists"}), 400
-                else:
-                    new_details = ProgramDetails(
-                        name=name,
-                        course_id=course_id,
-                        instructor_id=user_id,
-                        isDropins=isDropins,
-                        isRangeBased=isRangeBased
-                    )
-                    db.session.add(new_details)
-                    db.session.commit()
+            program = ProgramDetails.query.filter(and_(ProgramDetails.name == name, ProgramDetails.course_id == course_id)).first()
 
-                    # Return the new program ID
-                    new_program_id = new_details.id
-                    return jsonify({"message": "Added to program successfully", "program_id": new_program_id}), 200
+            if program:
+                return jsonify({"error": "Program name already exists"}), 400
             else:
-                return jsonify({"error": "Insufficient details to add program to course"}), 404
+                # create a new tuple for ProgramDetails
+                new_details = ProgramDetails(
+                    name=name,
+                    course_id=course_id,
+                    instructor_id=user_id,
+                    isDropins=isDropins,
+                    isRangeBased=isRangeBased
+                )
+
+                # post to the database
+                db.session.add(new_details)
+                db.session.commit()
+
+                # Return the new program ID
+                new_program_id = new_details.id
+                return jsonify({"message": "Added to program successfully", "program_id": new_program_id}), 200
         else:
-            return jsonify({"error": "Instructor not found"}), 404
+            return jsonify({"error": "Insufficient details to add program to course"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 # delete a program based on its ID and delete all connected data
 @programs.route('/program/delete/<int:program_id>', methods=['DELETE'])
 @jwt_required()
-def delete_program_type(program_id):
+def delete_program(program_id):
     try: 
         user_id = get_jwt_identity()
+
         if not is_instructor(user_id):
             return jsonify({"msg": "instructor access required"}), 401
 
@@ -384,11 +427,17 @@ def delete_program_type(program_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-# set the program attributees of a already existing program
+# set the program attributes of a already existing program
 @programs.route('/program/details', methods=['POST'])
 @jwt_required()
 def set_program_details():
     try:
+        user_id = get_jwt_identity()
+
+        if not is_instructor(user_id):
+            return jsonify({"msg": "instructor access required"}), 401
+        
+        # get the program details
         obj = request.get_json()
         data = obj.get('data')
         program_id = data.get('id')  
@@ -400,6 +449,7 @@ def set_program_details():
         meeting_url = data.get('meeting_url')
         isDropins = data.get('isDropins')
 
+        # don't set limits for dropins
         if isDropins:
             auto_approve_appointments = None
             max_daily_meetings = None
@@ -411,11 +461,13 @@ def set_program_details():
             max_weekly_meetings = data.get('max_weekly_meetings')
             max_monthly_meetings = data.get('max_monthly_meetings')
 
+        # nullify duration if empty
         if duration == '':
             duration = None
 
         program = ProgramDetails.query.filter_by(id=program_id).first()
 
+        # if program exists, update the program details
         if program:
             program.course_id = course_id
             program.name = name
@@ -445,26 +497,32 @@ def create_course():
         name = data.get('name')
         user_id = data.get('user_id')
 
-        if not (user_id and name):
-            return jsonify({"error": "Instructor ID or Course Name is missing."}), 400
+        if not user_id:
+            return jsonify({"error": "Instructor ID is missing."}), 404
+        
+        if not name:
+            return jsonify({"error": "Course Name is missing."}), 404
 
-        default_program_name = "Course Details"
-
+        # create a new tuple for CourseDetails
         new_course = CourseDetails(
             instructor_id=user_id,
             name=name,
         )
+
+        # post to the database
         db.session.add(new_course)
         db.session.commit()
 
         new_course_id = new_course.id
 
+        # add the user to the course in the CourseMembers Table
         new_member = CourseMembers(
             course_id=new_course_id,
             user_id=user_id,
         )
-        db.session.add(new_member)
 
+        # post to the database
+        db.session.add(new_member)
         db.session.commit()
 
         return jsonify({"message": "Course created successfully"}), 200
@@ -473,6 +531,8 @@ def create_course():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
     
+# WAS USED FOR TESTING. CAN BE CONVERTED TO 
+# WORK WITH CANVAS API WHEN ADDING STUDENTS TO COURSE
 # add user to course
 @programs.route('/course/add/user', methods=['POST'])
 def add_user_to_course():
@@ -481,11 +541,15 @@ def add_user_to_course():
         course_id = data.get('course_id')  
         user_id = data.get('user_id')
 
+        # if course_id and user_id found
         if course_id & user_id:
+            # add the user to the course in the CourseMembers Table
             new_details = CourseMembers(
                 course_id=course_id,
                 user_id=user_id,
             )
+            
+            # post to the database
             db.session.add(new_details)
             db.session.commit()
             

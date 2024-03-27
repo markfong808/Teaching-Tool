@@ -1,21 +1,23 @@
 /* CreateProgramPopup.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
- * UI popup shown when instructor clicks on the create program button
- * in the "Programs" tab. Allows instructor to enter name of program,
- * and whether it's drop-in or appointment based
+ * UI popup shown when instructor clicks on the "Create Program" button
+ * in the "Program Details" tab. Allows instructor to enter name of program,
+ * and whether it's drop-in or appointment based and range based or specific dates.
  *
  * Known Bugs:
  * -
  *
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie.js";
+import { UserContext } from "../context/UserContext.js";
 
 const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
+  const { user } = useContext(UserContext);
 
   // Load Variables
   const [readyToCreate, setReadyToCreate] = useState(false);
@@ -31,8 +33,12 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  // posts the program to the Program table
+  // posts the program to the ProgramDetails table
   const createProgram = async () => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
+    // program title error catcher
     if (programTitle === "Course Details") {
       alert(
         'Program Name: "Course Details" is not allowed for All Course Programs. For "Course Details" select it in your Single Course Programs.'
@@ -78,7 +84,7 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  // set program meeting option to drop-in
+  // flip the isDropins boolean for the program
   const handleDropInChange = () => {
     if (isAppointments) {
       setIsAppointments(false);
@@ -86,7 +92,7 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
     setIsDropIns(!isDropIns);
   };
 
-  // set program meeting option to appointment
+  // flip the isAppointmentBased boolean for the program
   const handleAppointmentChange = () => {
     if (isDropIns) {
       setIsDropIns(false);
@@ -94,7 +100,7 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
     setIsAppointments(!isAppointments);
   };
 
-  // set program meeting option to drop-in
+  // flip the isRangedBased boolean for the program
   const handleRangeBasedChange = () => {
     if (isSpecificDates) {
       setIsSpecificDates(false);
@@ -102,7 +108,7 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
     setIsRangeBased(!isRangeBased);
   };
 
-  // set program meeting option to appointment
+  // flip the isSpecificDates boolean for the program
   const handleSpecificDatesChange = () => {
     if (isRangeBased) {
       setIsRangeBased(false);
@@ -114,8 +120,10 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  // show create button if instructor picks drop-in or apppointment
-  // and program title isn't empty
+  // show create button if instructor picks:
+  // - drop-in or apppointment
+  // - range based or specific dates
+  // - program title isn't empty
   useEffect(() => {
     if (
       (isDropIns || isAppointments) &&

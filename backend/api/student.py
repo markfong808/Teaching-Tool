@@ -1,6 +1,6 @@
 """ 
  * student.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains functions which are applicable to
  * student user type
@@ -8,6 +8,10 @@
  * Known Bugs:
  * - get_student_programs() can be simplified if it uses get_programs(course_id) from programs.py
  * - reserve_appointment(appointment_id, course_id): figure out a way to not use course_id as a parameter
+ * - timezones could be incorrect
+ * - There are a good amount of functions that are close to identical with functions in
+ *   instructor.py. These functions can be merged and put into user.py. These functions can accept
+ *   students and instructors and will operate slightly different based on that.
  *
 """
 
@@ -19,7 +23,8 @@ from .models import User, Appointment, ProgramDetails, Availability, Appointment
 from . import db
 from datetime import datetime, timedelta, timezone
 from .mail import send_email
-from .programs import get_program_type, get_course_name
+from .programs import get_program_name, get_course_name
+from .user import is_student, is_instructor
 from ics import Calendar, Event
 
 student = Blueprint('student', __name__)
@@ -46,17 +51,18 @@ def refresh_expiring_jwts(response):
 # get all of the global programs for a instructor
 def get_global_programs(instructor_id):
     try:
-        instructor = User.query.get(instructor_id)
-        
-        if instructor:
+        if is_instructor(instructor_id):
+            # get all global programs for the instructor
             all_global_programs = ProgramDetails.query.filter(
                 and_(ProgramDetails.course_id == None, ProgramDetails.instructor_id == instructor_id)
             ).all()
 
+            # global programs found
             if all_global_programs:
                 all_formatted_programs = []
 
                 for program in all_global_programs:
+                    # convert attributes to a object
                     program_info = {
                         'id': program.id,
                         'name': program.name,
@@ -70,27 +76,31 @@ def get_global_programs(instructor_id):
                         'max_monthly_meetings': program.max_monthly_meetings,
                         'isDropins': program.isDropins,
                     }
+
+                    # append object to list
                     all_formatted_programs.append(program_info)
 
                 return all_formatted_programs
             else: 
+                # no global programs found
                 return None
         else:
+            # instructor not found
             return None
     except Exception as e:
         return None
 
-# Helper function to send confirmation email to student and instructor
+# Helper function to send confirmation email to attendee and host
 def send_confirmation_email(appointment):
-    student = User.query.get(appointment.attendee_id)
-    instructor = User.query.get(appointment.host_id)
+    attendee = User.query.get(appointment.attendee_id)
+    host = User.query.get(appointment.host_id)
 
-    if student and instructor:
-        student_email_subject = f'{appointment.availability.program_details.id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
-        student_email_content = f'Your {appointment.availability.program_details.id} appointment with {instructor.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+    if attendee and host:
+        attendee_email_subject = f'{appointment.availability.program_details.id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
+        attendee_email_content = f'Your {appointment.availability.program_details.id} appointment with {host.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
 
-        instructor_email_subject = f'{appointment.availability.program_details.id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
-        instructor_email_content = f'Your {appointment.availability.program_details.id} appointment with {student.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+        host_email_subject = f'{appointment.availability.program_details.id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
+        host_email_content = f'Your {appointment.availability.program_details.id} appointment with {attendee.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
 
         # Create datetime objs for ics file
         timezone_offset = "-08:00"  # PST timezone offset
@@ -117,7 +127,7 @@ def send_confirmation_email(appointment):
         ics_data = cal.serialize()
         
         # Attach the .ics file to the email
-        send_email(instructor.email, student_email_subject, student_email_content, ics_data)
+        send_email(host.email, attendee_email_subject, attendee_email_content, ics_data)
         return True
     return False
 
@@ -128,6 +138,7 @@ def get_week_range(date_str):
     end_of_week = start_of_week + timedelta(days=6)
     return start_of_week.strftime('%Y-%m-%d'), end_of_week.strftime('%Y-%m-%d')
 
+# Helper function to update appointments and availabilities status
 def update_appointments_status(host_id, appointment_date, scope):
     parsed_appointment_date = datetime.strptime(appointment_date, '%Y-%m-%d')
     if scope == 'daily':
@@ -190,65 +201,65 @@ def update_appointments_status(host_id, appointment_date, scope):
 def get_student_dropins(course_id):
     try:
         user_id = get_jwt_identity()
-        student = User.query.get(user_id)
-        
-        if student.account_type == "student":
-            courses = CourseMembers.query.filter(CourseMembers.user_id==user_id)
 
-            if course_id != '-1':
-                courses = courses.filter(CourseMembers.course_id==course_id).all()
-            else: 
-                courses = None
+        if is_student(user_id):
+            member = CourseMembers.query.filter(CourseMembers.user_id==user_id, CourseMembers.course_id==course_id).first()
 
-            if courses:
+            if member:
+                course_information = CourseDetails.query.filter(CourseDetails.id == member.course_id).first()
+                programs_in_course = ProgramDetails.query.filter(ProgramDetails.course_id == member.course_id).all()
 
-                for course in courses:
-                    course_information = CourseDetails.query.filter(CourseDetails.id == course.course_id).first()
-                    programs_in_course = ProgramDetails.query.filter(ProgramDetails.course_id == course.course_id).all()
+                all_formatted_programs = []
 
-                    all_formatted_programs = []
+                if programs_in_course:
+                    for program in programs_in_course:
+                        program_info = {
+                            'id': program.id,
+                            'isDropins': program.isDropins,
+                        }
+                        all_formatted_programs.append(program_info)
+                    
+                # get global programs
+                global_programs = get_global_programs(course_information.instructor_id)
 
-                    if programs_in_course:
-                        for program in programs_in_course:
-                            program_info = {
-                                'id': program.id,
-                                'isDropins': program.isDropins,
-                            }
-                            all_formatted_programs.append(program_info)
-                        
-                    # get global programs and add them to programs_in_course
-                    global_programs = get_global_programs(course_information.instructor_id)
+                # if there are global programs: append to all_formatted_programs with their id and isDropins
+                if global_programs is not None:
+                    global_programs = [{'id': program['id'], 'isDropins': program['isDropins']} for program in global_programs]
 
-                    if global_programs is not None:
-                        global_programs = [{'id': program['id'], 'isDropins': program['isDropins']} for program in global_programs]
+                    for program in global_programs:
+                        all_formatted_programs.append(program)
 
-                        for program in global_programs:
-                            all_formatted_programs.append(program)
+                # then filter by isDropins == True
+                all_formatted_programs = [program for program in all_formatted_programs if program.get('isDropins') == True]
 
-                    # then filter by isDropins == True
-                    all_formatted_programs = [program for program in all_formatted_programs if program.get('isDropins') == True]
+                dropin_times = []
 
-                    # join with availability
-                    dropin_times = []
+                # for each program, get the availabilities attached to it
+                for program in all_formatted_programs:
+                    availabilities = Availability.query.filter_by(program_id=program.get('id')).all()
 
-                    for program in all_formatted_programs:
-                        availabilities = Availability.query.filter_by(program_id=program.get('id')).all()
+                    # for each availability, get the program id, name, date, start time, and end time
+                    for availability in availabilities:
+                        program_name = get_program_name(availability.program_details.id)
 
-                        for availability in availabilities:
-                            program_name = get_program_type(availability.program_details.id)
-                            availability_info = {
-                                'id': availability.id,
-                                'name': program_name,
-                                'date': availability.date,
-                                'start_time': availability.start_time,
-                                'end_time': availability.end_time,
-                            }
-                            dropin_times.append(availability_info)
+                        # convert attributes to a object
+                        availability_info = {
+                            'id': availability.id,
+                            'name': program_name,
+                            'date': availability.date,
+                            'start_time': availability.start_time,
+                            'end_time': availability.end_time,
+                        }
+
+                        # append object to return list
+                        dropin_times.append(availability_info)
+
+                # when all programs have been iterated through, return the list
                 return jsonify(dropin_times), 200
             else:
-                return jsonify(None), 200
+                return jsonify({"msg": "User not found in course"}), 404
         else:
-            return jsonify({"error": "student not found"}), 404
+            return jsonify({"msg": "User not found"}), 404
     except Exception as e:
         print(f"FWF: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -259,13 +270,18 @@ def get_student_dropins(course_id):
 def get_student_appointments_for_course():
     try:
         student_id = get_jwt_identity()
+
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
+
         meeting_type = request.args.get('type', 'all')
-        current_time_pst = datetime.utcnow() - timedelta(hours=8)
+        current_time_pst = datetime.now(timezone.utc) - timedelta(hours=8)
         current_date_str = current_time_pst.strftime('%Y-%m-%d')
         current_time_str = current_time_pst.strftime('%H:%M')
 
         appointments_query = Appointment.query.filter(Appointment.attendee_id == student_id)
 
+        # filter appointments based on meeting type
         if meeting_type in ['upcoming', 'past', 'pending']:
             if meeting_type == 'upcoming':
                 appointments_query = appointments_query.filter(
@@ -304,23 +320,22 @@ def get_student_appointments_for_course():
         student_appointments = []
         appointments = appointments_query.all()
 
+        # iterate through appointments
         for appt in appointments:
-            instructor = User.query.get(appt.host_id) if appt.host_id else None
-            instructor_info = {
-                "name": instructor.name,
-                "title": instructor.title,
-                "pronouns": instructor.pronouns,
-                "email": instructor.email,
-            } if instructor else {}
+            host = User.query.get(appt.host_id) if appt.host_id else None
+            # create an object for the host's information
+            host_info = {
+                "name": host.name,
+                "title": host.title,
+                "pronouns": host.pronouns,
+                "email": host.email,
+            } if host else {}
 
-            program_name = get_program_type(appt.availability.program_details.id)
+            # get program name and course name
+            program_name = get_program_name(appt.availability.program_details.id)
             course_name = get_course_name(appt.course_id)
 
-            print(appt.availability.program_details.id)
-            print(program_name)
-            print(appt.course_id)
-            print(course_name)
-
+            # add appointment information to student_appointments
             student_appointments.append({
                 "appointment_id": appt.id,
                 "program_id": appt.availability.program_details.id,
@@ -333,7 +348,7 @@ def get_student_appointments_for_course():
                 "notes": appt.notes,
                 "physical_location": appt.physical_location,
                 "meeting_url": appt.meeting_url,
-                "instructor": instructor_info
+                "host": host_info
             })
 
         return jsonify(student_appointments=student_appointments), 200
@@ -346,42 +361,45 @@ def get_student_appointments_for_course():
 @jwt_required()
 def get_student_programs():
     try:
-        user_id = get_jwt_identity()
-        student = User.query.get(user_id)
+        student_id = get_jwt_identity()
+
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
         
-        if student:
-            all_student_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=user_id).all()
+        all_student_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=student_id).all()
 
-            if all_student_courses:
+        if all_student_courses:
 
-                all_programs = []
+            all_programs = []
 
-                for course in all_student_courses:
-                    course_id = course.id
+            for course in all_student_courses:
+                all_programs_in_course = ProgramDetails.query.filter_by(course_id=course.id).all()
 
-                    all_programs_in_course = ProgramDetails.query.filter_by(course_id=course_id).all()
+                # get global programs for instructor
+                global_programs = get_global_programs(course.instructor_id)
 
-                    global_programs = get_global_programs(course.instructor_id)
+                # for each program in course
+                for program in all_programs_in_course:
+                    # convert attributes to a object
+                    program_info = {
+                        'id': program.id,
+                        'name': program.name,
+                        'description': program.description,
+                        'duration': program.duration,
+                    }
 
-                    for program in all_programs_in_course:
-                        program_info = {
-                            'id': program.id,
-                            'name': program.name,
-                            'description': program.description,
-                            'duration': program.duration,
-                        }
-                        all_programs.append(program_info)
-                        
-                    if global_programs is not None:
-                        for global_program in global_programs:
-                            if not any(existing_program['id'] == global_program['id'] for existing_program in all_programs):
-                                all_programs.append(global_program)
-                
-                return jsonify(all_programs), 200
-            else: 
-                return jsonify([]), 200
-        else:
-            return jsonify({"error": "student not found"}), 404
+                    # append object to list
+                    all_programs.append(program_info)
+                    
+                # if there are global programs: append to all_programs
+                if global_programs is not None:
+                    for global_program in global_programs:
+                        all_programs.append(global_program)
+            
+            return jsonify(all_programs), 200
+        else: 
+            # no courses found for student
+            return jsonify([]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -391,11 +409,14 @@ def get_student_programs():
 def cancel_appointment(appointment_id):
     try:
         student_id = get_jwt_identity()
-        appointment = Appointment.query.get(appointment_id)
-        student = User.query.get(student_id)
+
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
         
-        if not appointment or not student:
-            return jsonify({"error": "Appointment or student doesn't exist"}), 404
+        appointment = Appointment.query.get(appointment_id)
+        
+        if not appointment:
+            return jsonify({"error": "Appointment doesn't exist"}), 404
         
         # Check if the appointment was booked by this student 
         if appointment.status == 'reserved' or appointment.status == 'pending' and appointment.attendee_id == student.id:
@@ -424,118 +445,142 @@ def cancel_appointment(appointment_id):
 @jwt_required()
 def get_appointment_programs():
     try:
-        user_id = get_jwt_identity()
-        student = User.query.get(user_id)
+        student_id = get_jwt_identity()
+
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
         
-        if student:
-            all_student_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=user_id).all()
-            course_info = [{'course_id': course.id, 'course_name': course.name} for course in all_student_courses]
+        student_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=student_id).all()
+        converted_courses = [{'course_id': course.id, 'course_name': course.name} for course in student_courses]
 
-            if all_student_courses:
+        if student_courses:
 
-                courses_with_programs = []
+            # return list of all courses
+            courses_list = []
 
-                for entry in course_info:
-                    course_id = entry['course_id']
+            for entry in converted_courses:
+                course_id = entry['course_id']
 
-                    all_programs_in_course = ProgramDetails.query.filter_by(course_id=course_id).all()
+                programs_in_course = ProgramDetails.query.filter_by(course_id=course_id).all()
 
-                    course = CourseDetails.query.filter_by(id=course_id).first()
+                course = CourseDetails.query.filter_by(id=course_id).first()
 
-                    global_programs = get_global_programs(course.instructor_id)
-                    course_with_programs = []
+                global_programs = get_global_programs(course.instructor_id)
 
-                    for program in all_programs_in_course:
-                        if program.isDropins == False:
-                            program_info = {
-                                'id': program.id,
-                                'name': program.name,
-                                'description': program.description,
-                                'duration': program.duration,
-                                'physical_location': program.physical_location,
-                                'meeting_url': program.meeting_url,
-                                'auto_approve_appointments': program.auto_approve_appointments,
-                                'max_daily_meetings': program.max_daily_meetings,
-                                'max_weekly_meetings': program.max_weekly_meetings,
-                                'max_monthly_meetings': program.max_monthly_meetings,
-                                'isDropins': program.isDropins,
-                            }
-                            course_with_programs.append(program_info)
-                        
-                    if global_programs is not None:
-                        for global_program in global_programs:
-                            if global_program['isDropins'] == False:
-                                course_with_programs.append(global_program)
+                # list of all programs in a course
+                programs_in_course_list = []
 
-                    formatTuple = {
-                        'id': course_id,
-                        'course_name': entry['course_name'],
-                        'programs': course_with_programs
-                    }
+                for program in programs_in_course:
+                    # check if program is not a dropin
+                    if program.isDropins == False:
+                        # convert attributes to a object
+                        program_info = {
+                            'id': program.id,
+                            'name': program.name,
+                            'description': program.description,
+                            'duration': program.duration,
+                            'physical_location': program.physical_location,
+                            'meeting_url': program.meeting_url,
+                            'auto_approve_appointments': program.auto_approve_appointments,
+                            'max_daily_meetings': program.max_daily_meetings,
+                            'max_weekly_meetings': program.max_weekly_meetings,
+                            'max_monthly_meetings': program.max_monthly_meetings,
+                            'isDropins': program.isDropins,
+                        }
 
-                    courses_with_programs.append(formatTuple)
-                
-                return jsonify(courses_with_programs), 200
-            else: 
-                return jsonify({"error": "no courses found for instructor"}), 404
-        else:
-            return jsonify({"error": "instructor not found"}), 404
+                        # append object to list
+                        programs_in_course_list.append(program_info)
+
+                # if global programs found and a dropin, append to programs_in_course_list 
+                if global_programs is not None:
+                    for global_program in global_programs:
+                        if global_program['isDropins'] == False:
+                            programs_in_course_list.append(global_program)
+
+                # format data to append to courses_list
+                formatTuple = {
+                    'id': course_id,
+                    'course_name': entry['course_name'],
+                    'programs': programs_in_course_list
+                }
+
+                # append to courses_list
+                courses_list.append(formatTuple)
+            
+            return jsonify(courses_list), 200
+        else: 
+            return jsonify({"error": "no courses found for student"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 # Retrieve available appointments to reserve for a student
 @student.route('/student/appointments/available/<program_id>/<course_id>', methods=['GET'])
+@jwt_required()
 def get_available_appointments(program_id, course_id):
-    now = datetime.now()
+    try:
+        student_id = get_jwt_identity()
 
-    program = ProgramDetails.query.filter_by(id=program_id).first()
-
-    if program:
-
-        if program.course_id == None:
-            course_id = None
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
         
-        future_appointments = Appointment.query.join(Availability).join(ProgramDetails).filter(
-            (Appointment.status == 'posted') &
-            (ProgramDetails.id == program_id) &
-            (ProgramDetails.course_id == course_id) &
-            (Appointment.appointment_date > now.date())
-        ).all()
+        now = datetime.now()
+
+        program = ProgramDetails.query.filter_by(id=program_id).first()
+
+        if program:
+            # convert to empty to match attribute in ProgramDetails
+            if program.course_id == None:
+                course_id = None
+            
+            # get all future appointments for the program
+            future_appointments = Appointment.query.join(Availability).join(ProgramDetails).filter(
+                (Appointment.status == 'posted') &
+                (ProgramDetails.id == program_id) &
+                (ProgramDetails.course_id == course_id) &
+                (Appointment.appointment_date > now.date())
+            ).all()
 
 
-        available_appointments = []
-        for appt in future_appointments:
-            appointment_data = {
-                "appointment_id": appt.id,
-                "physical_location": appt.physical_location,
-                "date": appt.appointment_date,
-                "program_id": appt.availability.program_details.id,
-                "start_time": appt.start_time,
-                "end_time": appt.end_time,
-                "status": appt.status,
-                "meeting_url": appt.meeting_url
-            }
-            available_appointments.append(appointment_data)
-                
-        return jsonify({"available_appointments": available_appointments})
-    else:
-        return jsonify({"error": "Program not found"}), 404
+            available_appointments = []
+            for appt in future_appointments:
+                # convert attributes to a object
+                appointment_data = {
+                    "appointment_id": appt.id,
+                    "physical_location": appt.physical_location,
+                    "date": appt.appointment_date,
+                    "program_id": appt.availability.program_details.id,
+                    "start_time": appt.start_time,
+                    "end_time": appt.end_time,
+                    "status": appt.status,
+                    "meeting_url": appt.meeting_url
+                }
+
+                # append object to list
+                available_appointments.append(appointment_data)
+                    
+            return jsonify({"available_appointments": available_appointments})
+        else:
+            return jsonify({"error": "Program not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # reserve an appointment for a student
 @student.route('/student/appointments/reserve/<appointment_id>/<course_id>', methods=['POST'])
 @jwt_required()
 def reserve_appointment(appointment_id, course_id):
     try:
-        data = request.get_json()
         student_id = get_jwt_identity()
-        appointment = Appointment.query.get(appointment_id)
-        
-        if not appointment or appointment.status != 'posted':
-            return jsonify({"error": "Appointment is not available for reservation"}), 400
 
         student = User.query.get(student_id)
         if not student or student.account_type != 'student':
             return jsonify({"error": "Only students are allowed to book sessions!"}), 400
+        
+        appointment = Appointment.query.get(appointment_id)
+        
+        if not appointment or appointment.status != 'posted':
+            return jsonify({"error": "Appointment is not available for reservation"}), 400
+        
+        data = request.get_json()
 
         current_time = datetime.now() - timedelta(hours=8)
         appointment_datetime = datetime.strptime(appointment.appointment_date + ' ' + appointment.start_time, '%Y-%m-%d %H:%M')
@@ -626,16 +671,21 @@ def reserve_appointment(appointment_id, course_id):
 @jwt_required()
 def create_comment(appointment_id):
     try:
+        student_id = get_jwt_identity()
+
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
+        
         data = request.get_json()
-        user_id = get_jwt_identity()
+        
         appointment_comment = data.get('appointment_comment')
         appointment = Appointment.query.get(appointment_id)
-        student = User.query.get(user_id)
         
-        if student and appointment:
+        if appointment and appointment_comment:
+            # create new AppointmentComment tuple
             new_comment = AppointmentComment(
                 appointment_id=appointment_id,
-                user_id=user_id,
+                user_id=student_id,
                 appointment_comment=appointment_comment,
                 created_at=datetime.now()
             )
@@ -652,14 +702,18 @@ def create_comment(appointment_id):
 @jwt_required()
 def get_comments(appointment_id):
     try:
-        user_id = get_jwt_identity()
-        appointment = Appointment.query.get(appointment_id)
-        student = User.query.get(user_id)
+        student_id = get_jwt_identity()
+
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
         
-        if student and appointment:
+        appointment = Appointment.query.get(appointment_id)
+        
+        if appointment:
             comments = AppointmentComment.query.filter_by(appointment_id=appointment_id).join(User, AppointmentComment.user_id == User.id).all()
             comments_list = []
             for comment in comments:
+                # convert attributes to a object
                 comment_info = {
                     'id': comment.id,
                     'name': comment.user.name,
@@ -680,13 +734,17 @@ def get_comments(appointment_id):
 @jwt_required()
 def delete_comment(appointment_id, comment_id):
     try:
-        user_id = get_jwt_identity()
+        student_id = get_jwt_identity()
+
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
+        
         appointment = Appointment.query.get(appointment_id)
-        student = User.query.get(user_id)
         comment = AppointmentComment.query.get(comment_id)
         
-        if student and appointment and comment:
-            if comment.user_id == user_id:
+        if appointment and comment:
+            # if student wrote the comment, delete it
+            if comment.user_id == student_id:
                 db.session.delete(comment)
                 db.session.commit()
                 return jsonify({"message": "comment deleted successfully"}), 200

@@ -1,5 +1,5 @@
 /* Logout.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Logout tab that handles instructor, student, and admin logout.
  *
@@ -15,6 +15,7 @@ import { UserContext } from "../context/UserContext";
 const Logout = () => {
   // General Variables
   const { setUser } = useContext(UserContext);
+
   // Webpage Navigate Variables
   const navigate = useNavigate();
 

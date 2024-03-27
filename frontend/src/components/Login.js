@@ -1,7 +1,7 @@
 /* Login.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
- * Login for students, instructors, admins, (later just student and instructors)
+ * Login for students, instructors, admins,
  * to enter email and password, or reset password, or create account
  *
  * Known Bugs:
@@ -67,7 +67,7 @@ export default function Login() {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  // handle login data once user clicks submit button
+  // when user clicks submit, attempt to login user
   const handleSubmit = (e) => {
     // prevent submit event from happening if email, password, or both are invalid
     e.preventDefault();

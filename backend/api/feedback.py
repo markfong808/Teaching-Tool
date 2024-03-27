@@ -1,6 +1,6 @@
 """ 
  * feedback.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains functions used to manipulate the feedback for appointments
  *
@@ -51,6 +51,9 @@ def add_feedback():
     user = User.query.get(user_id)
     if not user or user.account_type not in ['student', 'instructor']:
         return jsonify({"error": "Only students and instructors can add feedback"}), 401
+    
+    if not data.contains('satisfaction') or not data.contains('additional_comments'):
+        return jsonify({"error": "Missing satisfaction or additional_comments data"}), 404
 
     # Function to update or create feedback
     def update_or_create_feedback(feedback, is_student):

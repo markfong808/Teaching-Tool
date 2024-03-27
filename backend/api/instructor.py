@@ -1,12 +1,18 @@
 """ 
  * instructor.py
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Contains functions which are applicable to
  * instructor user type
  *
  * Known Bugs:
- * - 
+ * - timezones could be incorrect
+ * - delete_instructor_availabililty does not delete appointments. 
+ *   This isnt a bug, but the function's logic operates different 
+ *   than other Availability delete functions
+ * - There are a good amount of functions that are close to identical with functions in
+ *   student.py. These functions can be merged and put into user.py. These functions can accept
+ *   students and instructors and will operate slightly different based on that.
  *
 """
 
@@ -17,7 +23,8 @@ from sqlalchemy import extract, func, or_, and_
 from . import db
 from datetime import datetime, timedelta, timezone
 from .student import get_week_range
-from .programs import get_program_type, get_course_name
+from .programs import get_program_name, get_course_name
+from .user import is_instructor
 
 instructor = Blueprint('instructor', __name__)
 
@@ -41,7 +48,7 @@ def refresh_expiring_jwts(response):
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
 # return type and isDropins for a program
-def get_program_type_and_isDropins(program_id): 
+def get_program_name_and_isDropins(program_id): 
     try: 
         program = ProgramDetails.query.filter_by(id=program_id).first()
 
@@ -52,20 +59,18 @@ def get_program_type_and_isDropins(program_id):
         return jsonify({"error": str(e)}), 500
     
 # return the global programs for a instructor
-def get_global_programs():
+def get_global_programs(user_id):
     try:
-        user_id = get_jwt_identity()
-        instructor = User.query.get(user_id)
-
-        if instructor:
-            all_global_programs = ProgramDetails.query.filter(
+        if is_instructor(user_id):
+            global_programs = ProgramDetails.query.filter(
                 and_(ProgramDetails.course_id == None, ProgramDetails.instructor_id == user_id)
             ).all()
 
-            if all_global_programs:
-                all_formatted_programs = []
+            if global_programs:
+                formatted_programs = []
 
-                for program in all_global_programs:
+                for program in global_programs:
+                    # convert attributes to a object
                     program_info = {
                         'id': program.id,
                         'name': program.name,
@@ -80,18 +85,22 @@ def get_global_programs():
                         'isDropins': program.isDropins,
                         'isRangeBased': program.isRangeBased,
                     }
-                    all_formatted_programs.append(program_info)
+                    # add object to list
+                    formatted_programs.append(program_info)
 
-                all_formatted_programs = {
+                # add id and course_name to object
+                formatted_programs = {
                     'id': None,
                     'course_name': 'All Courses',
-                    'programs': all_formatted_programs
+                    'programs': formatted_programs
                 }
 
-                return all_formatted_programs
-            else: 
+                return formatted_programs
+            else:
+                # no global programs found
                 return None
         else:
+            # instructor not found
             return None
     except Exception as e:
         return None
@@ -126,7 +135,7 @@ def is_start_time_before_end_time(start_time, end_time):
         return False
 
 # validate availability information before before creating it as an availability tuple for the Availability Table
-def validate_availability_data_and_course(instructor_id, course_id, availability_id, date, start_time, end_time, isDropins):
+def validate_availability_data(instructor_id, course_id, availability_id, date, start_time, end_time, isDropins):
     course_id = int(course_id) if course_id and course_id != "null" else None
     
     required_fields = [instructor_id, availability_id, date, start_time, end_time]
@@ -163,7 +172,7 @@ def validate_availability_data_and_course(instructor_id, course_id, availability
     return None  # Data is valid
 
 # check if availability already exists in Availability table
-def is_existing_availability_in_course(instructor_id, program_id, date, start_time, end_time):
+def is_existing_availability(instructor_id, program_id, date, start_time, end_time):
     existing_availabilities = Availability.query.filter_by(user_id=instructor_id, program_id=program_id, date=date).all()
     
     for existing_availability in existing_availabilities:
@@ -173,7 +182,7 @@ def is_existing_availability_in_course(instructor_id, program_id, date, start_ti
     return False  # No time overlap found
 
 # add a availability tuple to the Availabilty Table
-def add_instructor_single_availability(course_id, instructor_id, data, physical_location, meeting_url, duration, isDropins):
+def add_instructor_availability(course_id, instructor_id, data, physical_location, meeting_url, duration, isDropins):
     try:
         program_id = data.get('id')
         date = data.get('date')
@@ -181,12 +190,12 @@ def add_instructor_single_availability(course_id, instructor_id, data, physical_
         end_time = data.get('end_time')
         
         # Validate the data
-        validation_result = validate_availability_data_and_course(instructor_id, course_id, program_id, date, start_time, end_time, isDropins)
+        validation_result = validate_availability_data(instructor_id, course_id, program_id, date, start_time, end_time, isDropins)
         if validation_result:
             return validation_result
         
         # Check if the same availability already exists for the instructor
-        if is_existing_availability_in_course(instructor_id, program_id, date, start_time, end_time):
+        if is_existing_availability(instructor_id, program_id, date, start_time, end_time):
             return jsonify({"error": "availability time conflict or it already exists for this instructor"}), 400
         
         current_time = datetime.now() - timedelta(hours=8)
@@ -206,7 +215,7 @@ def add_instructor_single_availability(course_id, instructor_id, data, physical_
             
             # Generate appointment events
             if not isDropins:
-                generate_appointment_tuples(instructor_id, course_id, program_id, date, start_time, end_time, physical_location, meeting_url, new_availability.id, duration)
+                generate_appointments(instructor_id, date, start_time, end_time, physical_location, meeting_url, new_availability.id, duration)
             return jsonify({"message": "availability added successfully"}), 201
         else:
             return jsonify({"error": "appointment datetime must be in the future"}), 400
@@ -215,7 +224,7 @@ def add_instructor_single_availability(course_id, instructor_id, data, physical_
         return jsonify({"error": str(e)}), 500
         
 # Generate appointment events at 30-minute intervals within the specified time range.
-def generate_appointment_tuples(instructor_id, course_id, program_id, date, start_time, end_time, physical_location, meeting_url, availability_id, duration):
+def generate_appointments(instructor_id, date, start_time, end_time, physical_location, meeting_url, availability_id, duration):
     try:
         start_datetime = datetime.strptime(start_time, "%H:%M")
         end_datetime = datetime.strptime(end_time, "%H:%M")
@@ -260,26 +269,29 @@ def generate_appointment_tuples(instructor_id, course_id, program_id, date, star
 # fetch all of the programs for each course an instructor is in
 @instructor.route('/instructor/programs', methods=['GET'])
 @jwt_required()
-def get_courses():
+def get_instructor_courses():
     try:
         user_id = get_jwt_identity()
-        instructor = User.query.get(user_id)
-        
-        if instructor:
-            all_instructor_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=user_id).all()
-            course_info = [{'course_id': course.id, 'course_name': course.name} for course in all_instructor_courses]
 
-            if all_instructor_courses:
+        if is_instructor(user_id):
+            instructor_courses = CourseDetails.query.join(CourseMembers, CourseDetails.id == CourseMembers.course_id).filter_by(user_id=user_id).all()
+            converted_courses = [{'course_id': course.id, 'course_name': course.name} for course in instructor_courses]
 
-                courses_with_programs = []
+            if instructor_courses:
 
-                for entry in course_info:
+                # return list of all courses
+                courses_list = []
+
+                for entry in converted_courses:
                     course_id = entry['course_id']
 
-                    all_programs_in_course = ProgramDetails.query.filter_by(course_id=course_id).all()
-                    course_with_programs = []
+                    programs_in_course = ProgramDetails.query.filter_by(course_id=course_id).all()
 
-                    for program in all_programs_in_course:
+                    # list of all programs in a course
+                    programs_in_course_list = []
+
+                    for program in programs_in_course:
+                        # convert attributes to a object
                         program_info = {
                             'id': program.id,
                             'name': program.name,
@@ -294,40 +306,49 @@ def get_courses():
                             'isDropins': program.isDropins,
                             'isRangeBased': program.isRangeBased,
                         }
-                        course_with_programs.append(program_info)
+                        
+                        # append object to list
+                        programs_in_course_list.append(program_info)
 
+                    # format data to append to courses_list
                     formatTuple = {
                         'id': course_id,
                         'course_name': entry['course_name'],
-                        'programs': course_with_programs
+                        'programs': programs_in_course_list
                     }
 
-                    courses_with_programs.append(formatTuple)
+                    # append to courses_list
+                    courses_list.append(formatTuple)
 
-                global_programs = get_global_programs()
+                # fetch global programs for instructor
+                global_programs = get_global_programs(user_id)
+
+                # if global programs found, append to courses_list
                 if global_programs is not None:
-                    courses_with_programs.append(global_programs)
-                                
+                    courses_list.append(global_programs)
 
-                return jsonify(courses_with_programs), 200
+                # courses found
+                return jsonify(courses_list), 200
             else: 
+                # no courses found
                 return jsonify([]), 204
         else:
-            return jsonify({"error": "instructor not found"}), 404
+            return jsonify({"error": "Instructor not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # fetch all of the descriptions for the programs a instructor has
 @instructor.route('/instructor/programs/descriptions', methods=['GET'])
 @jwt_required()
-def get_instructor_programs():
-    user_id = get_jwt_identity()
-
+def get_instructor_programs_with_descriptions():
     try: 
-        instructor = User.query.filter_by(id=user_id).first()
+        user_id = get_jwt_identity()
 
-        if instructor:
+        if is_instructor(user_id):
+            instructor = User.query.get(user_id)
             programs = ProgramDetails.query.filter(ProgramDetails.instructor_id==instructor.id).all()
+
+            # return list of all programs with their id, name, and description
             return jsonify([{
                 "id": program.id,
                 "name": program.name,
@@ -336,85 +357,98 @@ def get_instructor_programs():
         else:
             return jsonify({"error": "Instructor not found"}), 404
     except Exception as e:
+        print(e)
         return jsonify({"msg": "Error fetching program description data for instructor", "error": str(e)}), 500
 
 # fetch all appointments a instructor is scheduled for
 @instructor.route('/instructor/appointments', methods=['GET'])
 @jwt_required()
-def get_instructor_appointments_for_course():
-    instructor_id = get_jwt_identity()
-    meeting_type = request.args.get('type', 'all')
-    current_time_pst = datetime.utcnow() - timedelta(hours=8)  # Adjust for PST
-    current_date_str = current_time_pst.strftime('%Y-%m-%d')
-    current_time_str = current_time_pst.strftime('%H:%M')
+def get_instructor_appointments():
+    try:
+        instructor_id = get_jwt_identity()
 
-    appointments_query = Appointment.query.filter(Appointment.host_id == instructor_id)
+        if not is_instructor(instructor_id):
+            return jsonify({"error": "Instructor not found"}), 404
+        
+        meeting_type = request.args.get('type', 'all')
+        current_time_pst = datetime.now(timezone.utc) - timedelta(hours=8)  # Adjust for PST
+        current_date_str = current_time_pst.strftime('%Y-%m-%d')
+        current_time_str = current_time_pst.strftime('%H:%M')
 
-    if meeting_type in ['upcoming', 'past', 'pending']:
-        if meeting_type == 'upcoming':
-            appointments_query = appointments_query.filter(
-                or_(
-                    Appointment.appointment_date > current_date_str,
-                    and_(
-                        Appointment.appointment_date == current_date_str,
-                        Appointment.start_time >= current_time_str
-                    )
-                ),
-                Appointment.status == 'reserved'
-            )
-        elif meeting_type == 'past':
-            appointments_query = appointments_query.filter(
-                or_(
-                    Appointment.appointment_date < current_date_str,
-                    and_(
-                        Appointment.appointment_date == current_date_str,
-                        Appointment.start_time < current_time_str
-                    )
-                ),
-                Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
-            )
-        elif meeting_type == 'pending':
-            appointments_query = appointments_query.filter(
-                or_(
-                    Appointment.appointment_date > current_date_str,
-                    and_(
-                        Appointment.appointment_date == current_date_str,
-                        Appointment.start_time >= current_time_str
-                    )
-                ),
-                Appointment.status == 'pending'
-            )
+        appointments_query = Appointment.query.filter(Appointment.host_id == instructor_id)
 
-    instructor_appointments = []
-    appointments = appointments_query.all()
+        # filter appointments based on meeting type
+        if meeting_type in ['upcoming', 'past', 'pending']:
+            if meeting_type == 'upcoming':
+                appointments_query = appointments_query.filter(
+                    or_(
+                        Appointment.appointment_date > current_date_str,
+                        and_(
+                            Appointment.appointment_date == current_date_str,
+                            Appointment.start_time >= current_time_str
+                        )
+                    ),
+                    Appointment.status == 'reserved'
+                )
+            elif meeting_type == 'past':
+                appointments_query = appointments_query.filter(
+                    or_(
+                        Appointment.appointment_date < current_date_str,
+                        and_(
+                            Appointment.appointment_date == current_date_str,
+                            Appointment.start_time < current_time_str
+                        )
+                    ),
+                    Appointment.status.in_(['reserved', 'completed', 'rejected', 'missed', 'canceled'])
+                )
+            elif meeting_type == 'pending':
+                appointments_query = appointments_query.filter(
+                    or_(
+                        Appointment.appointment_date > current_date_str,
+                        and_(
+                            Appointment.appointment_date == current_date_str,
+                            Appointment.start_time >= current_time_str
+                        )
+                    ),
+                    Appointment.status == 'pending'
+                )
 
-    for appt in appointments:
-        student = User.query.get(appt.attendee_id) if appt.attendee_id else None
-        student_info = {
-            "name": student.name,
-            "pronouns": student.pronouns,
-            "email": student.email,
-        } if student else {}
+        instructor_appointments = []
+        appointments = appointments_query.all()
 
-        program_name = get_program_type(appt.availability.program_details.id)
-        course_name = get_course_name(appt.course_id)
+        # iterate through appointments
+        for appt in appointments:
+            attendee = User.query.get(appt.attendee_id) if appt.attendee_id else None
+            # create an object for the attendee's information
+            attendee_info = {
+                "name": attendee.name,
+                "pronouns": attendee.pronouns,
+                "email": attendee.email,
+            } if attendee else {}
 
-        instructor_appointments.append({
-            "appointment_id": appt.id,
-            "program_id": appt.availability.program_details.id,
-            "name": program_name,
-            "course_name": course_name,
-            "date": appt.appointment_date,
-            "start_time": appt.start_time,
-            "end_time": appt.end_time,
-            "status": appt.status,
-            "notes": appt.notes,
-            "physical_location": appt.physical_location,
-            "meeting_url": appt.meeting_url,
-            "instructor": student_info
-        })
+            # get program name and course name
+            program_name = get_program_name(appt.availability.program_details.id)
+            course_name = get_course_name(appt.course_id)
 
-    return jsonify(instructor_appointments=instructor_appointments), 200
+            # add appointment information to instructor_appointments
+            instructor_appointments.append({
+                "appointment_id": appt.id,
+                "program_id": appt.availability.program_details.id,
+                "name": program_name,
+                "course_name": course_name,
+                "date": appt.appointment_date,
+                "start_time": appt.start_time,
+                "end_time": appt.end_time,
+                "status": appt.status,
+                "notes": appt.notes,
+                "physical_location": appt.physical_location,
+                "meeting_url": appt.meeting_url,
+                "attendee": attendee_info
+            })
+
+        return jsonify(instructor_appointments=instructor_appointments), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 # Cancel a specific appointment by its ID if it has been booked
 @instructor.route('/instructor/appointments/cancel/<appointment_id>', methods=['POST'])
@@ -422,11 +456,14 @@ def get_instructor_appointments_for_course():
 def cancel_appointment(appointment_id):
     try:
         instructor_id = get_jwt_identity()
-        appointment = Appointment.query.get(appointment_id)
-        instructor = User.query.get(instructor_id)
+
+        if not is_instructor(instructor_id):
+            return jsonify({"error": "Instructor not found"}), 404
         
-        if not appointment or not instructor:
-            return jsonify({"error": "Appointment or instructor doesn't exist"}), 404
+        appointment = Appointment.query.get(appointment_id)
+        
+        if not appointment:
+            return jsonify({"error": "Appointment doesn't exist"}), 404
         
         # Check if the appointment was booked by this instructor 
         if appointment.status == 'reserved' or appointment.status == 'pending' \
@@ -453,13 +490,17 @@ def cancel_appointment(appointment_id):
 @jwt_required()
 def create_comment(appointment_id):
     try:
-        data = request.get_json()
         user_id = get_jwt_identity()
+        
+        if not is_instructor(user_id):
+            return jsonify({"error": "Instructor not found"}), 404
+        
+        data = request.get_json()
         appointment_comment = data.get('appointment_comment')
         appointment = Appointment.query.get(appointment_id)
-        instructor = User.query.get(user_id)
         
-        if instructor and appointment:
+        if appointment and appointment_comment:
+            # create new AppointmentComment tuple
             new_comment = AppointmentComment(
                 appointment_id=appointment_id,
                 user_id=user_id,
@@ -480,16 +521,20 @@ def create_comment(appointment_id):
 def get_comments(appointment_id):
     try:
         user_id = get_jwt_identity()
-        appointment = Appointment.query.get(appointment_id)
-        instructor = User.query.get(user_id)
+        
+        if not is_instructor(user_id):
+            return jsonify({"error": "Instructor not found"}), 404
 
-        if instructor and appointment:
+        appointment = Appointment.query.get(appointment_id)
+
+        if appointment:
             comments = AppointmentComment.query.filter_by(appointment_id=appointment_id).join(User, AppointmentComment.user_id == User.id).all()
             comments_list = []
             for comment in comments:
+                # convert attributes to a object
                 comment_info = {
                     'id': comment.id,
-                    'name': comment.user.name,  # Assuming name is the field name in User table
+                    'name': comment.user.name,
                     'title': comment.user.title,
                     'pronouns': comment.user.pronouns,
                     'user_id': comment.user_id,
@@ -509,11 +554,15 @@ def get_comments(appointment_id):
 def delete_comment(appointment_id, comment_id):
     try:
         user_id = get_jwt_identity()
+        
+        if not is_instructor(user_id):
+            return jsonify({"error": "Instructor not found"}), 404
+        
         appointment = Appointment.query.get(appointment_id)
-        instructor = User.query.get(user_id)
         comment = AppointmentComment.query.get(comment_id)
         
-        if instructor and appointment and comment:
+        if appointment and comment:
+            # if instructor wrote the comment, delete it
             if comment.user_id == user_id:
                 db.session.delete(comment)
                 db.session.commit()
@@ -531,21 +580,23 @@ def delete_comment(appointment_id, comment_id):
 def get_instructor_availabilities(course_id):
     try:
         # check if instructor exists
-        instructor_id = get_jwt_identity()
-        instructor = User.query.filter_by(id=instructor_id, account_type='instructor').first()
-        if not instructor:
-            return jsonify({"error": "instructor not found!"}), 404
+        user_id = get_jwt_identity()
+        
+        if not is_instructor(user_id):
+            return jsonify({"error": "Instructor not found"}), 404
         
         current_date = datetime.now().date()
 
         # get the availability data for the specified instructor
         if course_id:
+            # all courses selected
             if (course_id == '-1'):
                 course_id = None
 
+            # get all availability tuples
             availability_data = Availability.query.join(ProgramDetails, Availability.program_id == ProgramDetails.id).filter(
                 and_(
-                    Availability.user_id == instructor_id,
+                    Availability.user_id == user_id,
                     Availability.date > str(current_date),
                     ProgramDetails.course_id == course_id
                 )
@@ -553,9 +604,10 @@ def get_instructor_availabilities(course_id):
                 
             availability_list = []
             for availability in availability_data:
-                program = get_program_type_and_isDropins(availability.program_id)
+                program = get_program_name_and_isDropins(availability.program_id)
                 course_name = get_course_name(availability.program_details.course_id)
 
+                # convert attributes to a object
                 availability_info = {
                     'id': availability.id,
                     'name': program['name'],
@@ -566,6 +618,7 @@ def get_instructor_availabilities(course_id):
                     'status': availability.status,
                     'isDropins': program['isDropins']
                 }
+                # add object to list
                 availability_list.append(availability_info)
             return jsonify({"instructor_availability": availability_list}), 200
         else:
@@ -576,31 +629,38 @@ def get_instructor_availabilities(course_id):
 # post a set of availability tuples for a course to the Availability Table
 @instructor.route('/instructor/availability/<course_id>', methods=['POST'])
 @jwt_required()
-def add_all_instructor_availability(course_id):
+def post_instructor_availabilities(course_id):
     try:
-        data = request.get_json()
-        instructor_id = get_jwt_identity()
-        allAvailabilties = data.get('availabilities')
-        duration = data.get('duration')
-        physical_location = data.get('physical_location')
-        meeting_url = data.get('meeting_url')
-        isDropins = data.get('isDropins')
-        program_id = data.get('program_id')
+        user_id = get_jwt_identity()
+        
+        if is_instructor(user_id):
+            data = request.get_json()
+            allAvailabilties = data.get('availabilities')
+            duration = data.get('duration')
+            physical_location = data.get('physical_location')
+            meeting_url = data.get('meeting_url')
+            isDropins = data.get('isDropins')
+            program_id = data.get('program_id')
 
-        availabilities_to_delete = Availability.query.filter_by(program_id=program_id).all()
+            availabilities_to_delete = Availability.query.filter_by(program_id=program_id).all()
 
-        for availability in availabilities_to_delete:
-            appointments_to_delete = Appointment.query.filter_by(availability_id=availability.id).all()
+            # delete all past availabilities for the program
+            for availability in availabilities_to_delete:
+                appointments_to_delete = Appointment.query.filter_by(availability_id=availability.id).all()
 
-            for appointment in appointments_to_delete:
-                db.session.delete(appointment)
+                # delete all past appointments for the availability
+                for appointment in appointments_to_delete:
+                    db.session.delete(appointment)
 
-            db.session.delete(availability)
+                db.session.delete(availability)
 
-        for availabilityEntry in allAvailabilties:
-            add_instructor_single_availability(course_id, instructor_id, availabilityEntry, physical_location, meeting_url, duration, isDropins)
+            # add availabilities to the Availability Table
+            for availabilityEntry in allAvailabilties:
+                add_instructor_availability(course_id, user_id, availabilityEntry, physical_location, meeting_url, duration, isDropins)
 
-        return jsonify({"message": "all availability added successfully"}), 201
+            return jsonify({"message": "all availability added successfully"}), 201
+        else:
+            return jsonify({"error": "Instructor not found"}), 404
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -611,26 +671,31 @@ def add_all_instructor_availability(course_id):
 def update_availability_status():
     try:
         user_id = get_jwt_identity()
+
+        if not is_instructor(user_id):
+            return jsonify({"error": "Instructor not found"}), 404
+        
         data = request.get_json()
         availability_id = data.get('availability_id')
         status = data.get('status')
 
-        instructor = User.query.filter_by(id=user_id, account_type='instructor').first()
-        if not instructor:
-            return jsonify({"error": "instructor not found"}), 404
-
+        # fetch the availability tuple
         availability = Availability.query.filter_by(id=availability_id, user_id=user_id).first()
+
         if availability:
             parsed_appointment_date = datetime.strptime(availability.date, '%Y-%m-%d')
             start_of_week, end_of_week = get_week_range(availability.date)
 
+            # set all appointments to inactive if availability is set to inactive
             if status == 'inactive':
                 availability.status = status
                 appointments = Appointment.query.filter_by(availability_id=availability_id, status='posted').all()
                 for appointment in appointments:
                     appointment.status = 'inactive'
                 db.session.commit()
+            # set all appointments to posted if availability is set to active and limits are not reached
             elif status == 'active':
+                # calculate monthly count of reserved and pending appointments
                 monthly_count = Appointment.query.filter(
                     Appointment.host_id == user_id,
                     extract('month', func.date(Appointment.appointment_date)) == parsed_appointment_date.month,
@@ -638,12 +703,14 @@ def update_availability_status():
                     Appointment.status.in_(['reserved', 'pending'])
                 ).count()
 
+                # calculate weekly count of reserved and pending appointments
                 weekly_count = Appointment.query.filter(
                     Appointment.host_id == user_id,
                     func.date(Appointment.appointment_date).between(start_of_week, end_of_week),
                     Appointment.status.in_(['reserved', 'pending'])
                 ).count()
 
+                # calculate daily count of reserved and pending appointments
                 daily_count = Appointment.query.filter(
                     Appointment.host_id == user_id,
                     func.date(Appointment.appointment_date) == parsed_appointment_date,
@@ -653,6 +720,8 @@ def update_availability_status():
                 program = ProgramDetails.query.filter_by(id=availability.program_id).first()
 
                 error_message = "Meeting limit reached"
+
+                # compare calculations and limits
                 if program.max_monthly_meetings is not None and monthly_count >= program.max_monthly_meetings:
                     error_message = "Monthly meeting limit reached"
                 elif program.max_weekly_meetings is not None and weekly_count >= program.max_weekly_meetings:
@@ -680,8 +749,8 @@ def update_availability_status():
 def delete_instructor_availabililty(availability_id):
     try:
         instructor_id = get_jwt_identity()        
-        instructor = User.query.filter_by(id=instructor_id, account_type='instructor').first() 
-        if instructor:
+
+        if is_instructor(instructor_id):
             availability = Availability.query.get(availability_id)
 
             if availability and availability.user_id == int(instructor_id):

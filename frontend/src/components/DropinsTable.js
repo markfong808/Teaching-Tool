@@ -1,8 +1,8 @@
 /* DropinsTable.js
  * Last Edited: 3/24/24
  *
- * Table that shows student Drop-In times that instructors
- * have created for their course inside "Courses" tab
+ * Table that shows student Drop-In times
+ * for their courses inside "Courses" tab
  *
  * Known Bugs:
  * -
@@ -22,7 +22,7 @@ export default function DropinsTable({ courseId, courseName }) {
   const { user } = useContext(UserContext);
 
   // Drop-In Table Variables
-  const [data, setData] = useState([]);
+  const [dropinAvailabilties, setDropinAvailabilties] = useState([]);
   const [showTable, setShowTable] = useState(true);
   const [sortedBy, sortBy] = useState("Name");
   const [hoveringDateOrTime, setHoveringDateOrTime] = useState(false);
@@ -31,9 +31,10 @@ export default function DropinsTable({ courseId, courseName }) {
   //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
-  // fetch drop ins' data for a student
+  // fetch dropin availabilities for student
   const fetchDropins = async () => {
-    if (!user) return;
+    // user isn't an student
+    if (user.account_type !== "student") return;
 
     try {
       const response = await fetch(
@@ -58,7 +59,7 @@ export default function DropinsTable({ courseId, courseName }) {
         return dateComparison;
       });
       // set data based on sorted dates for drop-ins
-      setData(sortedData);
+      setDropinAvailabilties(sortedData);
     } catch (error) {
       console.error("Error fetching drop-ins data:", error);
     }
@@ -79,7 +80,7 @@ export default function DropinsTable({ courseId, courseName }) {
     ];
 
     // iterate through data array and sort
-    const sortedData = [...data].sort((a, b) => {
+    const sortedData = [...dropinAvailabilties].sort((a, b) => {
       switch (sort) {
         // sort based on name
         case "Name":
@@ -110,7 +111,7 @@ export default function DropinsTable({ courseId, courseName }) {
     });
 
     // set data to the sortedData
-    setData(sortedData);
+    setDropinAvailabilties(sortedData);
   };
 
   ////////////////////////////////////////////////////////
@@ -122,7 +123,7 @@ export default function DropinsTable({ courseId, courseName }) {
     if (courseId && courseId !== "") {
       fetchDropins();
     } else {
-      setData([]);
+      setDropinAvailabilties([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
@@ -152,7 +153,7 @@ export default function DropinsTable({ courseId, courseName }) {
 
       <div id="table" className="w-11/12">
         <table className="w-full border text-center">
-          {data.length > 0 ? (
+          {dropinAvailabilties.length > 0 ? (
             <>
               <thead className="border-b border-light-gray bg-purple text-white">
                 <th
@@ -190,7 +191,7 @@ export default function DropinsTable({ courseId, courseName }) {
               </thead>
               <tbody>
                 {showTable &&
-                  data.map((availability) => (
+                  dropinAvailabilties.map((availability) => (
                     <tr className="border" key={availability.id}>
                       <td className="border-r">{availability.name}</td>
                       <td className="border-r">

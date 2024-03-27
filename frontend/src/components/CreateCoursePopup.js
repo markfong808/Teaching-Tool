@@ -1,20 +1,22 @@
 /* CreateCoursePopup.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * UI popup shown when instructor clicks on the create course button
- * in the "courses" tab. Allows instructor to enter name of course
+ * in the "Program Details" tab. Allows instructor to enter name of course
  *
  * Known Bugs:
  * -
  *
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie.js";
+import { UserContext } from "../context/UserContext.js";
 
 const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
+  const { user } = useContext(UserContext);
 
   // Load Variables
   const [readyToCreate, setReadyToCreate] = useState(false);
@@ -26,8 +28,11 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  // posts the course to the course table
+  // posts the course to the CourseDetails Table
   const createCourse = async () => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
     try {
       const payload = {
         name: courseTitle,
@@ -45,7 +50,7 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
       });
 
       if (response.ok) {
-        // Course created successfully, reload page or update UI as needed
+        // Course created successfully, reload page and update UI as needed
         loadFunction();
         onClose();
       }
@@ -58,7 +63,7 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  // show create button if course title isn't empty
+  // show create button if course title is valid
   useEffect(() => {
     if (courseTitle !== "") {
       setReadyToCreate(true);

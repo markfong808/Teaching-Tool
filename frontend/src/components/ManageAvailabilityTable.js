@@ -24,9 +24,6 @@ export default function ManageAvailabilityTable({ courseId }) {
   const { user } = useContext(UserContext);
   const csrfToken = getCookie("csrf_access_token");
 
-  // Load Variables
-  const [initialLoad, setInitialLoad] = useState(true);
-
   // Availability Table Variables
   const [data, setData] = useState([]);
   const [showTable, setShowTable] = useState(true);
@@ -39,7 +36,8 @@ export default function ManageAvailabilityTable({ courseId }) {
 
   // fetch availability data of instructor
   const fetchAvailability = async () => {
-    if (!user) return;
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
 
     try {
       const response = await fetch(
@@ -71,6 +69,9 @@ export default function ManageAvailabilityTable({ courseId }) {
 
   // post status change of availability to Availability and Appointment tables
   const handleAvailabilityStatusChange = async (availabilityId, newStatus) => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
     const payload = {
       availability_id: availabilityId,
       status: newStatus,
@@ -109,6 +110,9 @@ export default function ManageAvailabilityTable({ courseId }) {
 
   // post deletion of availability to Availability table
   const handleDeleteAvailability = async (availabilityId) => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
     if (window.confirm("Are your sure you want to delete this availability?")) {
       const deleteEndpoint = `/instructor/availability/${availabilityId}/delete`;
 
@@ -138,7 +142,7 @@ export default function ManageAvailabilityTable({ courseId }) {
   //               Handler Functions                    //
   ////////////////////////////////////////////////////////
 
-  // sort availabilites
+  // sort availabilites by name, day, date, drop-ins, or status
   const sortTable = (sort) => {
     const daysOfWeekOrder = [
       "Monday",
@@ -182,7 +186,7 @@ export default function ManageAvailabilityTable({ courseId }) {
       }
     });
 
-    // set data to the sortedData
+    // setData to the sortedData
     setData(sortedData);
   };
 
@@ -190,15 +194,13 @@ export default function ManageAvailabilityTable({ courseId }) {
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  // on initial page load, fetchAvailability()
+  // Fetch availability when courseId is valid
   useEffect(() => {
-    // Fetch availability when it's not the initial load and courseId is updated and valid
-    if (!initialLoad && (courseId !== null || courseId !== "")) {
+    if (courseId !== null || courseId !== "") {
       fetchAvailability();
     }
-    setInitialLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialLoad, courseId, user]);
+  }, [courseId, user]);
 
   // sortTable function called when sortedBy is updated
   useEffect(() => {

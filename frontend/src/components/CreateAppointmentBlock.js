@@ -1,14 +1,15 @@
 /* CreateAppointmentBlock.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Popup menu to create a appointment block for a specific date
+ * when the instructor clicks on the "Create Appointment Block" button
  *
  * Known Bugs:
  * -
  *
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie";
 import Calendar from "react-calendar";
@@ -18,6 +19,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SingleInputTimeRangeField } from "@mui/x-date-pickers-pro/SingleInputTimeRangeField";
 import dayjs from "dayjs";
+import { UserContext } from "../context/UserContext";
 
 export default function CreateAppointmentBlock({
   id,
@@ -29,24 +31,35 @@ export default function CreateAppointmentBlock({
   isDropins,
   onClose,
 }) {
-  const [date, setDate] = useState(new Date());
-  const [timeRange, setTimeRange] = useState(["12:00", "12:30"]);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showDuration, setShowDuration] = useState(false);
-  const [boxShown, setBoxShown] = useState(false);
-  const [local_duration, setDuration] = useState("");
-  const [timeBlock, setTimeBlock] = useState({});
+  // General Variables
+  const { user } = useContext(UserContext);
+
+  // Load Variables
   const [dateSelected, setDateSelected] = useState(false);
   const [showPopup, setShowPopup] = useState(true);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showDuration, setShowDuration] = useState(false);
+  const [showDurationInputField, setShowDurationInputField] = useState(false);
 
+  // Data Variables
+  const [date, setDate] = useState(new Date());
+  const [timeRange, setTimeRange] = useState(["12:00", "12:30"]);
+  const [local_duration, setDuration] = useState("");
+  const [timeBlock, setTimeBlock] = useState({});
+
+  // post the availability to the Availability Table and create Appointments if needed
   const createTimeSlot = async () => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
     if (date && timeRange) {
       const csrfToken = getCookie("csrf_access_token");
 
+      // convert duration to correct values to be entered into the database
       if (!duration || duration === "") {
         duration = 0;
       } else {
-        duration = Number(duration); // set duration based on passed in duration
+        duration = Number(duration);
       }
 
       const convertedAvailability = {
@@ -84,6 +97,7 @@ export default function CreateAppointmentBlock({
         });
     }
 
+    // option to keep creating availabilities or not
     if (
       !window.confirm(
         "Availability created successfully! Do you want to create another?"
@@ -93,6 +107,7 @@ export default function CreateAppointmentBlock({
     }
   };
 
+  // called when user clicks a new date on the calendar
   const handleCalendarChange = (event) => {
     const formattedDate = format(event, "yyyy-MM-dd");
     setDate(formattedDate);
@@ -100,6 +115,7 @@ export default function CreateAppointmentBlock({
     setShowTimePicker(true);
   };
 
+  // called when user enters a new time range
   const handleTimeChange = (event) => {
     // format to military time
     const tempTimeRange = [
@@ -107,22 +123,25 @@ export default function CreateAppointmentBlock({
       event[1] && event[1].format("HH:mm"),
     ];
 
-    // set temp time range variable
+    // setTimeRange
     setTimeRange(tempTimeRange);
 
-    const newValue = { start_time: event[0], end_time: event[1] };
-
-    setTimeBlock(newValue);
+    // setTimeBlock
+    setTimeBlock({ start_time: event[0], end_time: event[1] });
   };
 
+  // called when a valid timeRange has been entered
   const handleShowDuration = (event) => {
+    // time block is valid
     if (isValidTimeBlock(event)) {
       setTimeBlock({
         start_time: dayjs(`2022-04-17T${event[0]}`),
         end_time: dayjs(`2022-04-17T${event[1]}`),
       });
       setShowDuration(true);
-    } else {
+    }
+    // time block is invalid
+    else {
       setShowDuration(false);
     }
   };
@@ -132,27 +151,27 @@ export default function CreateAppointmentBlock({
     return timeRange[0] < timeRange[1];
   };
 
-  // updates setBoxShown when instructor clicks on checkbox
+  // updates setShowDurationInputField when instructor clicks on duration checkbox
   const showBox = () => {
-    if (boxShown) {
-      // need to make work with save/cancel changes button
+    if (showDurationInputField) {
+      // reset duration value
       handleDurationChange("");
-      setBoxShown(false);
+      setShowDurationInputField(false);
     } else {
-      setBoxShown(true);
+      setShowDurationInputField(true);
     }
   };
 
+  // called when duration is changed by user or showBox
   const handleDurationChange = (duration) => {
+    // exit if invalid char
     if (duration.includes("a")) {
       return;
     }
 
-    // if name is duration check the duration provided by instructor
     if (Number(duration) > 0) {
       let maxRecommendedDuration = 1440;
 
-      // iterate through selectedProgramTimesData
       const startDate = new Date(`1970-01-01T${timeRange[0]}`);
       const endDate = new Date(`1970-01-01T${timeRange[1]}`);
 
@@ -160,7 +179,7 @@ export default function CreateAppointmentBlock({
       const timeDifference = endDate - startDate;
       const minutes = Math.floor(timeDifference / (1000 * 60));
 
-      // if maxsplit larger than minutes, set maxsplit to minutes
+      // if maxRecommendedDuration larger than minutes, set maxRecommendedDuration to minutes
       if (minutes < maxRecommendedDuration) {
         maxRecommendedDuration = minutes;
       }
@@ -172,9 +191,12 @@ export default function CreateAppointmentBlock({
         }, 10);
       }
     }
+
+    // setDuration
     setDuration(duration);
   };
 
+  // setDuration when the duration prop changes
   useEffect(() => {
     setDuration(duration);
   }, [duration]);
@@ -233,10 +255,10 @@ export default function CreateAppointmentBlock({
               type="checkbox"
               id="myCheckbox"
               class="form-checkbox h-6 w-7 text-blue-600 ml-2 mt-1"
-              checked={boxShown}
+              checked={showDurationInputField}
               onChange={showBox}
             ></input>
-            {boxShown && (
+            {showDurationInputField && (
               <div className="flex items-end">
                 <input
                   className="border border-light-gray ml-3 mt-1 w-20 hover:bg-gray"
