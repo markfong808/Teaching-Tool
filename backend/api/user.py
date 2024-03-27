@@ -166,15 +166,15 @@ def send_confirmation_email(appointment):
     host = User.query.get(appointment.host_id)
 
     if attendee and host:
-        attendee_email_subject = f'{appointment.program_id} Status Update'
+        attendee_email_subject = f'{appointment.availability.program_details.name} Status Update'
         if appointment.status == 'reserved':
-            attendee_email_content = f'Your {appointment.program_id} appointment with {host.name} has been reserved for {appointment.appointment_date} at {appointment.start_time}.'
+            attendee_email_content = f'Your {appointment.availability.program_details.name} appointment with {host.name} has been reserved for {appointment.appointment_date} at {appointment.start_time}.'
         else:
-            attendee_email_content = f'Your {appointment.program_id} appointment has been rejected for unknown reason {appointment.appointment_date} at {appointment.start_time}.'
-        attendee_email_content = f'Your {appointment.program_id} appointment with {host.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+            attendee_email_content = f'Your {appointment.availability.program_details.name} appointment has been rejected for unknown reason {appointment.appointment_date} at {appointment.start_time}.'
+        attendee_email_content = f'Your {appointment.availability.program_details.name} appointment with {host.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
 
-        host_email_subject = f'{appointment.program_id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
-        host_email_content = f'Your {appointment.program_id} appointment with {attendee.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+        host_email_subject = f'{appointment.availability.program_details.name} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
+        host_email_content = f'Your {appointment.availability.program_details.name} appointment with {attendee.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
 
         # Create datetime objs for ics file
         timezone_offset = "-08:00"  # PST timezone offset
@@ -193,7 +193,7 @@ def send_confirmation_email(appointment):
         # Create an .ics file for the appointment
         cal = Calendar()
         event = Event()
-        event.name = appointment.program_id
+        event.name = str(appointment.availability.program_details.name)
         event.begin = formatted_start_datetime
         event.end = formatted_end_datetime
         cal.events.add(event)
@@ -355,4 +355,5 @@ def update_meeting_status():
         else:
             return jsonify({"error": "appointment not found"}), 404
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500

@@ -8,7 +8,6 @@
  * Known Bugs:
  * - get_student_programs() can be simplified if it uses get_programs(course_id) from programs.py
  * - reserve_appointment(appointment_id, course_id): figure out a way to not use course_id as a parameter
- * - timezones could be incorrect
  * - There are a good amount of functions that are close to identical with functions in
  *   instructor.py. These functions can be merged and put into user.py. These functions can accept
  *   students and instructors and will operate slightly different based on that.
@@ -96,11 +95,11 @@ def send_confirmation_email(appointment):
     host = User.query.get(appointment.host_id)
 
     if attendee and host:
-        attendee_email_subject = f'{appointment.availability.program_details.id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
-        attendee_email_content = f'Your {appointment.availability.program_details.id} appointment with {host.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+        attendee_email_subject = f'{appointment.availability.program_details.name} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
+        attendee_email_content = f'Your {appointment.availability.program_details.name} appointment with {host.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
 
-        host_email_subject = f'{appointment.availability.program_details.id} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
-        host_email_content = f'Your {appointment.availability.program_details.id} appointment with {attendee.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
+        host_email_subject = f'{appointment.availability.program_details.name} confirmation: {appointment.appointment_date} at {appointment.start_time}.'
+        host_email_content = f'Your {appointment.availability.program_details.name} appointment with {attendee.name} is confirmed for {appointment.appointment_date} at {appointment.start_time}.'
 
         # Create datetime objs for ics file
         timezone_offset = "-08:00"  # PST timezone offset
@@ -120,7 +119,7 @@ def send_confirmation_email(appointment):
         # Create an .ics file for the appointment
         cal = Calendar()
         event = Event()
-        event.name = str(appointment.availability.program_details.id)
+        event.name = str(appointment.availability.program_details.name)
         event.begin = formatted_start_datetime
         event.end = formatted_end_datetime
         cal.events.add(event)
