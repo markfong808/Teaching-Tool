@@ -11,7 +11,8 @@
  * - configure feedback features to work with onBlur like the rest of the project(no save/cancel buttons)
  * - appoinment details should be converted into a popup
  * - feedback form should be converted into a popup too
- * - implement handleProvideFeedback
+ * - implement handleProvideFeedback to be called in handleSaveChanges
+ *   when feedback elements are valid to post to database
  *
  */
 

@@ -6,7 +6,10 @@
  * by students
  *
  * Known bugs:
- * -
+ * - course title sizing bug: border cuts off the last character sometimes
+ * - if user types before the fetch data functions complete from the backend,
+ *   their inputs will be erased as the data is reset to whatever
+ *   comes from the backend response
  *
  */
 

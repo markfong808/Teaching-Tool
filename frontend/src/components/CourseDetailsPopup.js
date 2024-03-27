@@ -6,7 +6,7 @@
  * a course they're registered in
  *
  * Known Bugs:
- * -
+ * - include the quarter of the course in the UI elements
  *
  */
 import React from "react";

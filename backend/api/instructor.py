@@ -6,7 +6,6 @@
  * instructor user type
  *
  * Known Bugs:
- * - timezones could be incorrect
  * - delete_instructor_availabililty does not delete appointments. 
  *   This isnt a bug, but the function's logic operates different 
  *   than other Availability delete functions

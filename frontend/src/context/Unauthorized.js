@@ -20,39 +20,39 @@ const Unauthorized = () => {
   // HTML for webpage
   return (
     // Container for Unauthorized user handling component
-    <div className="ua-container">
-      <div class="gandalf">
-        <div class="fireball" />
-        <div class="skirt" />
-        <div class="sleeves" />
-        <div class="shoulders">
-          <div class="hand left" />
-          <div class="hand right" />
-        </div>
-        <div class="head">
-          <div class="hair" />
-          <div class="beard" />
-        </div>
-      </div>
+    <div className="CAPY :)">
+      <div className="flex flex-col items-center mt-10">
+        <img
+          src="https://i.etsystatic.com/42200963/r/il/944800/4767018432/il_570xN.4767018432_20kg.jpg"
+          alt="capybara"
+          width="300"
+          height="450"
+        />
+        <br />
 
-      {/* Message to Unauthorized user */}
-      <div class="message">
-        <h1>403 - You Shall Not Pass</h1>
-        <p>
-          Uh oh, Gandalf is blocking the way!
+        {/* Message to Unauthorized user */}
+        <div className="border p-2">
+          <h1>Error 403 - You Cannot Pass This Way</h1>
           <br />
-          Maybe you have a typo in the url? Or you meant to go to a different
-          location? Like...Hobbiton?
+          <p>
+            Mr. Bara Isn't Pleased...
+            <br />
+            Perhaps you have a faulty URL and you need to go back home.
+          </p>
+        </div>
+
+        <br />
+
+        <p className="flex flex-col items-center">
+          <button className="font-bold border border-light-gray rounded-md shadow-md text-2xl px-3 py-2 ml-4 hover:bg-gray">
+            <Link to="/">Back to Home</Link>
+          </button>
+          <br />
+          <button className="font-bold border border-light-gray rounded-md shadow-md text-2xl px-3 py-2 ml-4 hover:bg-gray">
+            <Link to="/login">Login</Link>
+          </button>
         </p>
       </div>
-
-      {/* Link unauthorized user back to Home or Login Webpage */}
-      <p>
-        <Link to="/">Back to Home</Link>
-        <br />
-        <br />
-        <Link to="/login">Login</Link>
-      </p>
     </div>
   );
 };

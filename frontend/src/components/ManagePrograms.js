@@ -5,8 +5,8 @@
  * and modify existing programs.
  *
  * Known bugs:
- * - get rid of save buttons like the rest of the system?
- * - not updated to work in general
+ * - get rid of save buttons like the rest of the system (make it save onBlur)
+ * - not updated to work in general with the rest of the system
  *    - Doesnt load programs
  *
  */

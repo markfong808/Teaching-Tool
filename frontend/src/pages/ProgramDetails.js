@@ -10,6 +10,12 @@
  * Known Bugs:
  * - if duration is over max size, then the warning message
  *   will show repeatedly until the duration is less than it
+ * - course title sizing bug: border cuts off the last character sometimes
+ * - When the physical_location or meeting_url changes and appointments have
+ *   already been created for the program, the appointments physical_location
+ *   and meeting_url do not update. Fix this by getting rid of these attributes
+ *   in the Appointment Table and instead reference the ProgramDetails Table
+ *   physical_location and meeting_url attributes.
  *
  */
 
