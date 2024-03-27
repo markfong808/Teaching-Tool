@@ -1,5 +1,5 @@
 /* Signup.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Signup where students and instructors enter name, email, password,
  * password verification, and usertype to use the website
@@ -18,6 +18,8 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verifyPassword, setVerifyPassword] = useState("");
+
+  // Registration Error Message
   const [registrationError, setRegistrationError] = useState("");
 
   ////////////////////////////////////////////////////////

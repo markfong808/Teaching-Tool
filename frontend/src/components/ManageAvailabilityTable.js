@@ -18,6 +18,7 @@ import {
   capitalizeFirstLetter,
 } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
+import { isnt_Instructor } from "../utils/checkUser";
 
 export default function ManageAvailabilityTable({ courseId }) {
   // General Variables
@@ -37,7 +38,7 @@ export default function ManageAvailabilityTable({ courseId }) {
   // fetch availability data of instructor
   const fetchAvailability = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       const response = await fetch(
@@ -70,7 +71,7 @@ export default function ManageAvailabilityTable({ courseId }) {
   // post status change of availability to Availability and Appointment tables
   const handleAvailabilityStatusChange = async (availabilityId, newStatus) => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     const payload = {
       availability_id: availabilityId,
@@ -111,7 +112,7 @@ export default function ManageAvailabilityTable({ courseId }) {
   // post deletion of availability to Availability table
   const handleDeleteAvailability = async (availabilityId) => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     if (window.confirm("Are your sure you want to delete this availability?")) {
       const deleteEndpoint = `/instructor/availability/${availabilityId}/delete`;

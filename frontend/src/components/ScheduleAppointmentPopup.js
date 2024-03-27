@@ -1,9 +1,9 @@
 /* ScheduleAppointmentPopup.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
- * UI Popup shown when student presses "Schedule New Meeting"
+ * UI Popup shown when student presses "Schedule New Appointment"
  * in their "Courses" tab. Gives the student access to see
- * their courses and respective programs
+ * their courses and respective programs to schedule a appointment
  *
  * Known bugs:
  * -
@@ -16,29 +16,24 @@ import { ScheduleMeeting } from "react-schedule-meeting";
 import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie.js";
 import Appointment from "./Appointment.js";
+import { isnt_Student } from "../utils/checkUser.js";
 
 const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // General Variables
   const { user } = useContext(UserContext);
-  const [selectedProgramId, setSelectedProgramId] = useState("");
-  const [selectedTimeslot, setSelectedTimeslot] = useState(null);
-  const [selectedTimeDuration, setSelectedTimeDuration] = useState(0);
-  const [availableTimeslots, setAvailableTimeslots] = useState([]);
-  const [programDescriptions, setProgramDescriptions] = useState({});
-  const [appointmentNotes, setAppointmentNotes] = useState("");
-  const [appointmentStatus, setAppointmentStatus] = useState("");
 
   // Load Variables
   const [initialLoad, setInitialLoad] = useState(true);
-  const [isCourseVisible, setIsCourseVisible] = useState(false);
-  const [isPopupGrown, setPopupGrown] = useState(false);
+  const [isCourseSelected, setIsCourseSelected] = useState(false);
+  const [showPopup, setShowPopup] = useState(true);
+  const [expandPopup, setExpandPopup] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showAppointmentPanel, setShowAppointmentPanel] = useState(false);
-  const [showPopup, setShowPopup] = useState(true);
 
   // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedProgramId, setSelectedProgramId] = useState("");
   const [allCourseData, setAllCourseData] = useState([]);
   const [selectedCourseData, setSelectedCourseData] = useState({
     id: "",
@@ -46,13 +41,24 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     programs: [],
   });
 
+  // Time Data Variables
+  const [selectedTimeslot, setSelectedTimeslot] = useState(null);
+  const [selectedTimeDuration, setSelectedTimeDuration] = useState(0);
+  const [availableTimeslots, setAvailableTimeslots] = useState([]);
+
+  // Appointment Data Variables
+  const [programDescriptions, setProgramDescriptions] = useState({});
+  const [appointmentNotes, setAppointmentNotes] = useState("");
+  const [appointmentStatus, setAppointmentStatus] = useState("");
+
   ////////////////////////////////////////////////////////
   //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
   // fetch all appointment-based programs for the student's courses
   const fetchAllStudentCourses = async () => {
-    if (user.account_type !== "student") return;
+    // user isn't an student
+    if (isnt_Student(user)) return;
 
     try {
       const response = await fetch(`/student/programs/appointment-based`, {
@@ -60,6 +66,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
       });
 
       const fetchedCourseList = await response.json();
+
       setAllCourseData(fetchedCourseList);
     } catch (error) {
       console.error("Error fetching all student courses:", error);
@@ -68,7 +75,9 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
 
   // fetches all of the descriptions for each program in a course
   const fetchProgramDetails = async () => {
-    if (!user) return;
+    // user isn't an student
+    if (isnt_Student(user)) return;
+
     try {
       const response = await fetch(
         `/course/programs/${encodeURIComponent(selectedCourseId)}`,
@@ -77,10 +86,12 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
         }
       );
       const fetchedData = await response.json();
+
       const programDetails = fetchedData.map((program) => ({
         id: program.id,
         description: program.description,
       }));
+
       setProgramDescriptions(programDetails);
     } catch (error) {
       console.error("Error fetching program details:", error);
@@ -91,6 +102,9 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // if they are real values, fetch the available appointments
   // for the program
   useEffect(() => {
+    // user isn't an student
+    if (isnt_Student(user)) return;
+
     if (selectedProgramId && selectedCourseId !== "") {
       fetch(
         `/student/appointments/available/${encodeURIComponent(
@@ -130,6 +144,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
         })
         .catch((error) => console.error("Error:", error));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProgramId, selectedCourseId]);
 
   ////////////////////////////////////////////////////////
@@ -137,13 +152,19 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   ////////////////////////////////////////////////////////
 
   // called when a student clicks to reserve an appointment
-  // after fetch, will update page based on backend response
+  // after fetch, update page
   const bookAppointment = () => {
+    // user isn't an student
+    if (isnt_Student(user)) return;
+
+    // if there is a timeslot to post
     if (selectedTimeslot) {
       const appointmentID = selectedTimeslot.availableTimeslot.id;
+
       const appointmentData = {
         notes: appointmentNotes,
       };
+
       const csrfToken = getCookie("csrf_access_token");
       let isHandledError = false; // flag to indicate if the error has been handled
 
@@ -169,7 +190,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
               setShowAppointmentPanel(false);
               setShowCalendar(false);
               isHandledError = true; // Mark this error as handled
-              return; // Return early to avoid further processing
+              return;
             }
             throw new Error("Failed to reserve appointment");
           }
@@ -179,6 +200,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
           if (data) {
             setAppointmentStatus(data.status);
             setBookingConfirmed(true);
+
             // reload page
             functions.reloadAppointments();
           }
@@ -213,7 +235,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     setAppointmentNotes("");
   };
 
-  // resets all popup UI and select variables when user clicks on the X in the Appointment.js screen
+  // resets all popup UI and select variables when user exits the Appointment.js screen
   const resetBooking = () => {
     setBookingConfirmed(false);
     setSelectedProgramId("");
@@ -227,26 +249,28 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // called when user clicks to change selected course
   const handleCourseChange = (e) => {
     if (!e.target.value) {
-      setIsCourseVisible(false);
+      setIsCourseSelected(false);
       setSelectedCourseId(e.target.value);
       return;
     }
 
     const selectedCourse = parseInt(e.target.value);
 
-    // set the selected course ID
+    // setSelectedCourseId
     setSelectedCourseId(selectedCourse);
 
-    // update course info displayed on page to selectedCourseId
+    // update course info displayed on page to selectedCourse
     updateSelectedCourseData(selectedCourse);
 
-    setIsCourseVisible(true);
+    // setIsCourseSelected
+    setIsCourseSelected(true);
 
-    if (isPopupGrown && showCalendar) {
+    // reset selectedProgramId, availableTimeslots, showCalendar, and expandPopup
+    if (expandPopup && showCalendar) {
       setSelectedProgramId("");
       setAvailableTimeslots([]);
       setShowCalendar(false);
-      setPopupGrown(false);
+      setExpandPopup(false);
     }
   };
 
@@ -266,17 +290,19 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     // set the selected program ID
     setSelectedProgramId(selectedProgram);
 
+    // reset available timeslots and showCalendar if no program selected
     if (e.target.value === "") {
       setSelectedProgramId("");
       setAvailableTimeslots([]);
-      setPopupGrown(false);
+      setExpandPopup(false);
       setShowCalendar(false);
     } else {
-      setPopupGrown(true);
+      setExpandPopup(true);
       setShowCalendar(true);
     }
 
-    setSelectedTimeslot(null); // Reset the selected timeslot when changing type
+    // Reset the selected timeslot when changing program
+    setSelectedTimeslot(null);
     setShowAppointmentPanel(false);
   };
 
@@ -312,17 +338,17 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLoad, user]);
 
-  // when selectedCourseId changes, set it and fetchProgramDetails() if a real value
+  // when selectedCourseId changes, setSelectedCourseId and fetchProgramDetails() if a real value
   useEffect(() => {
     setSelectedCourseId(selectedCourseId);
+
     if (selectedCourseId !== "" && selectedCourseId) {
       fetchProgramDetails();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourseId]);
 
-  // when the booking is confirmed and showPopup is set to false
-  // close out of schedule meeting popup
+  // close out of ScheduleAppointmentPopup if popup is closed
   useEffect(() => {
     if (!showPopup) {
       onClose();
@@ -334,7 +360,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
 
-  // If booking is confirmed, render the Appointment component, otherwise render the booking UI
+  // If booking is confirmed, render the Appointment component
   if (bookingConfirmed) {
     return (
       <Appointment
@@ -365,7 +391,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   return (
     <div
       className={
-        isPopupGrown
+        expandPopup
           ? "fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative"
           : "fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative"
       }
@@ -395,7 +421,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
             ))}
           </select>
         </div>
-        {isCourseVisible && (
+        {isCourseSelected && (
           <div className="flex flex-col mt-3">
             <div id="dropdown" className="flex flex-row">
               <h1 className="whitespace-nowrap">

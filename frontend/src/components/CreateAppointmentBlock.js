@@ -20,6 +20,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SingleInputTimeRangeField } from "@mui/x-date-pickers-pro/SingleInputTimeRangeField";
 import dayjs from "dayjs";
 import { UserContext } from "../context/UserContext";
+import { isnt_Instructor } from "../utils/checkUser";
 
 export default function CreateAppointmentBlock({
   id,
@@ -50,7 +51,7 @@ export default function CreateAppointmentBlock({
   // post the availability to the Availability Table and create Appointments if needed
   const createTimeSlot = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     if (date && timeRange) {
       const csrfToken = getCookie("csrf_access_token");

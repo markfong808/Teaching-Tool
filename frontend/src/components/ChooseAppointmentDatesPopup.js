@@ -17,6 +17,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css";
 import { UserContext } from "../context/UserContext";
+import { isnt_Instructor } from "../utils/checkUser";
 
 const ChooseAppointmentDatesPopup = ({
   onClose,
@@ -52,7 +53,7 @@ const ChooseAppointmentDatesPopup = ({
   // posts added availbility data to the Availability table
   const createTimeSlot = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       const csrfToken = getCookie("csrf_access_token");

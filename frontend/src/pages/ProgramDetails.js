@@ -25,6 +25,7 @@ import CreateAppointmentBlock from "../components/CreateAppointmentBlock.js";
 import AutoAcceptAppointments from "../components/AutoAcceptAppointments.js";
 import CreateCoursePopup from "../components/CreateCoursePopup.js";
 import CourseDetails from "../components/CourseDetails.js";
+import { isnt_Instructor } from "../utils/checkUser.js";
 
 export default function ProgramDetails() {
   // General Variables
@@ -79,7 +80,7 @@ export default function ProgramDetails() {
   // fetch all courses the instructor is associated with
   const fetchAllInstructorCourses = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       const response = await fetch(`/instructor/programs`, {
@@ -97,7 +98,7 @@ export default function ProgramDetails() {
   // fetch all times for a course
   const fetchTimesData = async (courseId) => {
     // no course selected or user isn't an instructor
-    if (courseId <= -1 || user.account_type !== "instructor") {
+    if (courseId <= -1 || isnt_Instructor(user)) {
       return;
     }
 
@@ -148,7 +149,7 @@ export default function ProgramDetails() {
   // posts updated program data to the ProgramDetails table
   const postProgramToDatabase = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       // Set default values for max_daily_meetings, max_weekly_meetings, and max_monthly_meetings if they are empty or null
@@ -192,7 +193,7 @@ export default function ProgramDetails() {
   // post the times for the program to ProgramTimes Table
   const postProgramTimes = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       await fetch(
@@ -215,7 +216,7 @@ export default function ProgramDetails() {
   // delete a program from the ProgramDetails Table and all related data
   const handleDeleteProgram = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     // user boolean option popup
     if (window.confirm("Are your sure you want to delete this program?")) {
@@ -719,12 +720,11 @@ export default function ProgramDetails() {
                   : "p-5"
               }`}
             >
-
               {/* Program header */}
               <h1>
                 <strong>Program:</strong>
               </h1>
-              
+
               {/* Program selection for instructors*/}
               <select
                 className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
@@ -754,7 +754,7 @@ export default function ProgramDetails() {
                   </option>
                 ))}
               </select>
-              
+
               {/* Create Program button for instructors to create new Programs */}
               <button
                 className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-1 py-1 ml-4 hover:bg-gray ${
@@ -773,7 +773,6 @@ export default function ProgramDetails() {
               >
                 <span>ⓘ</span>
               </Tooltip>
-
             </div>
           </div>
         </div>
@@ -814,7 +813,7 @@ export default function ProgramDetails() {
                             Auto Generate Details
                           </button>
 
-                            {/* Delete Program button */}
+                          {/* Delete Program button */}
                           <button
                             className={`font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-3 absolute inset-y-10 right-0 flex justify-center items-center mr-6 hover:bg-gray z-10`}
                             onClick={handleDeleteProgram}
@@ -839,9 +838,8 @@ export default function ProgramDetails() {
                             value={selectedProgramData.name}
                             onChange={handleInputChange}
                             onBlur={handleSaveChanges}
-
                           />
-                          
+
                           {/* Tooltip to aid instructors in viewing and editing the selected Program Name*/}
                           <Tooltip
                             text="Click Program Name To Change Value."
@@ -849,7 +847,6 @@ export default function ProgramDetails() {
                           >
                             <span className="absolute transform">ⓘ</span>
                           </Tooltip>
-
                         </div>
 
                         {/* Container for UI elements Program Description and below */}
@@ -861,7 +858,7 @@ export default function ProgramDetails() {
                                   Program Description &nbsp;
                                 </label>
 
-                              {/* Tooltip to aid instructors in viewing and editing the selected Program description */}
+                                {/* Tooltip to aid instructors in viewing and editing the selected Program description */}
                                 <Tooltip text="Description of the program related to meetings for a course.">
                                   <span>ⓘ</span>
                                 </Tooltip>
@@ -889,7 +886,7 @@ export default function ProgramDetails() {
 
                             {/* Call AutoAcceptAppointments component if Program is Appointment based */}
                             {!isDropinsLayout && (
-                              // Instructors can choose to AutoAcceptAppointments and set Appointment limits 
+                              // Instructors can choose to AutoAcceptAppointments and set Appointment limits
                               <AutoAcceptAppointments
                                 functions={{
                                   setSelectedProgramData:
@@ -926,7 +923,6 @@ export default function ProgramDetails() {
                               )
                             )}
 
-
                             {locationChecker === true &&
                               (isRangedBasedLayout ? (
                                 <>
@@ -950,7 +946,6 @@ export default function ProgramDetails() {
                                     />
                                   </div>
 
-                                  
                                   {showDurationDetails && (
                                     <div className="flex flex-row items-center mt-4 p-5 border border-light-gray rounded-md shadow-md mt-5">
                                       {/* Appointment duration label */}
@@ -966,7 +961,6 @@ export default function ProgramDetails() {
                                         onChange={showBox}
                                       ></input>
 
-                                      
                                       {showDurationInputField && (
                                         <div className="flex items-end">
                                           {/* Appointment duration input field */}
@@ -998,7 +992,7 @@ export default function ProgramDetails() {
                                           </label>
                                         </div>
                                       )}
-                                      
+
                                       {/* Choose Appointment Dates button for instructor to make availability based on date */}
                                       <button
                                         className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2 hover:bg-gray`}
@@ -1014,7 +1008,7 @@ export default function ProgramDetails() {
                                   )}
                                 </>
                               ) : (
-                                  // Call CreateAppointmentBlockPopup component if instructor clicks on the Create Appointment Block button
+                                // Call CreateAppointmentBlockPopup component if instructor clicks on the Create Appointment Block button
                                 isCreateAvailabilityPopUpVisible && (
                                   <div className="fixed inset-0 z-10">
                                     {/* Display CreateAppointmentBlockPopup where instructor can create time-blocks 

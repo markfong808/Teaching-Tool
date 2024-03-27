@@ -1,5 +1,5 @@
-/* Users.js
- * Last Edited: 3/25/24
+/* ManageUsers.js
+ * Last Edited: 3/26/24
  *
  * Manage Users tab where admins can see registered instructor,
  * student, and admin accounts. Admins can manage
@@ -9,11 +9,16 @@
  *
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import UserProfile from "./UserProfile";
+import { UserContext } from "../context/UserContext";
+import { isnt_Admin } from "../utils/checkUser";
 
-export default function Users() {
+export default function ManageUsers() {
+  // General Variables
+  const { user } = useContext(UserContext);
+
   // User Data Variables
   const [users, setUsers] = useState([]);
   const [selectedUserType, setSelectedUserType] = useState("");
@@ -24,8 +29,11 @@ export default function Users() {
   //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
-  //
+  // fetch all users in system
   const fetchUsers = () => {
+    // user isn't an admin
+    if (isnt_Admin(user)) return;
+
     fetch("/admin/all-users")
       .then((response) => {
         if (response.ok) {
@@ -46,8 +54,12 @@ export default function Users() {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  //
+  // change account type of a user
   const handleAccountTypeChange = (user_id, new_account_type, userName) => {
+    // user isn't an admin
+    if (isnt_Admin(user)) return;
+
+    // warning message
     if (
       !new_account_type ||
       !window.confirm(
@@ -65,6 +77,8 @@ export default function Users() {
       .then((response) => {
         if (response.ok) {
           alert("Account Type changed successfully");
+
+          // update users variable
           setUsers((prevUsers) =>
             prevUsers.map((user) =>
               user.id === user_id
@@ -81,8 +95,12 @@ export default function Users() {
       });
   };
 
-  //
+  // change account status of a user
   const handleAccountStatusChange = (user_id, new_account_status, userName) => {
+    // user isn't an admin
+    if (isnt_Admin(user)) return;
+
+    // warning message
     if (
       !new_account_status ||
       !window.confirm(
@@ -91,6 +109,7 @@ export default function Users() {
     ) {
       return;
     }
+
     fetch("/admin/change-account-status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -98,8 +117,9 @@ export default function Users() {
     })
       .then((response) => {
         if (response.ok) {
-          // Update the user's account status locally
           alert("Account Status changed successfully");
+
+          // Update the user's account status locally
           setUsers((prevUsers) =>
             prevUsers.map((user) =>
               user.id === user_id
@@ -120,17 +140,17 @@ export default function Users() {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  //
+  // select a new user to view
   const handleUserNameClick = (user) => {
     setSelectedUser(user); // Set the selected user when name is clicked
   };
 
-  //
+  // select a new user type for table
   const handleUserTypeChange = (event) => {
     setSelectedUserType(event.target.value);
   };
 
-  //
+  // filter users by query
   const handleFilter = (event) => {
     setQuery(event.target.value);
   };
@@ -149,9 +169,9 @@ export default function Users() {
   //                 UseEffect Functions                //
   ////////////////////////////////////////////////////////
 
-  //
+  // fetch users on page load
   useEffect(() => {
-    fetchUsers(); // Call fetchUsers inside useEffect
+    fetchUsers();
   }, []);
 
   ////////////////////////////////////////////////////////

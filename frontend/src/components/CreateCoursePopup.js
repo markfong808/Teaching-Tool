@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie.js";
 import { UserContext } from "../context/UserContext.js";
+import { isnt_Instructor } from "../utils/checkUser.js";
 
 const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   // General Variables
@@ -31,7 +32,7 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   // posts the course to the CourseDetails Table
   const createCourse = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       const payload = {

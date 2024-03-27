@@ -1,5 +1,5 @@
 /* ViewFeedback.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * View Feedback tab for administrators to see feedback from students
  * and instructors about an appointment. Administrators can download
@@ -10,9 +10,14 @@
  *
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { isnt_Admin } from "../utils/checkUser";
+import { UserContext } from "../context/UserContext";
 
 export default function ViewFeedback() {
+  // General Variables
+  const { user } = useContext(UserContext);
+
   // Feedback Data Variables
   const [feedbackList, setFeedbackList] = useState([]);
 
@@ -20,9 +25,15 @@ export default function ViewFeedback() {
   //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
-  // function to fetch feedback data from the backend
+  // fetch feedback data from the Feedback Table
   useEffect(() => {
     const fetchFeedbackData = async () => {
+      // user isn't an admin
+      if (isnt_Admin(user)) {
+        console.error("user is not an admin, cannot view feedback data.");
+        return;
+      }
+
       try {
         const response = await fetch("/feedback/all", {
           method: "GET",
@@ -49,7 +60,7 @@ export default function ViewFeedback() {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  //
+  // downloads feedback data as a CSV file
   const downloadCSV = () => {
     let csvContent = "data:text/csv;charset=utf-8,";
     // Add CSV headers

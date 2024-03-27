@@ -15,6 +15,7 @@ import React, { useEffect, useState, useContext } from "react";
 import AppointmentsTable from "../components/AppointmentsTable.js";
 import ManageAvailabilityTable from "../components/ManageAvailabilityTable.js";
 import { UserContext } from "../context/UserContext.js";
+import { isnt_Instructor } from "../utils/checkUser.js";
 
 export default function Times() {
   // General Variables
@@ -34,7 +35,7 @@ export default function Times() {
   // fetch all courses the instructor is associated with
   const fetchAllInstructorCourses = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       const response = await fetch(`/user/courses`, {
@@ -110,12 +111,12 @@ export default function Times() {
         </select>
       </div>
 
-      {/* ManageAvaiblity Table so an instructor can see their Availabilities and manage them */} 
+      {/* ManageAvaiblity Table so an instructor can see their Availabilities and manage them */}
       <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md">
         <ManageAvailabilityTable courseId={selectedCourseId} />
       </div>
 
-      {/* Appointments Table so a student can see Appointments they booked */} 
+      {/* Appointments Table so a student can see Appointments they booked */}
       <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
         <AppointmentsTable courseId={selectedCourseId} reloadTable={false} />
       </div>

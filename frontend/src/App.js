@@ -16,7 +16,7 @@ import LoginSignup from "./pages/LoginSignup";
 import RegisterForm from "./pages/RegisterForm";
 import { Route, Routes } from "react-router-dom";
 import Logout from "./components/Logout";
-import Users from "./components/Users";
+import ManageUsers from "./components/ManageUsers";
 import ManagePrograms from "./components/ManagePrograms";
 import ProtectedRoute from "./context/ProtectedRoute";
 import Unauthorized from "./context/Unauthorized";
@@ -56,7 +56,7 @@ function App() {
             path="/admin/user-management"
             element={
               <ProtectedRoute allowedAccountTypes={["admin"]}>
-                <Users />
+                <ManageUsers />
               </ProtectedRoute>
             }
           />

@@ -12,6 +12,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { getCookie } from "../utils/GetCookie";
+import { isnt_Student_Or_Instructor } from "../utils/checkUser";
 
 export default function Comment({ appointmentId }) {
   // General Variables
@@ -34,8 +35,7 @@ export default function Comment({ appointmentId }) {
   // fetches comments for the appointment
   const fetchComments = async () => {
     // if not a user
-    if (user.account_type !== "instructor" || user.account_type !== "student")
-      return;
+    if (isnt_Student_Or_Instructor(user)) return;
 
     setIsLoading(true);
     try {
@@ -75,8 +75,7 @@ export default function Comment({ appointmentId }) {
   // posts a comment to the appointment
   const handleSubmit = async (e) => {
     // if not a user
-    if (user.account_type !== "instructor" || user.account_type !== "student")
-      return;
+    if (isnt_Student_Or_Instructor(user)) return;
 
     e.preventDefault();
     const payload = { appointment_comment: comment };
@@ -110,8 +109,7 @@ export default function Comment({ appointmentId }) {
   // delete the comment from the AppointmentComments Table
   const handleDelete = async (id) => {
     // if not a user
-    if (user.account_type !== "instructor" || user.account_type !== "student")
-      return;
+    if (isnt_Student_Or_Instructor(user)) return;
 
     try {
       await fetch(
@@ -157,7 +155,6 @@ export default function Comment({ appointmentId }) {
       {/* Comments label */}
       <h1 className="text-2xl font-bold">Comments</h1>
       <form className="flex" onSubmit={handleSubmit}>
-
         {/* Comment input field */}
         <input
           className="border border-light-gray p-2 w-full"
@@ -191,7 +188,6 @@ export default function Comment({ appointmentId }) {
             >
               <div className="flex justify-between">
                 <p className="font-bold">
-
                   {/* Display instructor or student information based on who left the Comment for the Appointment */}
                   {user.account_type === "student" ? (
                     <>

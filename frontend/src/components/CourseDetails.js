@@ -16,6 +16,7 @@ import { Tooltip } from "./Tooltip";
 import WeeklyCalendar from "./WeeklyCalendar";
 import { getCookie } from "../utils/GetCookie";
 import { UserContext } from "../context/UserContext";
+import { isnt_Instructor } from "../utils/checkUser";
 
 export default function CourseDetails({ courseId }) {
   // General Variables
@@ -39,7 +40,7 @@ export default function CourseDetails({ courseId }) {
   // fetch course data for selected course
   const fetchCourseDetails = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       const response = await fetch(`/course/details/${selectedCourseId}`, {
@@ -57,7 +58,7 @@ export default function CourseDetails({ courseId }) {
   // fetch all times the courseId is associated with
   const fetchTimesData = async () => {
     // user isn't an instructor or no course is selected
-    if (selectedCourseId === -1 || user.account_type !== "instructor") {
+    if (selectedCourseId === -1 || isnt_Instructor(user)) {
       return;
     }
 
@@ -111,7 +112,7 @@ export default function CourseDetails({ courseId }) {
   // posts updated program data for a course to the ProgramDetails table
   const postCourseDetails = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       await fetch(`/course/details`, {
@@ -134,7 +135,7 @@ export default function CourseDetails({ courseId }) {
   // post the times for the course to CourseTimes Table
   const postCourseTimes = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     try {
       await fetch(`/course/times/${encodeURIComponent(courseData.id)}`, {
@@ -289,9 +290,8 @@ export default function CourseDetails({ courseId }) {
             <Tooltip text="Click Course Name To Change Value." position="top">
               <span className="absolute transform">ⓘ</span>
             </Tooltip>
-
           </div>
-          
+
           {/* Container for UI Course Comments box and below */}
           <div className="flex flex-col">
             <div className="w-3/4 m-auto">
@@ -303,7 +303,6 @@ export default function CourseDetails({ courseId }) {
                   <Tooltip text="Description of the program related to meetings for a course.">
                     <span>ⓘ</span>
                   </Tooltip>
-
                 </div>
 
                 {/* Text area for instructor to enter in Comments about Course */}

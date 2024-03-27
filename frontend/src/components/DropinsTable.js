@@ -16,6 +16,7 @@ import {
   formatDate,
   getDayFromDate,
 } from "../utils/FormatDatetime";
+import { isnt_Student } from "../utils/checkUser";
 
 export default function DropinsTable({ courseId, courseName }) {
   // General Variables
@@ -34,7 +35,7 @@ export default function DropinsTable({ courseId, courseName }) {
   // fetch dropin availabilities for student
   const fetchDropins = async () => {
     // user isn't an student
-    if (user.account_type !== "student") return;
+    if (isnt_Student(user)) return;
 
     try {
       const response = await fetch(

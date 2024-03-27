@@ -1,5 +1,5 @@
 /* WeeklyCalendar.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Sets the general weekdays time blocks used
  * to populate the ProgramTimes table
@@ -53,7 +53,7 @@ export default function WeeklyCalendar({
       handleRemoveLocalTime(day);
     }
 
-    // flip boolean state for the weekday in timePickersList
+    // flip boolean state for the weekday in showTimeEntryField
     setShowTimeEntryField((prevState) => ({
       ...prevState,
       [day]: !prevState[day],
@@ -68,12 +68,14 @@ export default function WeeklyCalendar({
       event[1] && event[1].format("HH:mm"),
     ];
 
-    // set temp time range variable
+    // setTimeRange
     setTimeRange(militaryTimeTimeRange);
 
-    const convertedTimeRangeObj = { start_time: event[0], end_time: event[1] };
-
-    setLocalTimes({ ...localTimes, [day]: convertedTimeRangeObj });
+    // setLocalTimes
+    setLocalTimes({
+      ...localTimes,
+      [day]: { start_time: event[0], end_time: event[1] },
+    });
   };
 
   // remove time block that user allotted
@@ -92,10 +94,13 @@ export default function WeeklyCalendar({
     });
   };
 
-  // create button to push time block to parent function
+  // update local time variable and push to parent object
   const handleCreateTimeBlock = (day, newTimeBlock) => {
     if (isValidTimeBlock(newTimeBlock)) {
+      // setLocalTimes
       setLocalTimes({ ...localTimes, [day]: newTimeBlock });
+
+      // push changes to parent object
       functions.timesChangeFunction({
         type: program_id,
         name: day,
@@ -106,7 +111,7 @@ export default function WeeklyCalendar({
     }
   };
 
-  // handleCreateChange helper: check if time block chosen is a valid range
+  // handleCreateChange helper: check if time block is a valid range
   const isValidTimeBlock = (timeBlock) => {
     return timeBlock[0] < timeBlock[1];
   };
@@ -115,8 +120,8 @@ export default function WeeklyCalendar({
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
+  // load the weekday values when times are updated
   useEffect(() => {
-    // load the weekday values on page load
     if (loadPage) {
       // set the headers based on incoming data
       const updatedShowTimeEntries = {};
@@ -126,7 +131,7 @@ export default function WeeklyCalendar({
         }
       }
 
-      // show time fields
+      // show correct time fields
       setShowTimeEntryField({
         ...Object.keys(updatedShowTimeEntries).reduce((acc, key) => {
           if (updatedShowTimeEntries[key]) {
@@ -136,7 +141,6 @@ export default function WeeklyCalendar({
         }, {}),
       });
 
-      // set the times
       const updatedLocalTimes = {
         Monday: [],
         Tuesday: [],
@@ -145,6 +149,7 @@ export default function WeeklyCalendar({
         Friday: [],
       };
 
+      // set the times based on incoming data
       for (const day in times) {
         if (times.hasOwnProperty(day)) {
           // append random date to satisfy x-date-pickers library
@@ -153,19 +158,23 @@ export default function WeeklyCalendar({
           updatedLocalTimes[day] = { start_time: start, end_time: end };
         }
       }
+
+      // setLocalTimes
       setLocalTimes(updatedLocalTimes);
 
+      // reset loadPage
       functions.loadPageFunction(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTimeEntryField, times, localTimes, loadPage]);
 
+  // check if user has any data in UI, if so, show duration
   useEffect(() => {
     const anyDayHasData = Object.values(localTimes).some(
       (dayData) => dayData.length > 0 || Object.keys(dayData).length > 0
     );
 
-    // Call param.showDuration based on the condition
+    // show duration if parent object has a duration object
     if (functions.setShowDuration) {
       functions.setShowDuration(anyDayHasData);
     }
@@ -176,7 +185,7 @@ export default function WeeklyCalendar({
   //                 Render Functions                   //
   ////////////////////////////////////////////////////////
 
-  // render the weekday labels with object creation onClick
+  // render the weekday labels with object creation on click
   const renderWeekdayHeader = (day) => {
     return (
       <th

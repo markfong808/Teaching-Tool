@@ -1,5 +1,5 @@
 /* UserProfile.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Account Details UI inside Users.js that allows admin to
  * view admin, instructor, and student account information and make changes to name.
@@ -26,13 +26,15 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  //
+  // posts the updated form data to User Table
   const handleSaveChanges = async () => {
     const updatedFormData = {
       ...(formData ? 1 : 0),
     };
+
     const csrfToken = getCookie("csrf_access_token");
     const userID = user.id;
+
     try {
       const url = `/user/profile/${userID}`;
       const response = await fetch(url, {
@@ -50,6 +52,7 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
         throw new Error(errorData.error || "Profile update failed");
       }
       setChangesMade(false); // Reset changes made
+
       // Update the user context with the new data
       const updatedUser = await response.json();
       onUserUpdate(updatedUser);
@@ -62,19 +65,12 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  //
+  // handle input changes for user profiles
   const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     let newValue = value;
 
-    // Handle the radio button specifically
-    if (type === "radio") {
-      newValue = value === "true"; // Convert the value to boolean
-    } else {
-      // For other inputs, just use the value
-      newValue = value;
-    }
-
+    // setFormData
     setFormData({ ...formData, [name]: newValue });
 
     // Check if changes were made
@@ -84,7 +80,7 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
     setChangesMade(!formIsSameAsUser);
   };
 
-  //
+  // handle cancel changes for user profiles
   const handleCancelChanges = () => {
     // Reset form data to initial user data
     setFormData({
@@ -97,9 +93,8 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
   //                 UseEffect Functions                //
   ////////////////////////////////////////////////////////
 
-  //
+  // Update form data when user context updates
   useEffect(() => {
-    // Update form data when user context updates
     if (user) {
       setFormData({
         name: user.name || "",
@@ -114,6 +109,7 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
   if (!user) {
     return <div>Loading user data...</div>;
   }
+
   // HTML for webpage
   return (
     <div className="flex flex-col p-5 w-2/3 m-auto border border-light-gray rounded-md shadow-md">

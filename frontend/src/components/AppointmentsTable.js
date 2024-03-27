@@ -11,6 +11,7 @@
  * - configure feedback features to work with onBlur like the rest of the project(no save/cancel buttons)
  * - appoinment details should be converted into a popup
  * - feedback form should be converted into a popup too
+ * - implement handleProvideFeedback
  *
  */
 
@@ -25,6 +26,7 @@ import {
 import { getCookie } from "../utils/GetCookie.js";
 import { Tooltip } from "./Tooltip.js";
 import Comment from "./Comment.js";
+import { isnt_Student_Or_Instructor } from "../utils/checkUser.js";
 
 export default function AppointmentsTable({ courseId, reloadTable }) {
   // General Variables
@@ -61,8 +63,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // fetch the appointments for upcoming, pending, past tabs
   const fetchAppointments = async () => {
-    // If there's no user or course, we can't fetch appointments
-    if (!user || courseId === "") return;
+    // If there's no user or course, return
+    if (isnt_Student_Or_Instructor(user) || courseId === "") return;
 
     const apiEndpoint =
       user.account_type === "instructor"
@@ -102,8 +104,9 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // fetch program details for all programs
   const fetchProgramDetails = async () => {
-    // If there's no user, we can't fetch program details
-    if (!user) return;
+    // If there's no user or courseId, return
+    if (isnt_Student_Or_Instructor(user) || courseId === "") return;
+
     const apiEndpoint =
       user.account_type === "instructor"
         ? `/instructor/programs/descriptions`
@@ -134,7 +137,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // fetch feedback associated with appointment id
   const fetchFeedback = async () => {
-    if (!selectedAppointment) return;
+    // If there's no user, return
+    if (!selectedAppointment || isnt_Student_Or_Instructor(user)) return;
 
     try {
       const response = await fetch(
@@ -167,7 +171,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // posts appointment notes and/or appointment url to the Appointment table
   const handleSaveChanges = async () => {
-    if (!selectedAppointment) return;
+    // If there's no user or selectedAppointment, return
+    if (!selectedAppointment || isnt_Student_Or_Instructor(user)) return;
 
     const appendAppointmentId = {
       ...formData,
@@ -200,6 +205,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   // called when the instructor Approve Appointment, Attended, Missing button
   // posts new status of appointment to the Appointment table
   const handleStatusUpdate = async (appointmentId, newStatus) => {
+    // If there's no user, return
+    if (isnt_Student_Or_Instructor(user)) {
+      return;
+    }
+
     const payload = {
       appointment_id: appointmentId,
       status: newStatus,
@@ -232,6 +242,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   // called on save changes
   // posts feedback data to Feedback Table
   const handleProvideFeedback = async (event) => {
+    // If there's no user, return
+    if (isnt_Student_Or_Instructor(user)) {
+      return;
+    }
+
     event.preventDefault();
 
     const payload = {
@@ -269,6 +284,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // posts cancel status for instructor and posted for student to Appointment table
   const handleCancelAppointment = async (appointmentId) => {
+    // If there's no user, return
+    if (isnt_Student_Or_Instructor(user)) {
+      return;
+    }
+
     if (window.confirm("Are your sure you want to cancel this appointment?")) {
       // Construct the endpoint based on account type
       const cancelEndpoint =
@@ -469,7 +489,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
     // HTML for webpage
     return (
-      // Define Feedback Form 
+      // Define Feedback Form
       <div id="feedback-form">
         {/* Define border and color of Feedback Form*/}
         <div className="border bg-gray mt-2 p-5 relative">
@@ -713,7 +733,6 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           </div>
         </div>
 
-        
         <div className="flex flex-col">
           {/* Display text box for notes about Appointment */}
           <label className="font-bold pt-2">Appointment Notes</label>
@@ -764,10 +783,9 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             )}
         </div>
         <br />
-        
+
         {/* Comment box for students and instructor to type into */}
         <Comment appointmentId={selectedAppointment.appointment_id} />
-
       </div>
     );
   };
@@ -775,7 +793,10 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   // Global HTML for webpage, Display appointment list
   return (
     // Define AppointmentsTable component
-    <div id="content-container" className="flex flex-col w-full m-auto items-center">
+    <div
+      id="content-container"
+      className="flex flex-col w-full m-auto items-center"
+    >
       {/* Appointments label with upcoming, pending, and past tabs */}
       <div className="font-bold text-center text-2xl">
         <h1>Your {capitalizeFirstLetter(activeTab)} Appointments</h1>
@@ -917,7 +938,6 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 </tbody>
               </>
             ) : (
-
               /* Show graphic to instructor and student if no appointments in all tabs */
               <tbody>
                 <tr>

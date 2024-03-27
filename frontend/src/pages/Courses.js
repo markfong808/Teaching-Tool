@@ -17,6 +17,7 @@ import ScheduleAppointmentPopup from "../components/ScheduleAppointmentPopup.js"
 import AppointmentsTable from "../components/AppointmentsTable.js";
 import CourseDetailsPopup from "../components/CourseDetailsPopup.js";
 import DropinsTable from "../components/DropinsTable.js";
+import { isnt_Student } from "../utils/checkUser.js";
 
 export default function Courses() {
   // General Variables
@@ -53,7 +54,7 @@ export default function Courses() {
   // fetch all courses the student is associated with from database
   const fetchAllStudentCourses = async () => {
     // user isn't a student
-    if (user.account_type !== "student") return;
+    if (isnt_Student(user)) return;
 
     try {
       const response = await fetch(`/user/courses`, {
@@ -77,7 +78,7 @@ export default function Courses() {
   // fetch instructor details from a user based on their ID
   const fetchInstructorDetails = async (instructorId) => {
     // user isn't a student
-    if (user.account_type !== "student") return;
+    if (isnt_Student(user)) return;
 
     try {
       const response = await fetch(
@@ -231,7 +232,7 @@ export default function Courses() {
             reloadTable={reloadAppointmentsTable}
           />
         </div>
-        
+
         {/* Button students can interact with to schedule a new appointment for a Course */}
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
           <button
@@ -262,7 +263,7 @@ export default function Courses() {
         </div>
       )}
 
-      {/* Call ScheduleAppointmentPopup component if student clicks on the Schedule New Meeting button */ }
+      {/* Call ScheduleAppointmentPopup component if student clicks on the Schedule New Meeting button */}
       {isScheduleAppointmentPopUpVisible && (
         // Display ScheduleAppointmentPopup where student can schedule an appointment for a Program in a Course
         <div className="fixed inset-0">

@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie.js";
 import { UserContext } from "../context/UserContext.js";
+import { isnt_Instructor } from "../utils/checkUser.js";
 
 const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
   // General Variables
@@ -36,7 +37,7 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
   // posts the program to the ProgramDetails table
   const createProgram = async () => {
     // user isn't an instructor
-    if (user.account_type !== "instructor") return;
+    if (isnt_Instructor(user)) return;
 
     // program title error catcher
     if (programTitle === "Course Details") {

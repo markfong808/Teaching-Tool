@@ -15,6 +15,7 @@ import { UserContext } from "../context/UserContext";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
 import { Tooltip } from "../components/Tooltip";
+import { isnt_User } from "../utils/checkUser";
 
 export default function Profile() {
   // General Variables
@@ -37,12 +38,7 @@ export default function Profile() {
   // fetch the profile data for a user
   const fetchProfileData = async () => {
     // if not a user
-    if (
-      user.account_type !== "instructor" ||
-      user.account_type !== "student" ||
-      user.account_type !== "admin"
-    )
-      return;
+    if (isnt_User(user)) return;
 
     try {
       const response = await fetch(
@@ -71,12 +67,7 @@ export default function Profile() {
   // posts the profile data to the User Table
   const handleSaveChanges = async () => {
     // if not a user
-    if (
-      user.account_type !== "instructor" ||
-      user.account_type !== "student" ||
-      user.account_type !== "admin"
-    )
-      return;
+    if (isnt_User(user)) return;
 
     try {
       const response = await fetch("/user/profile", {

@@ -1,5 +1,5 @@
 /* Tooltip.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Tooltip that displays additional information for the
  * instructor and student when interacting with the UI of

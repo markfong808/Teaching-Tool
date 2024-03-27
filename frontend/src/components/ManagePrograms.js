@@ -14,6 +14,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie";
 import { UserContext } from "../context/UserContext";
+import { isnt_Admin } from "../utils/checkUser";
 
 const ManagePrograms = () => {
   // General Variables
@@ -44,7 +45,7 @@ const ManagePrograms = () => {
   // fetch all programs in system
   const fetchPrograms = async () => {
     // user isn't an admin
-    if (user.account_type !== "admin") return;
+    if (isnt_Admin(user)) return;
 
     setLoading(true);
 
@@ -79,7 +80,7 @@ const ManagePrograms = () => {
   // Add a new program to the ProgramDetails Table
   const handleAddProgram = async () => {
     // user isn't an admin
-    if (user.account_type !== "admin") return;
+    if (isnt_Admin(user)) return;
 
     const url = "/program";
     try {
@@ -109,7 +110,7 @@ const ManagePrograms = () => {
   // Submit form for creating or updating a program
   const handleSaveChanges = async (e) => {
     // user isn't an admin or no program selected
-    if (user.account_type !== "admin" || !selectedProgram) return;
+    if (isnt_Admin(user) || !selectedProgram) return;
 
     const url = `/program/${selectedProgram.id}`;
     try {
@@ -139,7 +140,7 @@ const ManagePrograms = () => {
   // Delete a program from the ProgramDetails Table
   const handleDelete = async (id) => {
     // user isn't an admin
-    if (user.account_type !== "admin") return;
+    if (isnt_Admin(user)) return;
 
     if (window.confirm("Are you sure you want to delete this program?")) {
       try {
