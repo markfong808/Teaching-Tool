@@ -1,8 +1,8 @@
 /* ChooseAppointmentDatesPopup.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
- * UI popup shown when Instructor clicks on choose meeting dates button
- * in the "Programs" tab. Allows instructor to set availabilities
+ * UI popup shown when Instructor clicks on "Choose Appointment Dates" button
+ * in the "Program Details" tab. Allows instructor to set availabilities
  * based on what days times they have scheduled for program already
  *
  * Known Bugs:
@@ -38,7 +38,7 @@ const ChooseAppointmentDatesPopup = ({
   const [showPopup, setShowPopup] = useState(true);
 
   // Course Variables
-  const [course_id, setCourseId] = useState();
+  const [courseId, setCourseId] = useState();
 
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //
@@ -79,11 +79,10 @@ const ChooseAppointmentDatesPopup = ({
       if (!duration || duration === "") {
         duration = 0;
       } else {
-        duration = Number(duration); // set duration based on passed in duration
+        duration = Number(duration);
       }
 
-      // create convertedAvailability object and pass to backend call
-      convertedAvailability = {
+      const payload = {
         availabilities: convertedAvailability,
         duration: duration,
         physical_location: physical_location,
@@ -92,18 +91,23 @@ const ChooseAppointmentDatesPopup = ({
         program_id: program_id,
       };
 
-      await fetch(`/instructor/availability/${encodeURIComponent(course_id)}`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": csrfToken,
-        },
-        body: JSON.stringify(convertedAvailability),
-      });
+      const response = await fetch(
+        `/instructor/availability/${encodeURIComponent(courseId)}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrfToken,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      window.alert("Availabilities created successfully!");
-      setShowPopup(false);
+      if (response.ok) {
+        window.alert("Availabilities created successfully!");
+        setShowPopup(false);
+      }
     } catch (error) {
       console.error("Error creating availability:", error);
     }
@@ -128,12 +132,12 @@ const ChooseAppointmentDatesPopup = ({
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  // on page load, set weekly times that instructor has chosen
+  // set weekly times when data prop is changed
   useEffect(() => {
     setWeeklyTimes(data);
   }, [data]);
 
-  // on page load, set course id
+  // set course id when id prop is changed
   useEffect(() => {
     setCourseId(id);
   }, [id]);

@@ -1,7 +1,7 @@
 /* GetCookie.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
- * Helper file that has function which parses csrf_access_token and returns cookie.
+ * Helper file that has function which parses csrf_access_token and returns a cookie.
  *
  * Known bugs:
  * -
@@ -12,7 +12,7 @@
 //                 Handler Functions                  //
 ////////////////////////////////////////////////////////
 
-//
+// get the value of a cookie by name
 export function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {

@@ -1,5 +1,5 @@
 /* ProtectedRoute.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Wraps routes in App.js to only serve admins, students, and instructors when
  * they access webpages and their components on Canvas Meeting Scheduler.

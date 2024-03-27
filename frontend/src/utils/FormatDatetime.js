@@ -1,5 +1,5 @@
 /* FormatDateTime.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Helper file that handles formatting date, time, strings,
  * and retrieving the day from a given date.
@@ -13,6 +13,7 @@
 //                 Handler Functions                  //
 ////////////////////////////////////////////////////////
 
+// convert a date string into a date object
 export function formatDate(dateString) {
   const options = {
     year: "numeric",
@@ -23,6 +24,7 @@ export function formatDate(dateString) {
   return new Date(dateString + "Z").toLocaleDateString(undefined, options);
 }
 
+// format the time string to "hh:mm AM/PM"
 export function formatTime(inputTime) {
   if (/\d{1,2}:\d{2}\s[APap][Mm]/.test(inputTime)) {
     return inputTime;
@@ -35,6 +37,7 @@ export function formatTime(inputTime) {
   return `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
 }
 
+// return the week day from a date object
 export function getDayFromDate(dateString) {
   const date = new Date(dateString);
   const days = [
@@ -49,6 +52,7 @@ export function getDayFromDate(dateString) {
   return days[date.getUTCDay()];
 }
 
+// capitalize the first letter of a string
 export function capitalizeFirstLetter(string) {
   if (typeof string !== "string") return string;
   return string.charAt(0).toUpperCase() + string.slice(1);

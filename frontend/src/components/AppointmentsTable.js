@@ -1,5 +1,5 @@
 /* AppointmentsTable.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Table UI to show appointment history for Students and Instructors.
  * Students and Instructors can sort, edit, and cancel appointments.
@@ -7,7 +7,10 @@
  * can edit appointment details.
  *
  * Known bugs:
- * - Redo feedback UI
+ * - frontend and backend cancel functions haven't been thoroughly tested for bugs
+ * - configure feedback features to work with onBlur like the rest of the project(no save/cancel buttons)
+ * - appoinment details should be converted into a popup
+ * - feedback form should be converted into a popup too
  *
  */
 
@@ -39,10 +42,10 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // Appointment Data Variables
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [programDescriptions, setProgramDescriptions] = useState({}); // [type: string]: string
+  const [programDetails, setProgramDetails] = useState({}); // [type: string]: string
   const [feedbackPresent, setFeedbackPresent] = useState(false);
   const [isProvidingFeedback, setIsProvidingFeedback] = useState(false);
-  const [data, setData] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [formData, setFormData] = useState({
     notes: "",
     meeting_url: "",
@@ -78,9 +81,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           ? "instructor_appointments"
           : "student_appointments";
 
-      // sort the appointment
-
-      console.log(fetchedData);
+      // sort the appointments by date and time
       const sortedData = (fetchedData[key] || []).sort((a, b) => {
         const dateComparison = new Date(a.date) - new Date(b.date);
         if (dateComparison === 0) {
@@ -93,13 +94,13 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       });
 
       // set data to sorted data
-      setData(sortedData);
+      setAppointments(sortedData);
     } catch (error) {
       console.error("Error fetching appointment data for user:", error);
     }
   };
 
-  // fetch program details
+  // fetch program details for all programs
   const fetchProgramDetails = async () => {
     // If there's no user, we can't fetch program details
     if (!user) return;
@@ -115,9 +116,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
       const fetchedData = await response.json();
 
-      // create program details array
-      // store id, program, and description into an object
-      // store object into array
+      // store programs as objects with id, name, and description
       if (fetchedData.length > 0) {
         const programDetails = fetchedData.map((program) => ({
           id: program.id,
@@ -125,8 +124,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           description: program.description,
         }));
 
-        // set program descriptions to program details
-        setProgramDescriptions(programDetails);
+        // setProgramDetails
+        setProgramDetails(programDetails);
       }
     } catch (error) {
       console.error("Error fetching program descriptions:", error);
@@ -155,7 +154,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         feedbackExists = apiData.host_rating || apiData.instructor_notes;
       }
 
-      // set feedbackPresent to feedbackExists
+      // setFeedbackPresent to feedbackExists
       setFeedbackPresent(feedbackExists);
     } catch (error) {
       console.error("Error fetching feedback:", error);
@@ -166,8 +165,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  // called when user clicks on save changes button after providing feedback
-  // posts appointment notes, appointment url, or both to the Appointment table
+  // posts appointment notes and/or appointment url to the Appointment table
   const handleSaveChanges = async () => {
     if (!selectedAppointment) return;
 
@@ -202,11 +200,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   // called when the instructor Approve Appointment, Attended, Missing button
   // posts new status of appointment to the Appointment table
   const handleStatusUpdate = async (appointmentId, newStatus) => {
-    // Get CSRF token from the cookie.
     const payload = {
       appointment_id: appointmentId,
       status: newStatus,
     };
+
     try {
       const response = await fetch(`/appointment/update/status`, {
         method: "POST",
@@ -219,7 +217,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       });
 
       if (response.ok) {
-        // update the selected appointment with the new formData
+        // update the selected appointment status
         setSelectedAppointment({ ...selectedAppointment, status: newStatus });
         alert("Appointment status updated successfully!");
         fetchAppointments(); // re-fetch appointments
@@ -231,8 +229,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     }
   };
 
-  // called when instructor or student clicks on save changes button after providing feedback
-  // posts feedback data to Feedback table
+  // called on save changes
+  // posts feedback data to Feedback Table
   const handleProvideFeedback = async (event) => {
     event.preventDefault();
 
@@ -269,7 +267,6 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     }
   };
 
-  // called when instructor or student wants to cancel appointment
   // posts cancel status for instructor and posted for student to Appointment table
   const handleCancelAppointment = async (appointmentId) => {
     if (window.confirm("Are your sure you want to cancel this appointment?")) {
@@ -288,8 +285,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           },
         });
 
+        // successful cancel
         if (response.ok) {
-          // If the cancellation was successful, update the state to reflect that
           alert("Appointment canceled successfully!");
           setActiveTab("upcoming");
           setSelectedAppointment(null); // Deselect the appointment as it is now cancelled
@@ -307,16 +304,18 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   //                 Handler Functions                  //
   ////////////////////////////////////////////////////////
 
-  // called when instructor wants to enter appointment URL Link or appointment notes
+  // called when instructor wants to enter appointment URL or appointment notes
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    // invalid account types
     if (
-      (user.account_type !== "instructor" && e.target.name === "meeting_url") ||
-      (user.account_type !== "student" && e.target.name === "notes")
+      (user.account_type !== "instructor" && name === "meeting_url") ||
+      (user.account_type !== "student" && name === "notes")
     ) {
       return;
     }
 
-    const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
@@ -371,7 +370,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     ];
 
     // iterate through data array and sort
-    const sortedData = [...data].sort((a, b) => {
+    const sortedData = [...appointments].sort((a, b) => {
       switch (sort) {
         // sort based on appointment name
         case "Name":
@@ -407,8 +406,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       }
     });
 
-    // set data to the sortedData
-    setData(sortedData);
+    // setAppointments to sortedData
+    setAppointments(sortedData);
   };
 
   ////////////////////////////////////////////////////////
@@ -426,7 +425,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     }
   }, [selectedAppointment]);
 
-  // fetch appointments and program details when use, activeTab, or reloadTable updates
+  // fetch appointments and program details when use, activeTab, or reloadTable updates and on initial load
   useEffect(() => {
     if (!initialLoad || reloadTable) {
       fetchAppointments();
@@ -437,7 +436,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab, initialLoad, reloadTable]);
 
-  // fetch dfedback when the selectedAppointment is updated
+  // fetch feedback when selectedAppointment is updated
   useEffect(() => {
     fetchFeedback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -471,43 +470,45 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     // HTML for webpage
     return (
       <div id="feedback-form">
-        <div className="flex flex-row justify-between mt-5">
-          <h2 className="text-2xl font-bold">Feedback Form</h2>
-          <div
-            className="cursor-pointer"
-            onClick={() => setIsProvidingFeedback(false)}
-          >
-            <i className="fas fa-times"></i>
-          </div>
-        </div>
-        <div>
-          <div className="flex flex-col">
-            <label className="font-bold pt-5">
-              How satisfied are you with the appointment?
-            </label>
-            <div className="flex flex-row justify-between">
-              {satisfactionLevels.map((level) => (
-                <div key={level} className="flex flex-col">
-                  <label>{level}</label>
-                  <input
-                    type="radio"
-                    name="satisfaction" // This should match the key in feedbackData
-                    value={level}
-                    checked={feedbackData.satisfaction === level}
-                    onChange={handleFeedbackInputChange}
-                    required
-                  />
-                </div>
-              ))}
+        <div className="border bg-gray mt-2 p-5 relative">
+          <div className="flex flex-row justify-between mt-5">
+            <h2 className="m-auto text-2xl font-bold">Feedback Form</h2>
+            <div
+              className="absolute top-1 right-1 cursor-pointer"
+              onClick={() => setIsProvidingFeedback(false)}
+            >
+              <i className="fas fa-times"></i>
             </div>
-            <div id="additional-comments" className="mt-5">
-              <label className="font-bold">Please Explain</label>
-              <textarea
-                className="w-full border border-light-gray h-20"
-                name="additional_comments" // This should match the key in feedbackData
-                value={feedbackData.additional_comments}
-                onChange={handleFeedbackInputChange}
-              />
+          </div>
+          <div>
+            <div className="flex flex-col">
+              <label className="font-bold pt-5">
+                How satisfied are you with the appointment?
+              </label>
+              <div className="flex flex-row justify-between">
+                {satisfactionLevels.map((level) => (
+                  <div key={level} className="flex flex-col">
+                    <label>{level}</label>
+                    <input
+                      type="radio"
+                      name="satisfaction" // This should match the key in feedbackData
+                      value={level}
+                      checked={feedbackData.satisfaction === level}
+                      onChange={handleFeedbackInputChange}
+                      required
+                    />
+                  </div>
+                ))}
+              </div>
+              <div id="additional-comments" className="mt-5">
+                <label className="font-bold">Please Explain</label>
+                <textarea
+                  className="w-full border border-light-gray h-20"
+                  name="additional_comments" // This should match the key in feedbackData
+                  value={feedbackData.additional_comments}
+                  onChange={handleFeedbackInputChange}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -529,7 +530,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             Appointment Details
           </h2>
           <div
-            className="cursor-pointer"
+            className="absolute top-1 right-1 cursor-pointer"
             onClick={() => {
               setSelectedAppointment(null);
               setIsProvidingFeedback(false);
@@ -629,7 +630,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
               <label className="font-bold">Program&nbsp;</label>
               <Tooltip
                 text={
-                  programDescriptions.find(
+                  programDetails.find(
                     (desc) => desc.id === Number(selectedAppointment.program_id)
                   )?.description || "No description for this program :("
                 }
@@ -639,7 +640,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             </div>
 
             <label>
-              {programDescriptions.find(
+              {programDetails.find(
                 (desc) => desc.id === Number(selectedAppointment.program_id)
               )?.name || "No name for this program"}
             </label>
@@ -789,7 +790,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           renderAppointmentDetails()
         ) : (
           <table className="w-full border text-center">
-            {data.length > 0 ? (
+            {appointments.length > 0 ? (
               <>
                 <thead className="bg-purple text-white">
                   <tr>
@@ -848,7 +849,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 </thead>
                 <tbody>
                   {showTable &&
-                    data.map((appointment) => (
+                    appointments.map((appointment) => (
                       <tr
                         key={appointment.appointment_id}
                         onClick={() => handleAppointmentClick(appointment)}

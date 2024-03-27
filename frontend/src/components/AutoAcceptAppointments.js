@@ -1,7 +1,7 @@
 /* AutoAcceptAppointments.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
- * Auto accept meeting UI for Program.js
+ * Auto accept meeting UI for ProgramDetails.js
  *
  * Known Bugs:
  * -
@@ -18,52 +18,45 @@ export default function AutoAcceptAppointments({
   // update data meeting limit's based on instructor entries
   const handleLimitInputChange = (e) => {
     const { name, value } = e.target;
+    const intValue = parseInt(value, 10) || 0;
+
     let newLimitData = {
       ...data,
-      [name]: parseInt(value, 10) || 0,
+      [name]: intValue,
     };
 
     // Ensure daily limit doesn't exceed weekly or total limit
     if (name === "max_daily_meetings") {
-      if (newLimitData.max_daily_meetings > newLimitData.max_weekly_meetings) {
-        newLimitData.max_weekly_meetings = newLimitData.max_daily_meetings;
+      if (intValue > newLimitData.max_weekly_meetings) {
+        newLimitData.max_weekly_meetings = intValue;
       }
-      if (newLimitData.max_daily_meetings > newLimitData.max_monthly_meetings) {
-        newLimitData.max_monthly_meetings = newLimitData.max_daily_meetings;
+      if (intValue > newLimitData.max_monthly_meetings) {
+        newLimitData.max_monthly_meetings = intValue;
       }
     }
 
     // Ensure weekly limit is between daily limit and total limit
     if (name === "max_weekly_meetings") {
-      if (newLimitData.max_weekly_meetings < newLimitData.max_daily_meetings) {
-        newLimitData.max_daily_meetings = newLimitData.max_weekly_meetings;
+      if (intValue < newLimitData.max_daily_meetings) {
+        newLimitData.max_daily_meetings = intValue;
       }
-      if (
-        newLimitData.max_weekly_meetings > newLimitData.max_monthly_meetings
-      ) {
-        newLimitData.max_monthly_meetings = newLimitData.max_weekly_meetings;
+      if (intValue > newLimitData.max_monthly_meetings) {
+        newLimitData.max_monthly_meetings = intValue;
       }
     }
 
     // Ensure total limit isn't less than daily or weekly limit
     if (name === "max_monthly_meetings") {
-      if (newLimitData.max_monthly_meetings < newLimitData.max_daily_meetings) {
-        newLimitData.max_daily_meetings = newLimitData.max_monthly_meetings;
+      if (intValue < newLimitData.max_daily_meetings) {
+        newLimitData.max_daily_meetings = intValue;
       }
-      if (
-        newLimitData.max_monthly_meetings < newLimitData.max_weekly_meetings
-      ) {
-        newLimitData.max_weekly_meetings = newLimitData.max_monthly_meetings;
+      if (intValue < newLimitData.max_weekly_meetings) {
+        newLimitData.max_weekly_meetings = intValue;
       }
     }
 
     // update selectedProgramData with new max daily, weekly, and montly meeting numbers
-    functions.setSelectedProgramData({
-      ...data,
-      max_daily_meetings: newLimitData.max_daily_meetings,
-      max_weekly_meetings: newLimitData.max_weekly_meetings,
-      max_monthly_meetings: newLimitData.max_monthly_meetings,
-    });
+    functions.setSelectedProgramData(newLimitData);
   };
 
   ////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /* LoginSignup.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Parent component of Login.js and Signup.js where instructor,
  * student, and admin can login to Canvas Meeting Scheduler or

@@ -1,5 +1,5 @@
 /* Unauthorized.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Message rendered for unauthorized use of Canvas Meeting Scheduler.
  * User is redirected back to the home or login page.

@@ -1,5 +1,5 @@
 /* CourseDetailsPopup.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * UI Popup shown when student clicks on one of the course details buttons
  * inside the "Courses" tab. Allows student to see details about

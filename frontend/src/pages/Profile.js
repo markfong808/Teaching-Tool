@@ -1,5 +1,5 @@
-/* ProfileSettings.js
- * Last Edited: 3/24/24
+/* Profile.js
+ * Last Edited: 3/26/24
  *
  * Profile Tab for Student and Instructor account_types.
  * The Profile tab has account_type-based layouts for the
@@ -16,13 +16,13 @@ import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
 import { Tooltip } from "../components/Tooltip";
 
-export default function ProfileSettings() {
+export default function Profile() {
   // General Variables
   const csrfToken = getCookie("csrf_access_token");
   const { user } = useContext(UserContext);
 
   // Load Variables
-  const [textBoxShown, setTextBoxShown] = useState(false);
+  const [showPronounInputField, setShowPronounInputField] = useState(false);
 
   // Profile Data Variables
   const [profileData, setProfileData] = useState({}); // backup data/database-specific data
@@ -52,7 +52,7 @@ export default function ProfileSettings() {
       // set formData to their profile data
       setFormData(fetchedProfileData);
     } catch (error) {
-      console.error("Error fetching information:", error);
+      console.error("Error fetching profile data:", error);
     }
   };
 
@@ -124,28 +124,27 @@ export default function ProfileSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // show input field if user selects "Other" in pronoun dropdown menu
+  // show input field if user selects "Other" in pronouns dropdown menu
   useEffect(() => {
     if (pronounsType === "Other") {
-      setTextBoxShown(true);
+      setShowPronounInputField(true);
     } else {
-      setTextBoxShown(false);
+      setShowPronounInputField(false);
     }
   }, [pronounsType]);
 
   // reset temp variables when formData.pronouns is updated
   useEffect(() => {
     if (
-      formData.pronouns !== "Undefined" &&
-      formData.pronouns !== "He/Him" &&
-      formData.pronouns !== "She/Her" &&
-      formData.pronouns !== "They/Them"
+      ["Undefined", "He/Him", "She/Her", "They/Them"].includes(
+        formData.pronouns
+      )
     ) {
-      setPronounsType("Other");
-      setPronounsUserInput(formData.pronouns);
-    } else {
       setPronounsType(formData.pronouns);
       setPronounsUserInput("");
+    } else {
+      setPronounsType("Other");
+      setPronounsUserInput(formData.pronouns);
     }
   }, [formData.pronouns]);
 
@@ -206,7 +205,7 @@ export default function ProfileSettings() {
                 Other
               </option>
             </select>
-            {textBoxShown && (
+            {showPronounInputField && (
               <input
                 className="border border-light-gray ml-2 mt-1"
                 name="pronouns"
@@ -278,7 +277,7 @@ export default function ProfileSettings() {
             disabled
           />
 
-          {/* NEEDS TO BE IMPLEMENTED */}
+          {/* NEEDS TO BE IMPLEMENTED FOR PROGRAMS */}
           {profileData.account_type === "instructor" && (
             <div className="flex flex-col">
               <div>

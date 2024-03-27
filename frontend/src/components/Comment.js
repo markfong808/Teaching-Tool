@@ -1,5 +1,5 @@
 /* Comment.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Comment section UI within Appointment Details Popup
  * where students and instructors can enter comments about an appointment.
@@ -31,7 +31,7 @@ export default function Comment({ appointmentId }) {
   //               Fetch Get Functions                  //
   ////////////////////////////////////////////////////////
 
-  //
+  // fetches comments for the appointment
   const fetchComments = async () => {
     setIsLoading(true);
     try {
@@ -46,10 +46,13 @@ export default function Comment({ appointmentId }) {
           },
         }
       );
+
       if (response.ok) {
         const data = await response.json();
         setComments(data.comments);
-      } else {
+      }
+      // bad response checker
+      else {
         const errorText = await response.text();
         setError("Error fetching comments: " + errorText);
       }
@@ -65,7 +68,7 @@ export default function Comment({ appointmentId }) {
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
 
-  //
+  // posts a comment to the appointment
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = { appointment_comment: comment };
@@ -84,8 +87,10 @@ export default function Comment({ appointmentId }) {
       );
 
       if (response.ok) {
-        fetchComments(); // Fetch comments again to update the list
-      } else {
+        fetchComments(); // re-fetch comments
+      }
+      // bad response checker
+      else {
         const errorText = await response.text();
         alert("Error posting comment: " + errorText);
       }
@@ -94,10 +99,9 @@ export default function Comment({ appointmentId }) {
     }
   };
 
-  //
+  // delete the comment from the AppointmentComments Table
   const handleDelete = async (id) => {
     try {
-      // Replace this URL with the URL for your server's delete comment endpoint
       await fetch(
         `/${user.account_type}/appointments/${appointmentId}/comment/${id}`,
         {
@@ -109,6 +113,8 @@ export default function Comment({ appointmentId }) {
           },
         }
       );
+
+      // update comments variable with new data
       setComments(comments.filter((comment) => comment.id !== id));
     } catch (err) {
       console.error("Failed to delete comment:", err);
@@ -116,19 +122,10 @@ export default function Comment({ appointmentId }) {
   };
 
   ////////////////////////////////////////////////////////
-  //                 Handler Functions                  //
-  ////////////////////////////////////////////////////////
-
-  //
-  const handleInputChange = (e) => {
-    setComment(e.target.value);
-  };
-
-  ////////////////////////////////////////////////////////
   //                 UseEffect Functions                //
   ////////////////////////////////////////////////////////
 
-  //
+  // on initial load, fetch comments
   useEffect(() => {
     if (!initialLoad) {
       fetchComments();
@@ -151,7 +148,7 @@ export default function Comment({ appointmentId }) {
           type="text"
           name="comment"
           value={comment}
-          onChange={handleInputChange}
+          onChange={(e) => setComment(e.target.value)}
           placeholder="Add a comment..."
         />
         <button

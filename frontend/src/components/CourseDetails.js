@@ -1,7 +1,9 @@
 /* CourseDetails.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Contains the input fields for course details programs
+ * which are displayed in CourseDetailsPopup.js accessed
+ * by students
  *
  * Known bugs:
  * -
@@ -22,7 +24,7 @@ export default function CourseDetails({ courseId }) {
 
   // Load Variables
   const [load, setLoad] = useState(true);
-  const [loadProgramTable, setLoadProgramTable] = useState(true);
+  const [loadCourseTimesTable, setLoadCourseTimesTable] = useState(true);
   const [postTimes, setPostTimes] = useState(false);
 
   // Course Data
@@ -36,6 +38,7 @@ export default function CourseDetails({ courseId }) {
 
   // fetch course data for selected course
   const fetchCourseDetails = async () => {
+    // user isn't an instructor
     if (user.account_type !== "instructor") return;
 
     try {
@@ -53,7 +56,8 @@ export default function CourseDetails({ courseId }) {
 
   // fetch all times the courseId is associated with
   const fetchTimesData = async () => {
-    if (selectedCourseId === -1) {
+    // user isn't an instructor or no course is selected
+    if (selectedCourseId === -1 || user.account_type !== "instructor") {
       return;
     }
 
@@ -67,8 +71,9 @@ export default function CourseDetails({ courseId }) {
 
       const fetchedCourseTimes = await response.json();
 
+      // course times found
       if (fetchedCourseTimes !== null) {
-        // create a tempData object and loop through fetchedCourseTimes
+        // loop through fetchedCourseTimes
         const tempData = fetchedCourseTimes.reduce((acc, item) => {
           const courseId = item.course_id;
 
@@ -89,11 +94,13 @@ export default function CourseDetails({ courseId }) {
 
         // set allTimesData to tempData
         setTimes(tempData);
-      } else {
+      }
+      // no course times found
+      else {
         setTimes({});
       }
     } catch (error) {
-      console.error("Error fetching time info:", error);
+      console.error("Error fetching times:", error);
     }
   };
 
@@ -103,6 +110,9 @@ export default function CourseDetails({ courseId }) {
 
   // posts updated program data for a course to the ProgramDetails table
   const postCourseDetails = async () => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
     try {
       await fetch(`/course/details`, {
         method: "POST",
@@ -114,15 +124,18 @@ export default function CourseDetails({ courseId }) {
         body: JSON.stringify(courseData),
       });
 
+      // re-fetch course details
       fetchCourseDetails();
     } catch (error) {
       console.error("Error saving program details:", error);
     }
   };
 
-  // handleSaveChanges helper: update ProgramTimes table in database for attached course
-  // called in a UseEffect below
+  // post the times for the course to CourseTimes Table
   const postCourseTimes = async () => {
+    // user isn't an instructor
+    if (user.account_type !== "instructor") return;
+
     try {
       await fetch(`/course/times/${encodeURIComponent(courseData.id)}`, {
         method: "POST",
@@ -165,17 +178,19 @@ export default function CourseDetails({ courseId }) {
     const tempDay = e.name;
     const tempValue = e.value;
 
-    // Create a new times data object to store the times
+    // set updatedTimesData initially to times for the selected course
     let updatedTimesData = { ...times[selectedCourseId] };
 
-    // Check if the day already exists in times
+    // if no days in object
     if (tempValue.length === 0) {
-      // If e.value.length == 0, delete the day from times
+      // delete the day
       if (updatedTimesData[tempDay]) {
         delete updatedTimesData[tempDay];
       }
-    } else {
-      // If the day exists, override its values; otherwise, create a new entry
+    }
+    // if days in object
+    else {
+      // override its values
       updatedTimesData = {
         ...updatedTimesData,
         [tempDay]: {
@@ -185,15 +200,17 @@ export default function CourseDetails({ courseId }) {
       };
     }
 
+    // setTimes
     setTimes({
       ...times,
       [selectedCourseId]: updatedTimesData,
     });
 
+    // post the times to the CourseTimes Table
     setPostTimes(true);
   };
 
-  // saves all course details to database
+  // saves all course details to CourseDetails Table
   const handleSaveChanges = async () => {
     if (Object.entries(courseData).length > 0) {
       postCourseDetails();
@@ -204,7 +221,7 @@ export default function CourseDetails({ courseId }) {
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
 
-  // on initial page load, select default tab
+  // on initial page load, fetch course details and times
   useEffect(() => {
     if (!load) {
       loadData();
@@ -214,13 +231,13 @@ export default function CourseDetails({ courseId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load, user]);
 
-  // reload the child info when SelectedProgramTimesData updates
+  // reload the WeeklyCalendar data when times updates
   useEffect(() => {
-    setLoadProgramTable(true);
+    setLoadCourseTimesTable(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [times]);
 
-  // post to database once changes save
+  // post to times to CourseTimes Table when changes are made
   useEffect(() => {
     if (postTimes) {
       postCourseTimes();
@@ -229,6 +246,7 @@ export default function CourseDetails({ courseId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postTimes]);
 
+  // setSelectedCourseId when courseId changes
   useEffect(() => {
     setSelectedCourseId(courseId);
   }, [courseId]);
@@ -299,11 +317,11 @@ export default function CourseDetails({ courseId }) {
                 <WeeklyCalendar
                   functions={{
                     timesChangeFunction: handleTimesChange,
-                    loadPageFunction: setLoadProgramTable,
+                    loadPageFunction: setLoadCourseTimesTable,
                     saveChangeFunction: handleSaveChanges,
                   }}
                   times={times[selectedCourseId]}
-                  loadPage={loadProgramTable}
+                  loadPage={loadCourseTimesTable}
                   program_id={courseData.id}
                 />
               </div>

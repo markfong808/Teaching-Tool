@@ -1,11 +1,11 @@
 /* Appointment.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Appointment Confirmation UI for an appointment booked by student.
  * Called in ScheduleAppointmentPopup.js.
  *
  * Known bugs:
- * -
+ * - notes still included as a prop incase of UI changes
  *
  */
 

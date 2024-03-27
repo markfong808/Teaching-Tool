@@ -1,5 +1,5 @@
 /* Courses.js
- * Last Edited: 3/24/24
+ * Last Edited: 3/26/24
  *
  * Courses Tab for students's view of courses they're registered in,
  * details of each course, drop in times for all and specific courses,
@@ -26,15 +26,17 @@ export default function Courses() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [coursesFound, setCoursesFound] = useState(true);
   const [reloadAppointmentsTable, setReloadAppointmentsTable] = useState(false);
-  const [isScheduleMeetingPopUpVisible, setScheduleMeetingPopUpVisible] =
-    useState(false);
+  const [
+    isScheduleAppointmentPopUpVisible,
+    setScheduleAppointmentPopUpVisible,
+  ] = useState(false);
   const [isCourseDetailsPopupVisible, setCourseDetailsPopupVisible] =
     useState(false);
 
   // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState();
   const [selectedCourseName, setSelectedCourseName] = useState();
-  const [allCourseData, setAllCourseData] = useState([]);
+  const [allCoursesData, setAllCoursesData] = useState([]);
   const [courseData, setCourseData] = useState({});
   const [instructorData, setInstructorData] = useState({
     id: "",
@@ -50,6 +52,7 @@ export default function Courses() {
 
   // fetch all courses the student is associated with from database
   const fetchAllStudentCourses = async () => {
+    // user isn't a student
     if (user.account_type !== "student") return;
 
     try {
@@ -57,11 +60,11 @@ export default function Courses() {
         credentials: "include",
       });
 
-      const allCourses = await response.json();
+      const fetchedData = await response.json();
 
       // set courses a student is enrolled in with fetched data
-      if (allCourses.length > 0) {
-        setAllCourseData(allCourses);
+      if (fetchedData.length > 0) {
+        setAllCoursesData(fetchedData);
       } else {
         setCoursesFound(false);
         alert("No courses found.");
@@ -73,6 +76,9 @@ export default function Courses() {
 
   // fetch instructor details from a user based on their ID
   const fetchInstructorDetails = async (instructorId) => {
+    // user isn't a student
+    if (user.account_type !== "student") return;
+
     try {
       const response = await fetch(
         `/user/profile/${encodeURIComponent(instructorId)}`,
@@ -94,7 +100,8 @@ export default function Courses() {
   //               Handler Functions                    //
   ////////////////////////////////////////////////////////
 
-  // called when a student clicks on one of the courses they're registered in
+  // called when a student clicks on a Course Details button
+  // show CourseDetailsPopup
   const handleButtonClick = (course) => {
     setCourseDetails(course.id);
 
@@ -110,13 +117,15 @@ export default function Courses() {
       return;
     }
 
-    // change selectedCourseId
+    // setSelectedCourseId
     setSelectedCourseId(parseInt(e.target.value));
 
-    const course = allCourseData.find(
+    // find course
+    const course = allCoursesData.find(
       (course) => course.id === parseInt(e.target.value)
     );
 
+    // setSelectedCourseName
     if (course) {
       setSelectedCourseName(course.course_name);
     } else {
@@ -135,12 +144,14 @@ export default function Courses() {
       return;
     }
 
-    const selectedCourse = allCourseData.find(
+    // find course
+    const selectedCourse = allCoursesData.find(
       (course) => course.id === courseId
     );
 
+    // if course was found
     if (selectedCourse) {
-      // update courseData with selectedCourse
+      // setCourseData
       setCourseData(selectedCourse);
 
       // fetch instructor details from selected course
@@ -152,6 +163,7 @@ export default function Courses() {
   //               UseEffect Function                   //
   ////////////////////////////////////////////////////////
 
+  // called only once
   // on initial page load, fetchCourseList()
   useEffect(() => {
     if (!initialLoad) {
@@ -170,7 +182,7 @@ export default function Courses() {
     <div>
       <div className="flex flex-col m-auto relative justify-center items-center">
         <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
-          {allCourseData.map((course) => (
+          {allCoursesData.map((course) => (
             <button
               key={course.id}
               className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
@@ -193,7 +205,7 @@ export default function Courses() {
             <option key={-1} value="">
               Select...
             </option>
-            {allCourseData.map((course) => (
+            {allCoursesData.map((course) => (
               <option key={course.id} value={course.id}>
                 {course.course_name}
               </option>
@@ -221,7 +233,9 @@ export default function Courses() {
               coursesFound ? "hover:text-gold" : "opacity-50"
             }`}
             onClick={() =>
-              setScheduleMeetingPopUpVisible(!isScheduleMeetingPopUpVisible)
+              setScheduleAppointmentPopUpVisible(
+                !isScheduleAppointmentPopUpVisible
+              )
             }
             disabled={!coursesFound}
           >
@@ -240,14 +254,15 @@ export default function Courses() {
         </div>
       )}
 
-      {isScheduleMeetingPopUpVisible && (
+      {isScheduleAppointmentPopUpVisible && (
         <div className="fixed inset-0">
           <ScheduleAppointmentPopup
-            onClose={() => setScheduleMeetingPopUpVisible(false)}
+            onClose={() => setScheduleAppointmentPopUpVisible(false)}
             functions={{ reloadAppointments: reloadAppointments }}
           />
         </div>
       )}
+
       {/* Empty Space at bottom of webpage */}
       <div className="p-10"></div>
     </div>

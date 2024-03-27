@@ -1,11 +1,10 @@
-/* ManageTimes.js
- * Last Edited: 3/24/24
+/* Times.js
+ * Last Edited: 3/26/24
  *
- * Manage Times tab for the Instructor account_type.
- * Allows instructor to see availibility table and
- * Manage Availability for global and per course programs.
+ * Times tab for the Instructor account_type.
+ * Allows instructor to manage availabilities for global and per course programs.
  * In addition, the instructor can see a table of Upcoming, Pending, and Past meetings and
- * cancel any meetings that are upcoming.
+ * update any meetings that are upcoming.
  *
  * Known Bugs:
  * -
@@ -26,7 +25,7 @@ export default function Times() {
 
   // Course Data Variables
   const [selectedCourseId, setSelectedCourseId] = useState(-1);
-  const [allCourseData, setAllCourseData] = useState([]);
+  const [allCoursesData, setAllCoursesData] = useState([]);
 
   ////////////////////////////////////////////////////////
   //               Fetch Get Functions                  //
@@ -34,6 +33,7 @@ export default function Times() {
 
   // fetch all courses the instructor is associated with
   const fetchAllInstructorCourses = async () => {
+    // user isn't an instructor
     if (user.account_type !== "instructor") return;
 
     try {
@@ -43,8 +43,8 @@ export default function Times() {
 
       const fetchedCourses = await response.json();
 
-      // set all the course data to the instructor's fetched courses
-      setAllCourseData(fetchedCourses);
+      // setAllCoursesData to the instructor's fetched courses
+      setAllCoursesData(fetchedCourses);
     } catch (error) {
       console.error("Error fetching instructor courses:", error);
     }
@@ -62,7 +62,7 @@ export default function Times() {
 
     const selectedCourse = parseInt(e.target.value);
 
-    // set selectedCourseId to the selectedCourse from instructor option choice
+    // setSelectedCourseId to selectedCourse
     setSelectedCourseId(selectedCourse);
   };
 
@@ -100,7 +100,7 @@ export default function Times() {
           <option key={-1} value="-1">
             All Courses
           </option>
-          {allCourseData.map((course) => (
+          {allCoursesData.map((course) => (
             <option key={course.id} value={course.id}>
               {course.course_name}
             </option>
@@ -113,6 +113,7 @@ export default function Times() {
       <div className="flex flex-col w-3/4 p-5 m-auto border border-light-gray rounded-md shadow-md mt-5">
         <AppointmentsTable courseId={selectedCourseId} reloadTable={false} />
       </div>
+
       {/* Empty Space at bottom of webpage */}
       <div className="p-10"></div>
     </div>

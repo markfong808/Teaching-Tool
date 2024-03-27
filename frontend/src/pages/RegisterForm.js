@@ -1,5 +1,5 @@
 /* RegisterForm.js
- * Last Edited: 3/25/24
+ * Last Edited: 3/26/24
  *
  * Register tab of the Canvas Meeting Scheduler when user
  * visits website.
