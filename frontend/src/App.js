@@ -23,7 +23,6 @@ import Unauthorized from "./context/Unauthorized";
 import Times from "./pages/Times";
 import ProgramDetails from "./pages/ProgramDetails";
 import Profile from "./pages/Profile";
-import AdminContent from "./pages/AdminContent";
 
 function App() {
   ////////////////////////////////////////////////////////
@@ -48,7 +47,7 @@ function App() {
             path="/admin"
             element={
               <ProtectedRoute allowedAccountTypes={["admin"]}>
-                <AdminContent />
+                <Home />
               </ProtectedRoute>
             }
           />

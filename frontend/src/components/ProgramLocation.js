@@ -37,23 +37,14 @@ export default function ProgramLocation({
   // conditional rendering of boxes if isCourseLocation is true or not
   return (
     <div className={"w-full m-auto"}>
-      <div
-        className={
-          isCourseInfoProgram
-            ? "flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5"
-            : "flex flex-row p-5 border border-light-gray rounded-md shadow-md m-auto mt-5 justify-between"
-        }
-      >
-        <div className="flex">
-          <label className="whitespace-nowrap font-bold text-2xl mb-2">
-            {isCourseInfoProgram
-              ? "Set Course Details:"
-              : "Set Program Location:"}
-          </label>
-        </div>
+      <div className={isCourseInfoProgram ? "flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5"
+      : "flex flex-row p-5 border border-light-gray rounded-md shadow-md m-auto mt-5 justify-between"}>
 
+        <div className="flex relative">
+          <label className="whitespace-nowrap font-bold text-2xl mb-2"> {isCourseInfoProgram ? "Set Course Details:" : "Set Program Location:"}</label>
+      
         {isCourseInfoProgram && (
-          <div className="flex flex-row items-center mb-2">
+          <div className="absolute right-0 top-2 flex flex-row items-center mb-2">
             <label className="whitespace-nowrap">Quarter:</label>
             <select
               className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
@@ -80,23 +71,11 @@ export default function ProgramLocation({
             </select>
           </div>
         )}
+      </div>
 
-        <div
-          className={
-            isCourseInfoProgram
-              ? "flex flex-row items-center mb-2"
-              : "flex flex-row items-center mb-1"
-          }
-        >
-          <label
-            className={
-              isCourseInfoProgram
-                ? "whitespace-nowrap"
-                : "whitespace-nowrap ml-2"
-            }
-          >
-            In-Person Location:
-          </label>
+    <div className ="flex flex-row relative">
+        <div className={isCourseInfoProgram ? "flex flex-row items-center mb-2": "flex flex-row items-center mb-1"}>
+          <label className={isCourseInfoProgram? "whitespace-nowrap": "whitespace-nowrap ml-2"}>In-Person Location:</label>
           <input
             className="border border-light-gray ml-2 w-40 hover:bg-gray"
             name={"physical_location"}
@@ -105,13 +84,9 @@ export default function ProgramLocation({
             onBlur={functions.saveChangeFunction}
           />
         </div>
-        <div
-          className={
-            isCourseInfoProgram
-              ? "flex flex-row items-center mb-2"
-              : "flex flex-row items-center mb-1"
-          }
-        >
+        
+        
+        <div className={isCourseInfoProgram ? "absolute right-0 flex flex-row items-center mb-2": "flex flex-row items-center mb-1"}>
           <label className={"whitespace-nowrap"}>Virtual Meeting Link:</label>
           <input
             className="border border-light-gray ml-2 w-40 hover:bg-gray"
@@ -121,32 +96,31 @@ export default function ProgramLocation({
             onBlur={functions.saveChangeFunction}
           />
         </div>
+      </div>
 
         {isCourseInfoProgram && (
           <>
-            <div className="flex flex-row items-center mb-2">
-              <label className="whitespace-nowrap">
-                Course Recordings Link:
-              </label>
-              <input
-                className="border border-light-gray ml-2 w-40 hover:bg-gray"
-                name="recordings_link"
-                value={data.recordings_link ?? ""}
-                onChange={handleInputChange}
-                onBlur={functions.saveChangeFunction}
-              />
-            </div>
-
-            <div className="flex flex-row items-center mb-2">
-              <label className="whitespace-nowrap">Discord Link:</label>
-              <input
-                className="border border-light-gray ml-2 w-40 hover:bg-gray"
-                name="discord_link"
-                value={data.discord_link ?? ""}
-                onChange={handleInputChange}
-                onBlur={functions.saveChangeFunction}
-              />
-            </div>
+            <div className="flex flex-row items-center mb-2 relative">
+                <label className="whitespace-nowrap">Course Recordings Link:</label>
+                <input
+                  className="border border-light-gray ml-2 w-40 hover:bg-gray"
+                  name="recordings_link"
+                  value={data.recordings_link ?? ""}
+                  onChange={handleInputChange}
+                  onBlur={functions.saveChangeFunction}
+                />
+              
+              <div className="absolute right-0">
+                <label className="whitespace-nowrap">Discord Link:</label>
+                <input
+                  className="border border-light-gray ml-2 w-40 hover:bg-gray"
+                  name="discord_link"
+                  value={data.discord_link ?? ""}
+                  onChange={handleInputChange}
+                  onBlur={functions.saveChangeFunction}
+                />
+              </div>
+              </div>
           </>
         )}
       </div>

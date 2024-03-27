@@ -471,15 +471,16 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     // HTML for webpage
     return (
       <div id="feedback-form">
-        <div className="flex flex-row justify-between mt-5">
-          <h2 className="text-2xl font-bold">Feedback Form</h2>
-          <div
-            className="cursor-pointer"
-            onClick={() => setIsProvidingFeedback(false)}
-          >
-            <i className="fas fa-times"></i>
+        <div className="border bg-gray mt-2 p-5 relative">
+          <div className="flex flex-row justify-between mt-5">
+            <h2 className="m-auto text-2xl font-bold">Feedback Form</h2>
+            <div
+              className="absolute top-1 right-1 cursor-pointer"
+              onClick={() => setIsProvidingFeedback(false)}
+            >
+              <i className="fas fa-times"></i>
+            </div>
           </div>
-        </div>
         <div>
           <div className="flex flex-col">
             <label className="font-bold pt-5">
@@ -500,14 +501,15 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 </div>
               ))}
             </div>
-            <div id="additional-comments" className="mt-5">
-              <label className="font-bold">Please Explain</label>
-              <textarea
-                className="w-full border border-light-gray h-20"
-                name="additional_comments" // This should match the key in feedbackData
-                value={feedbackData.additional_comments}
-                onChange={handleFeedbackInputChange}
-              />
+              <div id="additional-comments" className="mt-5">
+                <label className="font-bold">Please Explain</label>
+                <textarea
+                  className="w-full border border-light-gray h-20"
+                  name="additional_comments" // This should match the key in feedbackData
+                  value={feedbackData.additional_comments}
+                  onChange={handleFeedbackInputChange}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -529,7 +531,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             Appointment Details
           </h2>
           <div
-            className="cursor-pointer"
+            className="absolute top-1 right-1 cursor-pointer"
             onClick={() => {
               setSelectedAppointment(null);
               setIsProvidingFeedback(false);
