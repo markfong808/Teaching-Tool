@@ -22,21 +22,23 @@ export function Tooltip({ text, children, flip }) {
 
   // HTML for webpage
   return (
+    // Define Tooltip component 
+    // When instructor or student hovers over Tooltip, set isVisible flag to true
     <div
-      className={`relative inline-block hover:cursor-pointer ${
-        flip ? "origin-bottom-left" : "origin-bottom-right"
-      }`}
+      className={`relative inline-block hover:cursor-pointer ${flip ? "origin-bottom-left" : "origin-bottom-right"
+        }`}
       id="tooltip-container"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >
       {children}
+
+      {/* If Tooltip visible, display text */}
       {isVisible && (
         <div
           id="tooltip"
-          className={`bg-dark-gray text-white rounded-md p-2 w-[400px] absolute ${
-            flip ? "bottom-full right-0" : "bottom-full left-0"
-          } overflow-auto z-10`}
+          className={`bg-dark-gray text-white rounded-md p-2 w-[400px] absolute ${flip ? "bottom-full right-0" : "bottom-full left-0"
+            } overflow-auto z-10`}
         >
           {text}
         </div>

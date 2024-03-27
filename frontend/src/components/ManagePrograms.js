@@ -225,10 +225,12 @@ const ManagePrograms = () => {
   ////////////////////////////////////////////////////////
 
   if (loading) {
+    // if page is loading with fetched programs, display message
     return <div>Loading...</div>;
   }
 
   if (error) {
+    // display error message if Program can't be deleted or fetched, or form can't be submitted  
     return <div>Error: {error}</div>;
   }
 
@@ -241,10 +243,15 @@ const ManagePrograms = () => {
     const isFormComplete =
       formData.name && formData.description && formData.duration;
 
+    // HTML for webpage 
     return (
+      // Define New Program Form for adding a new Program
       <div className="flex flex-col p-5 w-2/3 m-auto border border-light-gray rounded-md shadow-md">
         <div className="flex flex-row">
+          {/* Add Details Here heading */}
           <h2 className="font-bold m-auto text-2xl">Add Details Here</h2>
+
+          {/* Close button of New Program Form */}
           <div
             className="cursor-pointer"
             onClick={() => setIsAddingNewProgram(false)}
@@ -252,7 +259,10 @@ const ManagePrograms = () => {
             <i className="fas fa-times"></i>
           </div>
         </div>
+
+        {/* Display Program information */}
         <div className="flex flex-col">
+          {/* Name label and input field */}
           <label className="font-bold">Name</label>
           <input
             className="border border-light-gray mb-3"
@@ -262,6 +272,8 @@ const ManagePrograms = () => {
             onChange={handleInputChange}
             required
           />
+
+          {/* Description label and text area */}
           <label className="font-bold">Description</label>
           <textarea
             className="border border-light-gray mb-3"
@@ -270,6 +282,8 @@ const ManagePrograms = () => {
             onChange={handleInputChange}
             required
           />
+
+          {/* Duration label and input field */}
           <label className="font-bold">Duration (mins)</label>
           <input
             className="border border-light-gray mb-3 w-[100px]"
@@ -280,8 +294,11 @@ const ManagePrograms = () => {
             required
           />
         </div>
+
+        {/* If admin's filled out form, they can add the new Program */}
         {isFormComplete && (
           <div className="flex justify-end">
+            {/* Submit button */}
             <button
               className="bg-purple text-white p-2 rounded-md"
               onClick={handleAddProgram}
@@ -300,10 +317,15 @@ const ManagePrograms = () => {
       return null;
     }
 
+    // HTML for webpage
     return (
+      // Define Program Form for editing  
       <div className="flex flex-col w-2/3 m-auto p-5 border border-light-gray rounded-md shadow-md">
         <div className="flex flex-row">
+          {/* Details heading */}
           <h2 className="font-bold text-2xl m-auto">Details</h2>
+
+          {/* Close button of Program Details Form */}
           <div
             className="cursor-pointer"
             onClick={() => setSelectedProgram(null)}
@@ -311,7 +333,10 @@ const ManagePrograms = () => {
             <i className="fas fa-times"></i>
           </div>
         </div>
+
+        {/* Admin can delete program */}
         <div className="flex justify-end">
+          {/* Delete Program button */}
           <button
             className="bg-purple text-white hover:text-gold p-2 rounded-md"
             onClick={() => handleDelete(selectedProgram.id)}
@@ -319,7 +344,10 @@ const ManagePrograms = () => {
             Delete Program
           </button>
         </div>
+
+        {/* Display Program information */}
         <div className="flex flex-col">
+          {/* Name label and input field */}
           <label className="font-bold">Name</label>
           <input
             className="border border-light-gray mb-3"
@@ -328,6 +356,8 @@ const ManagePrograms = () => {
             value={formData.name}
             onChange={handleInputChange}
           />
+
+          {/* Description label and text area */}
           <label className="font-bold">Description</label>
           <textarea
             className="border border-light-gray mb-3"
@@ -335,6 +365,8 @@ const ManagePrograms = () => {
             value={formData.description}
             onChange={handleInputChange}
           />
+
+          {/* Duration label and input field */}
           <label className="font-bold">Duration (mins)</label>
           <input
             className="border border-light-gray mb-3"
@@ -343,15 +375,21 @@ const ManagePrograms = () => {
             value={formData.duration}
             onChange={handleInputChange}
           />
+
         </div>
+
+        {/* If changes made to Program Name, Description, and Duration, admin can save or cancel changes */}
         {changesMade && (
           <div className="flex justify-end">
+            {/* Save Changes button */}
             <button
               className="bg-purple text-white hover:text-gold p-2 rounded-md"
               onClick={handleSaveChanges}
             >
               Save Changes
             </button>
+
+            {/* Cancel Changes button */}
             <button
               className="bg-purple text-white hover:text-gold p-2 ml-2 rounded-md"
               onClick={handleCancelChanges}
@@ -366,12 +404,19 @@ const ManagePrograms = () => {
 
   // HTML for webpage
   return (
+    // Container for ManagePrograms webpage
     <div className="w-2/3 m-auto">
+      {/* Call either render function based on if a Program is selected or not */}
       {selectedProgram ? renderProgramDetails() : renderNewProgramForm()}
+      {/* If there's no Program selected and admin isn't adding a new Program, display table of Programs */}
       {!selectedProgram && !isAddingNewProgram && (
         <div>
+          {/* Manage Programs header */}
           <h1 className="text-center text-2xl font-bold">Manage Programs</h1>
+          
+          {/* Admin can add new Program*/}
           <div className="flex justify-end my-5">
+            {/* Add New Program button */}
             <button
               className="bg-purple text-white hover:text-gold p-2 rounded-md"
               onClick={handleNewProgramClick}
@@ -379,14 +424,24 @@ const ManagePrograms = () => {
               Add New Program
             </button>
           </div>
+
+         {/* Table to display Programs */}
           <table className="border m-auto w-full">
+            {/* Table headers to display Program information categories */}
             <thead className="bg-purple text-white">
               <tr>
+                {/* Name header */}
                 <th className="border-r text-start">Name</th>
+
+                {/* Description header */}
                 <th className="border-r text-start">Description</th>
+
+                {/* Duration header */}
                 <th className="border-r text-start">Duration</th>
               </tr>
             </thead>
+
+            {/* Table body to display existing Programs */}
             <tbody>
               {programs.map((program) => (
                 <tr
@@ -394,10 +449,15 @@ const ManagePrograms = () => {
                   key={program.id}
                   onClick={() => handleProgramClick(program)}
                 >
+                  {/* Table cell to display Program Name */}
                   <td className="border-r underline text-blue cursor-pointer">
                     {program.name}
                   </td>
+
+                  {/* Table cell to display Program Description */}
                   <td className="border-r">{program.description}</td>
+
+                  {/* Table cell to display Program Duration */}
                   <td className="border-r">{program.duration} mins</td>
                 </tr>
               ))}

@@ -107,19 +107,25 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
   ////////////////////////////////////////////////////////
 
   if (!user) {
+    // if no user, display message below
     return <div>Loading user data...</div>;
   }
 
   // HTML for webpage
   return (
+    // Define UserProfile component 
     <div className="flex flex-col p-5 w-2/3 m-auto border border-light-gray rounded-md shadow-md">
       <div className="flex flex-row">
+        {/* Account Details label */}
         <h1 className="font-bold m-auto text-2xl">Account Details</h1>
+
+        {/* Close button */}
         <div className="cursor-pointer" onClick={onClose}>
           <i className="fas fa-times"></i>
         </div>
       </div>
 
+      {/* Name label and input field */}
       <label className="font-bold">Name</label>
       <input
         className="border border-light-gray mb-3"
@@ -129,6 +135,7 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
         onChange={handleInputChange}
       />
 
+      {/* ID label and input field */}
       <label className="font-bold">ID</label>
       <input
         className="border border-light-gray bg-gray mb-3"
@@ -138,6 +145,7 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
         disabled
       />
 
+      {/* Email label and input field */}
       <label className="font-bold">Email</label>
       <input
         className="border border-light-gray bg-gray mb-3"
@@ -147,6 +155,7 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
         disabled
       />
 
+      {/* Account Type label and input field */}
       <label className="font-bold">Account Type</label>
       <input
         className="border border-light-gray bg-gray mb-3"
@@ -156,14 +165,18 @@ export default function UserProfile({ user, onUserUpdate, onClose }) {
         disabled
       />
 
+      {/* If admin makes changes to name for account, changes can be saved or cancelled */}
       {changesMade && (
         <div className="flex justify-end">
+          {/* Save Changes button */}
           <button
             className="bg-purple text-white hover:text-gold rounded-md p-2"
             onClick={handleSaveChanges}
           >
             Save Changes
           </button>
+
+          {/* Cancel Changes button */}
           <button
             className="bg-purple text-white hover:text-gold rounded-md p-2 ml-2"
             onClick={handleCancelChanges}

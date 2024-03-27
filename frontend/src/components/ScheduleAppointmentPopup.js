@@ -363,6 +363,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // If booking is confirmed, render the Appointment component
   if (bookingConfirmed) {
     return (
+      // Once booking is confirmed, call Appointment component and pass Appointment Details
       <Appointment
         program_name={
           selectedCourseData.programs.find(
@@ -389,6 +390,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
 
   // HTML for webpage
   return (
+    // Define ScheduleAppointmentPopup component dimensions, color, and position for display
     <div
       className={
         expandPopup
@@ -396,15 +398,21 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
           : "fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-6 relative"
       }
     >
+      {/* Button to close out of ScheduleAppointmentPopup */}
       <button
         className="absolute top-1 right-1 cursor-pointer fas fa-times"
         onClick={onClose}
       ></button>
+
+      {/* Student selects Course they want to schedule Appointment for */}
       <div className="flex flex-col p-5 m-auto">
         <div className="flex items-center">
+          {/* Course label */}
           <h1 className="whitespace-nowrap">
             <strong>Course:</strong>
           </h1>
+
+          {/* Course selection */}
           <select
             className="border border-light-gray rounded ml-2 mt-1"
             id="course-dropdown"
@@ -421,12 +429,17 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
             ))}
           </select>
         </div>
+
+        {/* Student picks Program once Course is selected */}
         {isCourseSelected && (
           <div className="flex flex-col mt-3">
             <div id="dropdown" className="flex flex-row">
+              {/* Program label */}
               <h1 className="whitespace-nowrap">
                 <strong>Program:</strong>
               </h1>
+
+              {/* Program selection */}
               <select
                 className="border border-light-gray rounded ml-2"
                 id="course-dropdown"
@@ -443,8 +456,11 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
                 ))}
               </select>
             </div>
+
+            {/* Display Program description if instructor set one and student picked a Program */}
             <div className="mt-2">
               {programDescriptions.length > 0 && selectedProgramId !== "" && (
+                // Program description label and content
                 <div>
                   <label className="font-bold">Description: </label>
                   <p>
@@ -455,9 +471,12 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
                 </div>
               )}
             </div>
+
+            {/* Display calendar to student once they pick a Course and Program */}
             <div className="flex">
               {showCalendar && (
                 <div className="w-4/5">
+                  {/* Call ScheduleMeeting component */}
                   <ScheduleMeeting
                     borderRadius={10}
                     primaryColor="#4b2e83"
@@ -467,29 +486,42 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
                   />
                 </div>
               )}
+
+              {/* Once student picks a date and time for an appointment, they can see the details of selected Appointment */}
               {showAppointmentPanel && selectedTimeslot && (
                 <div className="rounded shadow-2xl w-1/3 m-4">
                   <div className="m-5">
+                    {/* Appointment Details */}
                     <h3 className="text-center pb-5 font-bold">
                       Appointment Details
                     </h3>
+                  
+                    {/* Program Name of Appointment */}
                     <p className="pb-2">
                       <b>Name</b>:{" "}
                       {selectedCourseData.programs.find(
                         (name) => name.id === selectedProgramId
                       )?.name || ""}
                     </p>
+
+                    {/* Date of Appointment */}
                     <p className="pb-2">
                       <b>Date</b>: {format(selectedTimeslot.startTime, "PPPP")}
                     </p>
+
+                    {/* Selected time slot for Appointment */}
                     <p className="pb-2">
                       <b>Time</b>: {format(selectedTimeslot.startTime, "p")} -{" "}
                       {format(selectedTimeslot.availableTimeslot.endTime, "p")}{" "}
                       (PST)
                     </p>
+
+                    {/* Duration for Appointment */}
                     <p className="pb-2">
                       <b>Duration:</b> {selectedTimeDuration} minutes
                     </p>
+
+                    {/* Appointment note label and text area */}
                     <label>
                       <b>Notes</b> (optional):
                     </label>
@@ -500,16 +532,21 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
                       onChange={(e) => setAppointmentNotes(e.target.value)}
                       placeholder="Please share anything that will help us prepare for the meeting."
                     />
+                    
+                    {/* Button container */}
                     <div
                       id="button-container"
                       className="flex flex-row justify-end"
                     >
+                      {/* Confirm button */}
                       <button
                         onClick={bookAppointment}
                         className="bg-purple text-white p-2 rounded mr-3 mt-5 "
                       >
                         Confirm
                       </button>
+
+                      {/* Cancel button */}
                       <button
                         onClick={cancelSelectedSlot}
                         className="bg-purple text-white p-2 rounded mt-5"

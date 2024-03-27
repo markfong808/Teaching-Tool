@@ -141,10 +141,14 @@ export default function DropinsTable({ courseId, courseName }) {
 
   // HTML for webpage
   return (
+    // Define Drop-Ins Table component 
     <div className="flex flex-col w-full m-auto items-center">
+      {/* Course Drop-Ins header or if no Course selected, inform student to select a Course */}
       <div className="text-center font-bold text-2xl pb-5">
         <h1>{courseName ? `${courseName} Drop-Ins` : "Select A Course"}</h1>
       </div>
+
+      {/* Show table button that lets students show or hide Drop-Ins table */}
       <button
         className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-end"
         onClick={() => setShowTable(!showTable)}
@@ -152,23 +156,30 @@ export default function DropinsTable({ courseId, courseName }) {
         {showTable ? "Hide Table" : "Show Table"}
       </button>
 
+      {/* Table to display Drop-Ins */}
       <div id="table" className="w-11/12">
         <table className="w-full border text-center">
           {dropinAvailabilties.length > 0 ? (
             <>
+             {/* Table headers to display Drop-In information categories and allow sorting */}
               <thead className="border-b border-light-gray bg-purple text-white">
+                {/* Name header */}
                 <th
                   className="border-r border-light-gray w-14% cursor-pointer hover:bg-gold"
                   onClick={() => sortBy("Name")}
                 >
                   Name
                 </th>
+
+                {/* Day header */}
                 <th
                   className="border-r border-light-gray w-8% cursor-pointer hover:bg-gold"
                   onClick={() => sortBy("Day")}
                 >
                   Day
                 </th>
+
+                {/* Date header */}
                 <th
                   className={`border-r border-light-gray w-12% cursor-pointer ${
                     hoveringDateOrTime ? "bg-gold" : ""
@@ -179,6 +190,8 @@ export default function DropinsTable({ courseId, courseName }) {
                 >
                   Date
                 </th>
+
+                {/* Time header */}
                 <th
                   className={`border-r border-light-gray w-12% cursor-pointer ${
                     hoveringDateOrTime ? "bg-gold" : ""
@@ -190,17 +203,28 @@ export default function DropinsTable({ courseId, courseName }) {
                   Time (PST)
                 </th>
               </thead>
+
+              {/* Table body to display existing Drop-Ins */}
               <tbody>
                 {showTable &&
                   dropinAvailabilties.map((availability) => (
+                    // Table row to map each row to a Drop-In
                     <tr className="border" key={availability.id}>
+
+                      {/* Table cell to display Drop-In Program name */}
                       <td className="border-r">{availability.name}</td>
+
+                      {/* Table cell to display Drop-In day */}
                       <td className="border-r">
                         {getDayFromDate(availability.date)}
                       </td>
+
+                      {/* Table cell to display Drop-In date */}
                       <td className="border-r">
                         {formatDate(availability.date)}
                       </td>
+
+                      {/* Table cell to display Drop-In start and end time */}
                       <td className="border-r">
                         {formatTime(availability.start_time)} -{" "}
                         {formatTime(availability.end_time)}{" "}
@@ -210,6 +234,7 @@ export default function DropinsTable({ courseId, courseName }) {
               </tbody>
             </>
           ) : (
+              /* Show graphic to student if no Drop-Ins Available */
             <tbody>
               <tr>
                 <td colSpan="5">

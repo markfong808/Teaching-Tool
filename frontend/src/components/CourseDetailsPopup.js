@@ -26,41 +26,54 @@ const CourseDetailsPopup = ({ onClose, courseData, instructorData }) => {
         onClick={onClose}
       ></button>
 
-      {/* Header for Course name*/}
+      {/* Course Name header */}
       <h2 className="pb-10 text-center font-bold text-4xl">
         {courseData.course_name}
       </h2>
 
       {/* Grid showing selected Course and its details*/}
       <div className="grid grid-cols-2 font-bold">
+        {/* Left  Side of the CourseDetailsPopup  */}
         <div className="flex flex-col">
+          {/* Course Times label and span */}
           <label>
             {" "}
             Course Times:{" "}
             <span className="font-normal">{courseData.course_times.times}</span>
           </label>
+
+          {/* Course Location label and span */}
           <label>
             {" "}
             Course Location:{" "}
             <span className="font-normal">{courseData.physical_location}</span>
           </label>
+
+          {/* Course Recordings Link label and span */}
           <label>
             {" "}
             Course Recordings Link:{" "}
             <span className="font-normal"> {courseData.recordings_link}</span>
           </label>
+
+          {/* Comments label and paragraph */}
           <label>
             {" "}
             Comments: &nbsp;{" "}
             <p className="font-normal">{courseData.comments}</p>
           </label>
         </div>
+
+        {/* Right Side of the CourseDetailsPopup  */}
         <div className="flex flex-col justify-self-end">
+          {/* Office Hours label and span */}
           <label>
             {" "}
             Office Hours:{" "}
             <span className="font-normal">{courseData.office_hours.times}</span>
           </label>
+
+          {/* Office Hours Location label and span */}
           <label>
             {" "}
             Office Hours Location:{" "}
@@ -68,11 +81,15 @@ const CourseDetailsPopup = ({ onClose, courseData, instructorData }) => {
               {courseData.office_hours.physical_location}
             </span>
           </label>
+
+          {/* Office Hours URL label and span */}
           <label>
             {" "}
             Office Hours URL:{" "}
             <span className="font-normal">{courseData.office_hours.link}</span>
           </label>
+
+          {/* Instructor label and span */}
           <label>
             {" "}
             Instructor:{" "}
@@ -81,6 +98,8 @@ const CourseDetailsPopup = ({ onClose, courseData, instructorData }) => {
               {instructorData.title} {instructorData.name}
             </span>
           </label>
+
+          {/* Discord Link label and span */}
           <label>
             {" "}
             Discord Link:{" "}

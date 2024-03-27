@@ -186,6 +186,7 @@ export default function Courses() {
         {/* Displays Course Details buttons of all Courses a student is enrolled in currently */}
         <div className="flex flex-row w-2/3 p-5 m-auto justify-center">
           {allCoursesData.map((course) => (
+            // Course Details Button 
             <button
               key={course.id}
               className="m-2 p-2 border border-light-gray rounded-md shadow-md font-bold"
@@ -196,11 +197,14 @@ export default function Courses() {
           ))}
         </div>
 
-        {/* Container that allows students to choose which Course they want to see Drop-Ins for */}
+        {/* Students can choose which Course they want to see Drop-Ins for */}
         <div className="flex w-2/3">
+          {/* Course header */}
           <h1>
             <strong>Course:</strong>
           </h1>
+          
+          {/* Course Selection */}
           <select
             className="border border-light-gray rounded ml-2 hover:cursor-pointer"
             value={selectedCourseId}
@@ -233,8 +237,9 @@ export default function Courses() {
           />
         </div>
 
-        {/* Button students can interact with to schedule a new appointment for a Course */}
+        {/* Schedule New Appointment Button students can interact with to schedule a new appointment for a Course */}
         <div className="flex flex-col w-1/6 p-2 m-auto border border-light-gray rounded-md shadow-md mt-5">
+          {/* Schedule New Appointment Button */}
           <button
             className={`bg-purple p-2 rounded-md text-white ${
               coursesFound ? "hover:text-gold" : "opacity-50"

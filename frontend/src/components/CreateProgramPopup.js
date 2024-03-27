@@ -143,15 +143,22 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
 
   // HTML for webpage
   return (
+    // Define CreateProgramPopup component dimensions, color, and position for display
     <div className="fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-7 relative">
+      {/* Button to close out of CreateProgramPopup */}
       <button
         className="absolute top-1 right-1 cursor-pointer fas fa-times"
         onClick={onClose}
       ></button>
+
+      {/* Display Program Name label and input field for instructor to enter Program Name */}
       <div className="flex flex-col items-center">
+        {/* Program Name label */}
         <div className="mb-1">
           <label className="font-bold text-lg">Program Name</label>
         </div>
+
+        {/* Program Name input field */}
         <div className="flex items-center">
           <input
             className="border border-light-gray hover:bg-gray"
@@ -161,7 +168,9 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
         </div>
       </div>
 
+      {/* Instructor selects if Program is Drop-Ins or Appointment Based */}
       <div className="mt-4 flex justify-center">
+        {/* Drop-Ins button */}
         <button
           className={`w-36 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl mr-2 hover:bg-gray ${
             isDropIns ? "bg-gold" : "bg-white"
@@ -170,6 +179,8 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
         >
           Drop-Ins
         </button>
+
+        {/* Appointment Based button */}
         <button
           className={`w-40 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl ml-2 p-1 hover:bg-gray ${
             isAppointments ? "bg-gold" : "bg-white"
@@ -180,7 +191,9 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
         </button>
       </div>
 
+      {/* Instructor selects if Program is Range Based or is for Specific Dates */}
       <div className="mt-4 flex justify-center">
+        {/* Range Based button */}
         <button
           className={`w-36 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl mr-2 hover:bg-gray ${
             isRangeBased ? "bg-gold" : "bg-white"
@@ -189,6 +202,8 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
         >
           Range Based
         </button>
+
+        {/* Specific Dates button */}
         <button
           className={`w-40 h-28 font-bold border border-light-gray rounded-md shadow-md text-2xl ml-2 p-1 hover:bg-gray ${
             isSpecificDates ? "bg-gold" : "bg-white"
@@ -199,8 +214,10 @@ const CreateProgramPopup = ({ onClose, courseId, loadFunction }) => {
         </button>
       </div>
 
+      {/* Once instructor enters Program and its details, the create button shows*/}
       {readyToCreate && (
         <div className="flex justify-center mt-4">
+          {/* Create button */}
           <button
             className="bg-purple font-bold text-white rounded-md text-2xl px-5 py-1 hover:text-gold"
             onClick={createProgram}

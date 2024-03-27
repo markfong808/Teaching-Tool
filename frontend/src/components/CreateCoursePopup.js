@@ -79,15 +79,22 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
 
   // HTML for webpage
   return (
+    // Define CreateCoursePopup component dimensions, color, and position for display
     <div className="fixed top-1/2 left-1/2 w-1/4 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-7 relative">
+      {/* Button to close out of CreateCoursePopup */}
       <button
         className="absolute top-1 right-1 cursor-pointer fas fa-times"
         onClick={onClose}
       ></button>
+
+      {/* Display Course Name label and input field for instructor to enter Course Name */}
       <div className="flex flex-col items-center">
+        {/* Course Name label */}
         <div className="mb-1">
           <label className="font-bold text-lg">Course Name</label>
         </div>
+        
+        {/* Course Name input field */}
         <div className="flex items-center">
           <input
             className="border border-light-gray hover:bg-gray"
@@ -97,8 +104,10 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
         </div>
       </div>
 
+      {/* Once instructor enters Course name, the create button shows*/}
       {readyToCreate && (
         <div className="flex justify-center mt-4">
+          {/* Create button */}
           <button
             className="bg-purple font-bold text-white rounded-md text-2xl px-5 py-1 hover:text-gold"
             onClick={createCourse}

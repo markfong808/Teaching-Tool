@@ -90,10 +90,13 @@ export default function Times() {
     <div className="flex flex-col m-auto mt-8">
       {/* Course selection when an instructor wants to see Availabilities for all Courses */}
       <div className="w-3/4 p-5 m-auto items-center">
+        {/* Course header */}
         <h1 className="inline-block">
           {" "}
           <strong>Course:</strong>
         </h1>
+
+        {/* Course Selection */}
         <select
           className="border border-light-gray rounded ml-2 hover:cursor-pointer"
           id="course-dropdown"

@@ -211,30 +211,39 @@ export default function CreateAppointmentBlock({
   }, [showPopup]);
 
   return (
+    // Define CreateAppointmentBlock popup component dimensions, color, and position for display
     <div className="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-calendar-popup-gray border border-gray-300 shadow-md pb-7 relative">
+      {/* Button to close out of CreateCoursePopup */}
       <button
         className="absolute top-1 right-1 cursor-pointer fas fa-times"
         onClick={onClose}
       ></button>
+
+      {/* Define Calendar container */}
       <div className="w-11/12 m-auto font-body">
         <div id="calendar-container" className="">
           <div className="flex flex-col items-center">
+            {/* Label to inform instructor on how to interact with the popup */}
             <h2 className="font-bold pt-5">
               Enter Dates Along With Their Times
             </h2>
 
+            {/* Call Calendar component */}
             <Calendar
               onChange={handleCalendarChange}
               minDate={new Date()} // disables past dates from being selected
             />
-
+            
+            {/* Display date instructor has selected */}
             {dateSelected && <label>{format(date, "MMMM do, yyyy")}</label>}
 
             <br />
 
+            {/* Instructor enters time once date is chosen */}
             {showTimePicker && (
               <div className="flex flex-col items-center py-5">
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  {/* Call SingleInputTimeRangeField */}
                   <SingleInputTimeRangeField
                     label="Set Time"
                     value={[timeBlock.start_time, timeBlock.end_time]}
@@ -247,11 +256,15 @@ export default function CreateAppointmentBlock({
           </div>
         </div>
 
+        {/* Once instructor picks date and defines time block, they can define duration Drop-In or Appointment */}
         {showDuration && (
           <div className="flex flex-row items-center mt-4">
+            {/* Appointment duration label */}
             <label className="whitespace-nowrap font-bold text-xl">
               Define Appointment Duration?
             </label>
+
+            {/* Appointment duration checkbox */}
             <input
               type="checkbox"
               id="myCheckbox"
@@ -259,7 +272,10 @@ export default function CreateAppointmentBlock({
               checked={showDurationInputField}
               onChange={showBox}
             ></input>
+           
+            {/* Show duration input field if instructor clicks on checkbox */}
             {showDurationInputField && (
+              // Appointment duration input field
               <div className="flex items-end">
                 <input
                   className="border border-light-gray ml-3 mt-1 w-20 hover:bg-gray"
@@ -271,11 +287,15 @@ export default function CreateAppointmentBlock({
                     handleDurationChange(numericValue);
                   }}
                 />
+
+                {/* Minutes label once instructor clicks on checkbox to enter duration */}
                 <label className="whitespace-nowrap font-bold text-sm ml-1">
                   minutes
                 </label>
               </div>
             )}
+
+            {/* Create button */}
             <button
               className={`ms-auto font-bold border border-light-gray rounded-md shadow-md text-sm px-2 py-2`}
               onClick={createTimeSlot}

@@ -674,10 +674,12 @@ export default function ProgramDetails() {
                       : "p-5"
                   }`}
                 >
-                  {/* Course selection menu */}
+                  {/* Course header */}
                   <h1>
                     <strong>Course:</strong>
                   </h1>
+
+                  {/* Course selection */}
                   <select
                     className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
                     id="course-dropdown"
@@ -725,7 +727,7 @@ export default function ProgramDetails() {
                 <strong>Program:</strong>
               </h1>
 
-              {/* Program selection for instructors*/}
+              {/* Program selection */}
               <select
                 className="border border-light-gray rounded ml-2 hover:bg-gray hover:cursor-pointer"
                 id="course-dropdown"
@@ -788,12 +790,15 @@ export default function ProgramDetails() {
                   <>
                     {/* Display if Program is Drop-Ins or Appointment and Range Based or Specific Dates */}
                     <div className="flex justify-center items-center">
+                      {/* Drop-Ins or Appointment button */}
                       <button
                         className="w-12% font-bold border border-light-gray bg-gray rounded-md shadow-md px-1 py-1 mb-2 mr-1"
                         disabled
                       >
                         {isDropinsLayout ? "Drop-Ins" : "Appointment Based"}
                       </button>
+
+                      {/* Range Based or Specific Dates button */}
                       <button
                         className="w-12% font-bold border border-light-gray bg-gray rounded-md shadow-md px-1 py-1 mb-2 ml-1"
                         disabled
@@ -854,6 +859,7 @@ export default function ProgramDetails() {
                           <div className="w-3/4 m-auto">
                             <div className="flex flex-col p-5 border border-light-gray rounded-md shadow-md mt-5">
                               <div>
+                                {/* Program Description label */}
                                 <label className="font-bold">
                                   Program Description &nbsp;
                                 </label>
@@ -910,6 +916,7 @@ export default function ProgramDetails() {
                             ) : (
                               // If Drop-Ins or Appointments for specific Dates, render Create Appointment Block button
                               !isRangedBasedLayout && (
+                                // Create Appointment Block button
                                 <button
                                   className="flex flex-row p-5 m-auto mt-5 justify-center font-bold border border-light-gray rounded-md shadow-md text-xl px-5 py-3 hover:bg-gray"
                                   onClick={() =>
@@ -923,6 +930,7 @@ export default function ProgramDetails() {
                               )
                             )}
 
+                            {/* Display Weekly Calendar once location is entered */}
                             {locationChecker === true &&
                               (isRangedBasedLayout ? (
                                 <>
@@ -945,10 +953,11 @@ export default function ProgramDetails() {
                                       program_id={selectedProgramData.id}
                                     />
                                   </div>
-
+                                  
+                                  {/* Display Duration element for instructor to use if Appointment or Drop-In has duration */}
                                   {showDurationDetails && (
                                     <div className="flex flex-row items-center mt-4 p-5 border border-light-gray rounded-md shadow-md mt-5">
-                                      {/* Appointment duration label */}
+                                      {/* Define Appointment Duration? label */}
                                       <label className="whitespace-nowrap font-bold text-2xl">
                                         Define Appointment Duration?
                                       </label>
@@ -961,6 +970,7 @@ export default function ProgramDetails() {
                                         onChange={showBox}
                                       ></input>
 
+                                      {/* Display Duration input field if instructor wants to add duration */}
                                       {showDurationInputField && (
                                         <div className="flex items-end">
                                           {/* Appointment duration input field */}

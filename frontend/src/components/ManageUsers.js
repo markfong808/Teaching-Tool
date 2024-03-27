@@ -180,20 +180,26 @@ export default function ManageUsers() {
 
   // HTML for webpage
   return (
+    // Container for the ManageUsers webpage
     <div className="flex flex-col w-2/3 m-auto">
       {selectedUser ? (
+        // If admin clicks on user's name when looking at user accounts, call UserProfile component to see user account details
         <UserProfile
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
           onUserUpdate={fetchUsers}
         />
       ) : (
+        // Admins can choose which users to manage based on user account type
         <div className="">
+          {/* Manage Users label*/}
           <h1 className="text-2xl font-bold">Manage Users</h1>
+          {/* User account type selection*/}
           <select
             className="border border-light-gray"
             onChange={handleUserTypeChange}
           >
+          {/* User account type options */}
             <option value="">Select User Type</option>
             {Object.keys(groupUsersByAccountType).map((account_type) => (
               <option key={account_type} value={account_type}>
@@ -201,7 +207,10 @@ export default function ManageUsers() {
               </option>
             ))}
           </select>
+
+          {/* Once admin selects user type, they can view all users of same type and edit information */}
           {selectedUserType && (
+            // Input field to filter user type
             <div>
               <input
                 className="border border-light-gray w-1/3 my-5"
@@ -209,7 +218,10 @@ export default function ManageUsers() {
                 placeholder="Filter"
                 onChange={handleFilter}
               />
+
+              {/* Table to display Canvas Meeting Scheduler users */}
               <table className="border w-full">
+                {/* Table headers to display user account information categories */}
                 <thead className="bg-purple text-white">
                   <tr>
                     <th className="text-start border-r">ID</th>
@@ -219,7 +231,10 @@ export default function ManageUsers() {
                     <th className="text-start border-r">Status</th>
                   </tr>
                 </thead>
+
+                {/* Table body to display existing Canvas Meeting Scheduler users */}
                 <tbody>
+                  {/* Call function to group users by selected user account type */}
                   {groupUsersByAccountType[selectedUserType]
                     .filter(
                       (user) =>
@@ -230,15 +245,23 @@ export default function ManageUsers() {
                         user.status.toLowerCase().includes(query)
                     )
                     .map((user) => (
+                      // Table row to display user account information
                       <tr className="border-b" key={user.id}>
+                        {/* Table cell to display user id */}
                         <td className="border-r w-[75px]">{user.id}</td>
+
+                        {/* Table cell to display user name */}
                         <td
                           className="border-r text-blue underline cursor-pointer"
                           onClick={() => handleUserNameClick(user)}
                         >
                           {user.name}
                         </td>
+
+                        {/* Table cell to display user email */}
                         <td className="border-r">{user.email}</td>
+
+                        {/* Table cell for display and edit user account type */}
                         <td className="border-r w-[125px]">
                           <div>
                             <select
@@ -250,6 +273,7 @@ export default function ManageUsers() {
                                 )
                               }
                             >
+                              {/* Account type options: Admin, Instructor, or student  */}
                               <option value="">
                                 {capitalizeFirstLetter(user.account_type)}
                               </option>
@@ -259,8 +283,11 @@ export default function ManageUsers() {
                             </select>
                           </div>
                         </td>
+
+                        {/* Table Cell to display and edit user account status */}
                         <td className="border-r w-[125px]">
                           <div>
+                            {/* Account status selection */}
                             <select
                               onChange={(e) =>
                                 handleAccountStatusChange(
@@ -270,6 +297,7 @@ export default function ManageUsers() {
                                 )
                               }
                             >
+                            {/* Account status options: Active or Inactive */}
                               <option value="">
                                 {capitalizeFirstLetter(user.status)}
                               </option>

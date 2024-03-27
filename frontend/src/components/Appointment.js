@@ -30,11 +30,13 @@ export default function Appointment({
   return (
     // Define Appointment popup component's dimensions, color, and position for display
     <div className="fixed top-1/2 left-1/2 w-3/5 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-light-gray shadow-md p-5">
-      {/* Define label for Appointment status and Appointment popup close button */}
       <div className="flex flex-row justify-between">
+        {/* Appointment Status label */}
         <h2 className="text-2xl">
           Appointment Status: {capitalizeFirstLetter(status)}!
         </h2>
+
+        {/* Appointment popup close button */}
         <div className="cursor-pointer" onClick={resetBooking}>
           <i className="absolute top-1 right-1 fas fa-times"></i>
         </div>
@@ -56,16 +58,23 @@ export default function Appointment({
 
       {/* Appointment details for student to view after reservation */}
       <div>
+        {/* Program Name Label */}
         <p>
           <strong>Name:</strong> {program_name}
         </p>
+
+        {/* Date Label */}
         <p>
           <strong>Date:</strong> {format(selectedTimeslot.startTime, "PPPP")}
         </p>
+
+        {/* Start and End Time Label */}
         <p>
           <strong>Time:</strong> {format(selectedTimeslot.startTime, "p")} -{" "}
           {format(selectedTimeslot.availableTimeslot.endTime, "p")}
         </p>
+
+        {/* Duration Label */}
         <p>
           <strong>Duration:</strong>{" "}
           {format(
@@ -75,9 +84,13 @@ export default function Appointment({
           )}{" "}
           minutes
         </p>
+
+        {/* In-Person Location Label */}
         <p>
           <strong>In-Person Location:</strong> {location}
         </p>
+
+        {/* Meeting URL Label */}
         <p>
           <strong>Meeting URL:</strong> {meetingURL}
         </p>

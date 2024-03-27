@@ -188,6 +188,7 @@ export default function WeeklyCalendar({
   // render the weekday labels with object creation on click
   const renderWeekdayHeader = (day) => {
     return (
+      // Define weekday table header labels and interaction
       <th
         className={`border-r w-1/5 hover:cursor-pointer ${
           showTimeEntryField[day] ? "bg-light-gray" : "bg-white"
@@ -203,10 +204,12 @@ export default function WeeklyCalendar({
   // render the SingleInputTimeRangeField UI for each weekday
   const renderWeekdayBody = (day) => {
     return (
+      // Define weekday table cell and interaction where instructor can set times
       <td>
         {showTimeEntryField[day] && (
           <div className={`flex flex-col items-center`}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
+              {/* Call SingleInputTimeRangeField */}
               <SingleInputTimeRangeField
                 label="Set Time"
                 value={[localTimes[day].start_time, localTimes[day].end_time]}
@@ -222,13 +225,17 @@ export default function WeeklyCalendar({
 
   // HTML for webpage
   return (
+    // Define WeeklyCalendar component 
     <div>
+      {/* Set Program Times label */}
       <div className="font-bold text-2xl mb-4">
         <label className="whitespace-nowrap">Set Program Times:</label>
       </div>
 
+      {/* Table that displays Weekly Calendar days and times*/}
       <div>
         <table className="w-full">
+          {/* Call helper function to render Weekly Calendar table header for each day */}
           <thead className="border">
             <tr>
               {renderWeekdayHeader("Monday")}
@@ -241,6 +248,7 @@ export default function WeeklyCalendar({
 
           <br />
 
+          {/* Call helper function to render Weekly Calendar table body for each day */}
           <tbody>
             {renderWeekdayBody("Monday")}
             {renderWeekdayBody("Tuesday")}

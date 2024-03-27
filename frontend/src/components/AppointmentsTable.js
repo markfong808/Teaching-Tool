@@ -494,8 +494,10 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         {/* Define border and color of Feedback Form*/}
         <div className="border bg-gray mt-2 p-5 relative">
           <div className="flex flex-row justify-between mt-5">
-            {/* Feedback Form title and close button of Feedback Form */}
+            {/* Feedback Form header */}
             <h2 className="m-auto text-2xl font-bold">Feedback Form</h2>
+
+            {/* Feedback Form close button */}
             <div
               className="absolute top-1 right-1 cursor-pointer"
               onClick={() => setIsProvidingFeedback(false)}
@@ -504,16 +506,21 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             </div>
           </div>
 
+          {/* Feedback satisfaction scale for student and instructor to interact with about an attended Appointment */}
           <div>
-            {/* Feedback satisfaction scale for student and instructor */}
             <div className="flex flex-col">
+              {/*  How satisfied are you with the appointment? label */}
               <label className="font-bold pt-5">
                 How satisfied are you with the appointment?
               </label>
+
               <div className="flex flex-row justify-between">
                 {satisfactionLevels.map((level) => (
                   <div key={level} className="flex flex-col">
+                    {/* Satisfaction level label */}
                     <label>{level}</label>
+
+                    {/* Satisfaction level input toggle button */}
                     <input
                       type="radio"
                       name="satisfaction" // This should match the key in feedbackData
@@ -526,9 +533,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 ))}
               </div>
 
-              {/* Text area for student and instructor to write about satisfaction */}
+              {/* Students and isntructors can provide in-depth feedback about satisfaction */}
               <div id="additional-comments" className="mt-5">
+                {/* Please Explain label*/}
                 <label className="font-bold">Please Explain</label>
+                {/* Text area for student and instructor to write about satisfaction */}
                 <textarea
                   className="w-full border border-light-gray h-20"
                   name="additional_comments" // This should match the key in feedbackData
@@ -553,11 +562,13 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     return (
       // Define AppointmentDetails popup dimensions, color, and position for display
       <div className="fixed top-1/2 left-1/2 w-11/12 transform -translate-x-1/2 -translate-y-1/2 bg-popup-gray border border-gray-300 shadow-md p-8 relative">
-        {/* Label for Appointment Details and close button for popup */}
         <div className="flex flex-row ">
+          {/* Appointment Details Label */}
           <h2 className="m-auto text-2xl font-body font-bold">
             Appointment Details
           </h2>
+
+          {/* Appointment Details popup close button */}
           <div
             className="absolute top-1 right-1 cursor-pointer"
             onClick={() => {
@@ -577,6 +588,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {((user.account_type === "student" && activeTab !== "past") ||
               (user.account_type === "instructor" &&
                 activeTab === "upcoming")) && (
+              // Cancel Appointment button 
               <button
                 className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                 onClick={() =>
@@ -590,6 +602,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {/* Instructor can approve or cancel appointment */}
             {user.account_type === "instructor" && activeTab === "pending" && (
               <div>
+                {/* Approve Appointment button */}
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
@@ -602,6 +615,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 >
                   Approve Appointment
                 </button>
+
+                {/* Cancel Appointment button */}
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
@@ -617,6 +632,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {/* Allow instructor can indicate that appointment was attended or missed when appointment date passed */}
             {user.account_type === "instructor" && activeTab === "past" && (
               <div className="flex flex-row">
+
+                {/* Attended button */}
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
@@ -629,6 +646,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 >
                   Attended
                 </button>
+
+                {/* Missed button */}
                 <button
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
@@ -648,6 +667,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {activeTab === "past" && !feedbackPresent && (
               <div className="flex flex-row ml-2 mt-3">
                 <br />
+                {/* Provide Feedback button */ }
                 <button
                   className=" bg-purple text-white hover:bg-gold rounded-md p-2"
                   onClick={handleFeedbackClick}
@@ -666,7 +686,10 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           {/* Left Side of the Appointment Details showing program, date, and time */}
           <div className="flex flex-col">
             <div className="flex flex-row">
+              {/* Program label */}
               <label className="font-bold">Program&nbsp;</label>
+
+              {/* Tooltip to aid students and instructors in what the purpose of Program is*/}
               <Tooltip
                 text={
                   programDetails.find(
@@ -678,17 +701,20 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
               </Tooltip>
             </div>
 
+            {/* Program Name label */}
             <label>
               {programDetails.find(
                 (desc) => desc.id === Number(selectedAppointment.program_id)
               )?.name || "No name for this program"}
             </label>
 
+            {/* Appointment Date label */}
             <label className="font-bold pt-2">Date</label>
             {getDayFromDate(selectedAppointment.date) +
               ", " +
               formatDate(selectedAppointment.date)}
 
+            {/* Appointment Start and End Time label */}
             <label className="font-bold pt-2">Time</label>
             {`${formatTime(selectedAppointment.start_time)} - ${formatTime(
               selectedAppointment.end_time
@@ -697,19 +723,26 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
           {/* Right Side of the Appointment Details showing Course, Physical Location, and Current Status */}
           <div className="flex flex-col justify-self-end">
+            {/* Course label */}
             <label className="font-bold pt-2">Course</label>
             {selectedAppointment.course_name}
 
+            {/* Display physical location if it exists for Appointment */}
             {selectedAppointment.physical_location ? (
               <>
+                {/* Physical Location label */}
                 <label className="font-bold pt-2">Physical Location</label>
                 {selectedAppointment.physical_location}
               </>
             ) : null}
 
+            {/* Display Meeting URL if it exists for Appointment */}
             {selectedAppointment.meeting_url ? (
               <>
+                {/* Your Appointment URL label */}
                 <label className="font-bold pt-2">Your Appointment URL</label>
+               
+                {/* Your Appointment URL input field for instructors to change */}
                 <input
                   className={`w-full ${
                     user.account_type !== "instructor"
@@ -728,14 +761,18 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
               </>
             ) : null}
 
+            {/* Current Status label */}
             <label className="font-bold pt-2">Current Status</label>
             {capitalizeFirstLetter(selectedAppointment.status)}
           </div>
         </div>
 
+        {/* Display text box for notes about Appointment */}
         <div className="flex flex-col">
-          {/* Display text box for notes about Appointment */}
+          {/* Appointment Notes label */}
           <label className="font-bold pt-2">Appointment Notes</label>
+
+          {/* Appointment Notes text area */}
           <textarea
             className={`w-full h-20 ${
               user.account_type !== "student" ? "" : "border border-light-gray"
@@ -751,13 +788,18 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           {user.account_type === "instructor" &&
             selectedAppointment.attendee && (
               <div className="flex flex-col pt-5">
+                {/* Student Info header */}
                 <h2 className="text-2xl font-bold">Student Info</h2>
+
+                {/* Student Name label */}
                 <label className="font-bold pt-2">Name</label>
                 {selectedAppointment.attendee.name}
 
+                {/* Student Pronouns label */}
                 <label className="font-bold pt-2">Pronouns</label>
                 {selectedAppointment.attendee.pronouns}
 
+                {/* Student Email label */}
                 <label className="font-bold pt-2">Email</label>
                 {selectedAppointment.attendee.email}
               </div>
@@ -768,15 +810,20 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             selectedAppointment.host &&
             activeTab !== "pending" && (
               <div className="flex flex-col pt-5">
+                {/* Instructor Info header */}
                 <h2 className="text-2xl font-bold">Instructor Info</h2>
+
+                {/* Instructor Name label */}
                 <label className="font-bold pt-2">Name</label>
                 {selectedAppointment.host.title +
                   " " +
                   selectedAppointment.host.name}
 
+                {/* Instructor Pronouns label */}
                 <label className="font-bold pt-2">Pronouns</label>
                 {selectedAppointment.host.pronouns}
 
+                {/* Instructor Email label */}
                 <label className="font-bold pt-2">Email</label>
                 {selectedAppointment.host.email}
               </div>
@@ -797,23 +844,30 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       id="content-container"
       className="flex flex-col w-full m-auto items-center"
     >
-      {/* Appointments label with upcoming, pending, and past tabs */}
+      {/* Appointments label */}
       <div className="font-bold text-center text-2xl">
         <h1>Your {capitalizeFirstLetter(activeTab)} Appointments</h1>
       </div>
+
+      {/* Upcoming, Pending, and Past Tabs */}
       <div id="tabs" className="p-2 m-2 rounded-md">
+        {/* Upcoming button */}
         <button
           className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold"
           onClick={() => handleTabClick("upcoming")}
         >
           Upcoming
         </button>
+
+        {/* Pending button */}
         <button
           className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold"
           onClick={() => handleTabClick("pending")}
         >
           Pending
         </button>
+
+        {/* Past button */}
         <button
           className="bg-purple p-2 m-2 rounded-md text-white hover:text-gold"
           onClick={() => handleTabClick("past")}
@@ -830,35 +884,42 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         {showTable ? "Hide Table" : "Show Table"}
       </button>
 
-      {/* Appointments table itself */}
+      {/* Appointments table */}
       <div id="table" className="w-11/12">
         {selectedAppointment ? (
           renderAppointmentDetails()
         ) : (
-          // Table headers for Appointment table allows sorting by details relevant to Appointment
+          // Table headers to display Availability information categories and allow sorting
           <table className="w-full border text-center">
             {appointments.length > 0 ? (
               <>
                 <thead className="bg-purple text-white">
                   <tr>
+                    {/* Program Name header */}
                     <th
                       className="border-r w-14% hover:bg-gold"
                       onClick={() => sortBy("Name")}
                     >
                       Program Name
                     </th>
+
+                    {/* Course Name header */}
                     <th
                       className="border-r w-14% cursor-pointer hover:bg-gold"
                       onClick={() => sortBy("course_name")}
                     >
                       Course Name
                     </th>
+
+                    {/* Day header */}
                     <th
                       className="border-r w-8% hover:bg-gold"
                       onClick={() => sortBy("Day")}
                     >
                       Day
                     </th>
+
+                    {/* Date header */}
                     <th
                       className={`border-r w-12% hover:bg-gold ${
                         hoveringDateOrTime ? "bg-gold" : ""
@@ -869,6 +930,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                     >
                       Date
                     </th>
+
+                    {/* Time header */}
                     <th
                       className={`border-r w-12% hover:bg-gold ${
                         hoveringDateOrTime ? "bg-gold" : ""
@@ -879,13 +942,19 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                     >
                       Time (PST)
                     </th>
+
+                    {/* Physical Location header */}
                     <th
                       className="border-r w-12% hover:bg-gold"
                       onClick={() => sortBy("Location")}
                     >
                       Physical Location
                     </th>
+
+                    {/* Appointment URL header */}
                     <th className="border-r w-14%">Appointment URL</th>
+
+                    {/* Appointment Status header */}
                     <th
                       className="w-6% hover:bg-gold"
                       onClick={() => sortBy("Status")}
@@ -904,18 +973,27 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                         onClick={() => handleAppointmentClick(appointment)}
                         className="cursor-pointer hover:bg-gray border-b"
                       >
+                        {/* Table cell to display Appointment Name */}
                         <td className="border-r">
                           {appointment.name || "-------"}
                         </td>
+
+                        {/* Table cell to display Appointment Course Name */}
                         <td className="border-r">
                           {appointment.course_name || "-------"}
                         </td>
+
+                        {/* Table cell to display Appointment day */}
                         <td className="border-r">
                           {getDayFromDate(appointment.date) || "-------"}
                         </td>
+
+                        {/* Table cell to display Appointment date */}
                         <td className="border-r">
                           {formatDate(appointment.date) || "-------"}
                         </td>
+
+                        {/* Table cell to display Appointment Start and End times */}
                         <td className="border-r">
                           {appointment.start_time && appointment.end_time
                             ? `${formatTime(
@@ -923,12 +1001,18 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                               )} - ${formatTime(appointment.end_time)}`
                             : "-------"}
                         </td>
+
+                        {/* Table cell to display Appointment Physical Location */}
                         <td className="border-r">
                           {appointment.physical_location || "-------"}
                         </td>
+
+                        {/* Table cell to display Appointment Meeting URL */}
                         <td className="border-r">
                           {appointment.meeting_url || "-------"}
                         </td>
+
+                        {/* Table cell to display Appointment Status*/}
                         <td>
                           {capitalizeFirstLetter(appointment.status) ||
                             "-------"}

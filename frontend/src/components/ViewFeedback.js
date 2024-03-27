@@ -104,8 +104,12 @@ export default function ViewFeedback() {
 
   // HTML for webpage
   return (
+    // Container for View Feedback webpage
     <div className="flex flex-col m-auto w-2/3">
+      {/* View Feedback label */}
       <h1 className="text-2xl font-bold text-center">View Feedback</h1>
+
+      {/* Download Feedback Details button */}
       <div className="flex flex-row justify-end py-5">
         <button
           className="bg-purple text-white p-2 hover:text-gold rounded-md"
@@ -114,7 +118,10 @@ export default function ViewFeedback() {
           Download Feedback Details
         </button>
       </div>
+
+      {/* Table that shows admin feedbacks for Appointments */}
       <table className="w-full border">
+        {/* Table headers for Appointment feedback information categories */}
         <thead className="bg-purple text-white">
           <tr>
             <th className="border-r text-start">Appointment Type</th>
@@ -124,6 +131,8 @@ export default function ViewFeedback() {
             <th className="border-r text-start">instructor Feedback</th>
           </tr>
         </thead>
+
+        {/* Table body showing Appointment feedback notes and ids of instructors and students */}
         <tbody>
           {feedbackList.map((feedback, index) => (
             <tr className="border-b" key={index}>
@@ -138,6 +147,8 @@ export default function ViewFeedback() {
           ))}
         </tbody>
       </table>
+
+      {/* If no feedback is present, display that none exist to admin */}
       {feedbackList.length === 0 && <p>No feedback data available.</p>}
     </div>
   );

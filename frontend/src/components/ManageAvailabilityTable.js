@@ -215,10 +215,14 @@ export default function ManageAvailabilityTable({ courseId }) {
 
   // HTML for webpage
   return (
+    // Define ManageAvailabilityTable component 
     <div className="flex flex-col w-full m-auto items-center">
+      {/* Manage Availability header */}
       <div className="text-center font-bold text-2xl pb-5">
         <h1>Manage Availability</h1>
       </div>
+
+      {/* Show table button that lets instructors show or hide Availabilities table */}
       <button
         className="font-bold border border-light-gray rounded-md shadow-md text-sm px-3 py-1 mb-2 place-self-end"
         onClick={() => setShowTable(!showTable)}
@@ -226,24 +230,33 @@ export default function ManageAvailabilityTable({ courseId }) {
         {showTable ? "Hide Table" : "Show Table"}
       </button>
 
+      {/* Table to display Availabilities */}
       <div className="w-11/12">
         <table className="w-full border text-center">
+          {/* Table headers to display Availability information categories and allow sorting */}
           <thead className="border-b border-light-gray bg-purple text-white">
+            {/* Program Name header */}
             <th
               className="border-r border-light-gray w-14% cursor-pointer hover:bg-gold"
               onClick={() => sortBy("Name")}
             >
               Program Name
             </th>
+
+            {/* Course Name header only shown if Course is associated with Availability */ }
             {courseId !== -1 && (
               <th className="border-r border-light-gray w-14%">Course Name</th>
             )}
+
+            {/* Day header */}
             <th
               className="border-r border-light-gray w-8% cursor-pointer hover:bg-gold"
               onClick={() => sortBy("Day")}
             >
               Day
             </th>
+
+            {/* Date header */}
             <th
               className={`border-r border-light-gray w-12% cursor-pointer ${
                 hoveringDateOrTime ? "bg-gold" : ""
@@ -254,6 +267,8 @@ export default function ManageAvailabilityTable({ courseId }) {
             >
               Date
             </th>
+
+            {/* Time header */}
             <th
               className={`border-r border-light-gray w-12% cursor-pointer ${
                 hoveringDateOrTime ? "bg-gold" : ""
@@ -264,44 +279,67 @@ export default function ManageAvailabilityTable({ courseId }) {
             >
               Time (PST)
             </th>
+
+            {/* Drop-Ins? header */}
             <th
               className="border-r border-light-gray w-6% cursor-pointer hover:bg-gold"
               onClick={() => sortBy("Dropins")}
             >
               Drop-Ins?
             </th>
+
+            {/* Status header */}
             <th
               className="border-r border-light-gray w-6% cursor-pointer hover:bg-gold"
               onClick={() => sortBy("Status")}
             >
               Status
             </th>
+
+            {/* Delete? header */}
             <th className="w-6%">Delete?</th>
           </thead>
+
+          {/* Table body to display Availabilities */}
           <tbody>
+            {/* If instructor has show table button, show Availabilities created */}
             {showTable &&
               data.map((availability) => (
                 <tr className="border" key={availability.id}>
+                  {/* Table cell to display Program name associated with Availability */}
                   <td className="border-r">{availability.name}</td>
+
                   {courseId !== -1 && (
+                    // Display Course name if there's a course associated with Availability
                     <td className="border-r">
                       {availability.course_name
                         ? availability.course_name
                         : "-------"}
                     </td>
                   )}
+
+                  {/* Table cell to display Availability Day */}
                   <td className="border-r">
                     {getDayFromDate(availability.date)}
                   </td>
+
+                  {/* Table cell to display Availability date */}
                   <td className="border-r">{formatDate(availability.date)}</td>
+
+                  {/* Table cell to display Availability start time and end time */}
                   <td className="border-r">
                     {formatTime(availability.start_time)} -{" "}
                     {formatTime(availability.end_time)}{" "}
                   </td>
+
+                  {/* Table cell to display if Availability is Drop-Ins */}
                   <td className="border-r">
                     {availability.isDropins ? "Yes" : "No"}
                   </td>
+
+                  {/* Table cell to display Availability status */}
                   <td className="border-r">
+                    {/* Availability status selection allows instructors to change Availability status from active to inactive and vice versa */}
                     <select
                       onChange={(e) =>
                         handleAvailabilityStatusChange(
@@ -312,6 +350,7 @@ export default function ManageAvailabilityTable({ courseId }) {
                       className="hover:cursor-pointer hover:bg-gray"
                       value={capitalizeFirstLetter(availability.status)}
                     >
+                      {/* Availability status options are active or inactive */}
                       <option value="" className="bg-white">
                         {capitalizeFirstLetter(availability.status)}
                       </option>
@@ -329,7 +368,10 @@ export default function ManageAvailabilityTable({ courseId }) {
                       </option>
                     </select>
                   </td>
+
+                  {/* Table cell to display delete button for an Availability if instructor wants to delete */}
                   <td className="hover:cursor-pointer hover:bg-gray">
+                    {/* Delete button */}
                     <button
                       onClick={() => handleDeleteAvailability(availability.id)}
                     >
