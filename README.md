@@ -14,7 +14,7 @@ Welcome to the UWB Canvas Meeting Scheduler! This guide will help you get starte
 1. **Clone the Repository**:
 
 ```bash
-git clone https://dev.azure.com/software-engineering-studio/studio-course/_git/mentor-network
+git clone https://software-engineering-studio@dev.azure.com/software-engineering-studio/studio-course/_git/teaching-tools-scheduling
 ```
 
 ### Setting Up the Frontend
