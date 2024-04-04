@@ -7,7 +7,7 @@ This is the backend API for the Canvas Meeting Scheduler platform, which include
 Before you begin, ensure you have met the following requirements:
 
 - You have a basic understanding of Python and Flask.
-- You have Python 3.9 installed on your machine.
+- You have Python 3.12.1 installed on your machine.
 - Create a new sendgrid API Key
 
 ## Configuring SendGrid for Email Functionality
