@@ -31,7 +31,7 @@ import CreateAppointmentBlock from "../components/CreateAppointmentBlock.js";
 import AutoAcceptAppointments from "../components/AutoAcceptAppointments.js";
 import CreateCoursePopup from "../components/CreateCoursePopup.js";
 import CourseDetails from "../components/CourseDetails.js";
-import { isnt_Instructor } from "../utils/CheckUser.js";
+import { isnt_Instructor } from "../utils/CheckUserType.js";
 
 export default function ProgramDetails() {
   // General Variables

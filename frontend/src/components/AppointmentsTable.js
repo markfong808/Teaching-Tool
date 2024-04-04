@@ -27,7 +27,7 @@ import {
 import { getCookie } from "../utils/GetCookie.js";
 import { Tooltip } from "./Tooltip.js";
 import Comment from "./Comment.js";
-import { isnt_Student_Or_Instructor } from "../utils/CheckUser.js";
+import { isnt_Student_Or_Instructor } from "../utils/CheckUserType.js";
 
 export default function AppointmentsTable({ courseId, reloadTable }) {
   // General Variables

@@ -13,7 +13,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import UserProfile from "./UserProfile";
 import { UserContext } from "../context/UserContext";
-import { isnt_Admin } from "../utils/CheckUser";
+import { isnt_Admin } from "../utils/CheckUserType.js";
 
 export default function ManageUsers() {
   // General Variables

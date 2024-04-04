@@ -17,7 +17,7 @@ import ScheduleAppointmentPopup from "../components/ScheduleAppointmentPopup.js"
 import AppointmentsTable from "../components/AppointmentsTable.js";
 import CourseDetailsPopup from "../components/CourseDetailsPopup.js";
 import DropinsTable from "../components/DropinsTable.js";
-import { isnt_Student } from "../utils/CheckUser.js";
+import { isnt_Student } from "../utils/CheckUserType.js";
 
 export default function Courses() {
   // General Variables

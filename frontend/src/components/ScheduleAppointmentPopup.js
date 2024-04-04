@@ -16,7 +16,7 @@ import { ScheduleMeeting } from "react-schedule-meeting";
 import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie.js";
 import Appointment from "./Appointment.js";
-import { isnt_Student } from "../utils/CheckUser.js";
+import { isnt_Student } from "../utils/CheckUserType.js";
 
 const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // General Variables

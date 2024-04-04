@@ -15,7 +15,7 @@ import React, { useEffect, useState, useContext } from "react";
 import AppointmentsTable from "../components/AppointmentsTable.js";
 import ManageAvailabilityTable from "../components/ManageAvailabilityTable.js";
 import { UserContext } from "../context/UserContext.js";
-import { isnt_Instructor } from "../utils/CheckUser.js";
+import { isnt_Instructor } from "../utils/CheckUserType.js";
 
 export default function Times() {
   // General Variables

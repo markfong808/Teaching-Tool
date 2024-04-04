@@ -17,7 +17,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "@wojtekmaj/react-timerange-picker/dist/TimeRangePicker.css";
 import { UserContext } from "../context/UserContext";
-import { isnt_Instructor } from "../utils/CheckUser";
+import { isnt_Instructor } from "../utils/CheckUserType.js";
 
 const ChooseAppointmentDatesPopup = ({
   onClose,

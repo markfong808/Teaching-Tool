@@ -16,7 +16,7 @@ import {
   formatDate,
   getDayFromDate,
 } from "../utils/FormatDatetime";
-import { isnt_Student } from "../utils/CheckUser";
+import { isnt_Student } from "../utils/CheckUserType.js";
 
 export default function DropinsTable({ courseId, courseName }) {
   // General Variables

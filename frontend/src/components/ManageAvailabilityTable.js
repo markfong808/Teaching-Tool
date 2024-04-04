@@ -18,7 +18,7 @@ import {
   capitalizeFirstLetter,
 } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
-import { isnt_Instructor } from "../utils/CheckUser";
+import { isnt_Instructor } from "../utils/CheckUserType.js";
 
 export default function ManageAvailabilityTable({ courseId }) {
   // General Variables

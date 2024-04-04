@@ -20,7 +20,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { SingleInputTimeRangeField } from "@mui/x-date-pickers-pro/SingleInputTimeRangeField";
 import dayjs from "dayjs";
 import { UserContext } from "../context/UserContext";
-import { isnt_Instructor } from "../utils/CheckUser";
+import { isnt_Instructor } from "../utils/CheckUserType.js";
 
 export default function CreateAppointmentBlock({
   id,

@@ -12,7 +12,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { getCookie } from "../utils/GetCookie";
-import { isnt_Student_Or_Instructor } from "../utils/CheckUser";
+import { isnt_Student_Or_Instructor } from "../utils/CheckUserType.js";
 
 export default function Comment({ appointmentId }) {
   // General Variables

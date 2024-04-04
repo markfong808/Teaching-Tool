@@ -11,7 +11,7 @@
  */
 
 import React, { useContext, useEffect, useState } from "react";
-import { isnt_Admin } from "../utils/CheckUser";
+import { isnt_Admin } from "../utils/CheckUserType.js";
 import { UserContext } from "../context/UserContext";
 
 export default function ViewFeedback() {

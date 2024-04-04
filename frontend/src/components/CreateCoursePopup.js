@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie.js";
 import { UserContext } from "../context/UserContext.js";
-import { isnt_Instructor } from "../utils/CheckUser.js";
+import { isnt_Instructor } from "../utils/CheckUserType.js";
 
 const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
   // General Variables

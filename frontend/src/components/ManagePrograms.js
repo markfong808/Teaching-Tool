@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { getCookie } from "../utils/GetCookie";
 import { UserContext } from "../context/UserContext";
-import { isnt_Admin } from "../utils/CheckUser";
+import { isnt_Admin } from "../utils/CheckUserType.js";
 
 const ManagePrograms = () => {
   // General Variables

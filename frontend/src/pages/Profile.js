@@ -15,7 +15,7 @@ import { UserContext } from "../context/UserContext";
 import { capitalizeFirstLetter } from "../utils/FormatDatetime";
 import { getCookie } from "../utils/GetCookie";
 import { Tooltip } from "../components/Tooltip";
-import { isnt_User } from "../utils/CheckUser";
+import { isnt_User } from "../utils/CheckUserType.js";
 
 export default function Profile() {
   // General Variables
