@@ -19,7 +19,7 @@ git clone https://software-engineering-studio@dev.azure.com/software-engineering
 
 ### Node.js Installation Process
 **Before running the React frontend, you need to install Node.js onto your computer (https://nodejs.org/en/download).**
-- Select the latest version of Node.js and download.
+- Select the latest LTS (Long-Term Support) version of Node.js and download.
 - A message will popup indicating that the file is a Node.js file.
 - Walkthrough the Setup windows and click on the checkbox automatically install all the necessary tools under the Tools for Native Modules window.
 - Install Node.js.
