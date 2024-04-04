@@ -77,7 +77,7 @@ This will start the Flask server, and the API will be accessible at `http://loca
 
 ## Issues With Python Libraries
 In case you run into troubles with when trying to run python main.py in the virtual enviornment (venv), you'll need to install libraries needed.
-Below is a list of the libraries needed. More could be required based on the build needs. For further help consult Professor Kochanski.
+Below is a list of the libraries needed. For further help consult Professor Kochanski.
 - pip install cryptography
 - pip install flask_cors
 - pip install python-dotenv
