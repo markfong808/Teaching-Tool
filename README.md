@@ -17,7 +17,7 @@ Welcome to the UWB Canvas Meeting Scheduler! This guide will help you get starte
 git clone https://software-engineering-studio@dev.azure.com/software-engineering-studio/studio-course/_git/teaching-tools-scheduling
 ```
 
-### Node JS installation process
+### Node.js Installation Process
 **Before running the React frontend, you need to install Node.js onto your computer (https://nodejs.org/en/download).**
 - Select the latest version of Node.js and download.
 - A message will popup indicating that the file is a Node.js file.
