@@ -19,38 +19,15 @@ git clone https://software-engineering-studio@dev.azure.com/software-engineering
 
 ### Node JS installation process
 **Before running the React frontend, you need to install Node.js onto your computer (https://nodejs.org/en/download).**
+- Select the latest version of Node.js and download.
+- A message will popup indicating that the file is a Node.js file.
+- Walkthrough the Setup windows and click on the checkbox automatically install all the necessary tools under the Tools for Native Modules window.
+- Install Node.js.
+- You'll be redirected to Powershell that asks you to press enter to install all tools needed.
+- You'll need to exit out of the Powershell and restart by searching "Install Additional Tools for Node.js" in Windows search.
+- To ensure that Node.js has been installed: Go to the terminal and enter node -v. Then enter npm -v. You should see the node and npm respective versions.
+- Now that you have the Node.js installed you should be able to run the frontend.
 
-``` Step 1.
-Select the latest version of Node.js and download.
-```
-
-``` Step 2.
-A message will popup indicating that the file is a Node.js file.
-```
-
-``` Step 3.
-Walkthrough the Setup windows and click on the checkbox automatically install all the necessary tools under the Tools for Native Modules window.
-```
-
-``` Step 4.
-Install Node.js
-```
-
-``` Step 5.
-You'll be redirected to Powershell that asks you to press enter to install all tools needed.
-```
-
-``` Step 6.
-You'll need to exit out of the Powershell and restart by searching "Install Additional Tools for Node.js" in Windows search.
-```
-
-``` Step 7.
-To ensure that Node.js has been installed: Go to the terminal and enter node -v. Then enter npm -v. You should see the node and npm respective versions.
-```
-
-``` Step 8.
-Now that you have the Node.js installed you should be able to run the frontend.
-```
 
 
 
