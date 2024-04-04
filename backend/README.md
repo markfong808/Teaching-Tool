@@ -43,7 +43,7 @@ To set up the Canvas Meeting Scheduler backend API, follow these steps:
    ```
 2. **Create a virtual environment in the backend directory:**
    ```bash
-   python3.9 -m venv venv
+   python -m venv venv
    ```
 3. **Activate the virtual environment**:
    - On Windows:
@@ -71,7 +71,7 @@ To set up the Canvas Meeting Scheduler backend API, follow these steps:
 To run the API, use the following command from the `backend` directory:
 
 ```bash
-python3.9 main.py
+python main.py
 ```
 
 This will start the Flask server, and the API will be accessible at `http://localhost:5000`.
