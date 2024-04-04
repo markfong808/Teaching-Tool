@@ -1,7 +1,7 @@
 /* AppointmentsTable.js
  * Last Edited: 3/26/24
  *
- * Table UI to show appointment history for Students and Instructors.
+ * Table UI to show Appointment history for Students and Instructors.
  * Students and Instructors can sort, edit, and cancel appointments.
  * Students and Instructors can view appointment details and Instructors
  * can edit appointment details.
