@@ -73,8 +73,25 @@ To run the API, use the following command from the `backend` directory:
 ```bash
 python main.py
 ```
-
 This will start the Flask server, and the API will be accessible at `http://localhost:5000`.
+
+## Issues With Python Libraries
+In case you run into troubles with when trying to run python main.py, you'll need to install libraries needed.
+Below is a list of the libraries needed. More could be required based on the build needs. For further help consult Professor Kochanski.
+- pip install cryptography
+- pip install flask_cors
+- pip install python-dotenv
+- pip install flask-swagger-ui
+- pip install wget
+- pip install pypandoc
+- pip install requests
+- pip install pdfkit
+- pip install mysql-connector-python
+- pip install google-auth
+- pip install google-api-python-client
+- pip install google-auth-oauthlib
+- pip install pytz
+- pip install Flask-Session
 
 ## Running the Tests
 
