@@ -24,6 +24,8 @@ import Times from "./pages/Times";
 import ProgramDetails from "./pages/ProgramDetails";
 import Profile from "./pages/Profile";
 
+import OutlookCalendar from "./components/OutlookCalendar"
+
 function App() {
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //
@@ -137,6 +139,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+          <Route
+            path="/outlookcalendar"
+            element={
+              <ProtectedRoute
+                allowedAccountTypes={["instructor", "student", "admin"]}
+              >
+                <OutlookCalendar />
+              </ProtectedRoute>
+            }
+          />
+          
         </Routes>
       </div>
     </>

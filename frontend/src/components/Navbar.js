@@ -41,6 +41,7 @@ export default function Navbar() {
             <CustomLink to="/login" className="hover:text-gold font-headlines">
               LOGIN
             </CustomLink>
+            
             <CustomLink
               to="/registerform"
               className="hover:text-gold font-headlines"
@@ -141,6 +142,9 @@ export default function Navbar() {
               className="hover:text-gold font-headlines"
             >
               PROFILE
+            </CustomLink>
+            <CustomLink to="/OutlookCalendar" className="hover:text-gold font-headlines">
+              OutlookCalendar
             </CustomLink>
 
             {/* Display LOGOUT to admin, instructor, and student on Navbar with its CustomLink set */}

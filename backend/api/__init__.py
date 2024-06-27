@@ -37,6 +37,7 @@ def create_app():
     from .feedback import feedback
     from .models import User
     from .user import user
+    from .outlook import outlook_calendar_dp
     
     ##create MySQL database##    
     load_dotenv()
@@ -55,6 +56,7 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
 
+    # Register the Blueprint
     app.register_blueprint(auth, url_prefix='/')
     app.register_blueprint(admin, url_prefix='/')
     app.register_blueprint(student, url_prefix='/')
@@ -62,6 +64,7 @@ def create_app():
     app.register_blueprint(programs, url_prefix='/')
     app.register_blueprint(feedback, url_prefix='/')
     app.register_blueprint(user, url_prefix='/')
+    app.register_blueprint(outlook_calendar_dp, url_prefix='/api')
     
     with app.app_context():
         db.create_all()
