@@ -81,7 +81,10 @@ class OutlookCalendarService:
  
                 # Define the start and end datetime for the calendar view
                 now = datetime.now(pytz.utc)  # Current time in UTC
-                start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of the current month
+                # start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of the current month
+                # end_date = (now.replace(year=now.year + 1, month=12, day=31, hour=23, minute=59, second=59))  # End of next year
+                
+                start_date = datetime(now.year, 3, 1, 0, 0, 0, 0, pytz.utc)  # Start of March 1st of the current year
                 end_date = (now.replace(year=now.year + 1, month=12, day=31, hour=23, minute=59, second=59))  # End of next year
                 
                 # Convert to ISO 8601 format with 'Z' suffix for UTC
@@ -95,12 +98,12 @@ class OutlookCalendarService:
                     response = requests.get(events_url, headers=headers)
                     response.raise_for_status()
                     data = response.json()
+                    print(f"Received {len(data.get('value', []))} events")
                     events.extend(data.get('value', []))
                     events_url = data.get('@odata.nextLink', None)
                 
                 return events
                 
-                # return response.json().get('value', [])
             except Exception as e:
                 raise Exception(f"Error fetching events: {str(e)}")
 
