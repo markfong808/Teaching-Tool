@@ -164,7 +164,7 @@ export default function Courses() {
   //               UseEffect Function                   //
   ////////////////////////////////////////////////////////
 
-  // called only once
+  // called only once`
   // on initial page load, fetchCourseList()
   useEffect(() => {
     if (!initialLoad) {

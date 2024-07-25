@@ -312,6 +312,18 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           setActiveTab("upcoming");
           setSelectedAppointment(null); // Deselect the appointment as it is now cancelled
           fetchAppointments(); // Re-fetch appointments to update the list
+           
+          const eventID = selectedAppointment.event_id;
+          console.log('Deleting Event ID:', eventID);
+          
+          await fetch(`http://localhost:5000/api/delete_event/${eventID}`,{
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+            "Content-Type": "application/json",
+          },
+          });
+          
         } else {
           throw new Error("Failed to cancel the appointment");
         }
@@ -558,7 +570,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     if (!selectedAppointment) {
       return null;
     }
-
+    
+    const eventID = selectedAppointment.event_id;
     // HTML for webpage
     return (
       // Define AppointmentDetails popup dimensions, color, and position for display
@@ -593,7 +606,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
               <button
                 className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                 onClick={() =>
-                  handleCancelAppointment(selectedAppointment.appointment_id)
+                  handleCancelAppointment(selectedAppointment.appointment_id, eventID)
                 }
               >
                 Cancel Appointment
@@ -622,7 +635,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                   className="bg-purple text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
                   type="button"
                   onClick={() =>
-                    handleCancelAppointment(selectedAppointment.appointment_id)
+                    handleCancelAppointment(selectedAppointment.appointment_id, eventID)
                   }
                 >
                   Cancel Appointment

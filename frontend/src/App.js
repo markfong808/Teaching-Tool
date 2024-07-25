@@ -141,7 +141,7 @@ function App() {
           />
           
           <Route
-            path="/outlookcalendar"
+            path="/OutlookCalendar"
             element={
               <ProtectedRoute
                 allowedAccountTypes={["instructor", "student", "admin"]}

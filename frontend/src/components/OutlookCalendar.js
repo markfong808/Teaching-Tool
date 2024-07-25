@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import axios from 'axios';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-// import '../styles/CalendarView.css';
-// import '../styles/GoogleLoginButton.css';
+import '../styles/CalendarView.css';
+
 
 // initialize the moment localizer for react-big-calendar
 // moment localizer handles date and time operations
@@ -26,10 +26,12 @@ function OutlookCalendar() {
       const result = await axios.get('http://localhost:5000/api/get_calendar_events', {
         withCredentials: true,
       });
+     
+      console.log('Events fetched successfully:', result.data);
 
       // format the fetched events to match the calendar requirements
       const formattedEvents = result.data.map(event => {
-        const { summary, start, end, id, extendedProperties } = event;
+        const { subject, start, end, id, extendedProperties } = event;
 
         let startDate, endDate;
         let allDay = false;
@@ -42,12 +44,12 @@ function OutlookCalendar() {
           allDay = true;
         } else {
           // Timed event
-          startDate = moment(start.dateTime).toDate();
-          endDate = moment(end.dateTime).toDate();
+          startDate = moment.utc(start.dateTime).local().toDate();
+          endDate = moment.utc(end.dateTime).local().toDate();        
         }
         return {
           id,
-          title: summary,
+          title: subject,
           start: startDate,
           end: endDate,
           allDay: allDay,
@@ -73,6 +75,7 @@ function OutlookCalendar() {
     }
   };
 
+  
   ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
@@ -127,22 +130,43 @@ function OutlookCalendar() {
   // if the user is authenticated, render the calendar with events
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div>
+      <div className='text-right'>
         <h1 className="text-purple text-center text-4xl font-headlines p-5">Your Outlook Calendar Events</h1>
+
+        {/* <button onClick={CreateEvent} className="create-event-button bg-gray-200 rounded-lg p-2 border border-gray-200">
+        <div className='text-blue text-center text-sm font-headlines p-1'>
+          Create New Event     
+        </div>
+        </button>           */}
+        
         <Calendar
           localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
           style={{ height: 500, width: 1000 }}
-          views={['month', 'week', 'day', 'agenda']}
+          views={['month', 'week', 'day', 'agenda',]}
           defaultView="month"
           onSelectEvent={event => alert(event.title)}
           onSelectSlot={slotInfo => console.log(slotInfo)}
+          selectable
           eventPropGetter={(event) => ({
             className: event.isOutlookEvent ? 'outlook-event' : ''
           })}
         />
+        {/* {isModalOpen && (
+          <div className="modal">
+            <h2>Create Event</h2>
+            <input
+              type="text"
+              placeholder="Event Title"
+              value={newEvent.title}
+              onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+            />
+            <button onClick={CreateEvent}>Submit</button>
+            <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+          </div>
+        )} */}
       </div>
     </div>
   );

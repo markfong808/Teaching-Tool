@@ -18,6 +18,7 @@ from werkzeug.security import generate_password_hash
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
+from flask_session import Session
 
 db = SQLAlchemy()
 jwt = JWTManager()
@@ -28,7 +29,10 @@ def create_app():
     # Allow requests from localhost (React app during development)
     CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+    app.config['SESSION_TYPE'] = 'filesystem'  # Store sessions in the filesystem
 
+    Session(app)
+    
     from .auth import auth
     from .admin import admin
     from .student import student

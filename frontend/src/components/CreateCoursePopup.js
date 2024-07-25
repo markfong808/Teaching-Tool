@@ -24,10 +24,33 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
 
   // course Data Variables
   const [courseTitle, setCourseTitle] = useState("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [allStudents, setAllStudents] = useState([])
+
+
 
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
+  const fetchAllStudents = async () => {
+    try {
+      const response = await fetch("/students", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken,  // Include CSRF token if needed
+        },
+        credentials: "include",  // Include credentials for cookies
+      });
+      if (!response.ok) {
+        throw new Error("Error fetching students");
+      }
+      const data = await response.json();
+      setAllStudents(data);  // Assuming the response is an array of students
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   // posts the course to the CourseDetails Table
   const createCourse = async () => {
@@ -38,6 +61,7 @@ const CreateCoursePopup = ({ onClose, user_id, loadFunction }) => {
       const payload = {
         name: courseTitle,
         user_id: user_id,
+        student_ids: selectedStudentIds
       };
 
       const response = await fetch(`/course/create`, {

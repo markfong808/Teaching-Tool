@@ -1,5 +1,5 @@
 /* ScheduleAppointmentPopup.js
- * Last Edited: 3/26/24
+ * Last Edited: 7/22/24
  *
  * UI Popup shown when student presses "Schedule New Appointment"
  * in their "Courses" tab. Gives the student access to see
@@ -17,6 +17,9 @@ import { format } from "date-fns";
 import { getCookie } from "../utils/GetCookie.js";
 import Appointment from "./Appointment.js";
 import { isnt_Student } from "../utils/CheckUserType.js";
+import { formatInTimeZone } from 'date-fns-tz';
+import { toDate } from 'date-fns';
+
 
 const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // General Variables
@@ -150,7 +153,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //
   ////////////////////////////////////////////////////////
-
+  
   // called when a student clicks to reserve an appointment
   // after fetch, update page
   const bookAppointment = () => {
@@ -160,14 +163,32 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     // if there is a timeslot to post
     if (selectedTimeslot) {
       const appointmentID = selectedTimeslot.availableTimeslot.id;
+      const { startTime, endTime } = selectedTimeslot.availableTimeslot;
 
+      
+    // Adjust the times to the required time zone before converting to UTC
+    const adjustedStartTime = new Date(startTime);
+    const adjustedEndTime = new Date(endTime);
+
+
+    // Convert the local time to UTC time before sending to the server
+    const startTimeUtc = formatInTimeZone(toDate(adjustedStartTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    const endTimeUtc = formatInTimeZone(toDate(adjustedEndTime), 'UTC', "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    
       const appointmentData = {
         notes: appointmentNotes,
+        summary: `${selectedCourseData.course_name} - ${selectedCourseData.programs.find(
+          (name) => name.id === selectedProgramId
+        )?.name}`,
+        start: startTimeUtc,
+        end: endTimeUtc,
+        attendees: ['attendee@example.com']      
       };
-
+      
+      
       const csrfToken = getCookie("csrf_access_token");
       let isHandledError = false; // flag to indicate if the error has been handled
-
+   
       fetch(
         `/student/appointments/reserve/${encodeURIComponent(
           appointmentID
@@ -196,14 +217,38 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
           }
           return response.json();
         })
-        .then((data) => {
+        .then((data) => { //successful reservation
           if (data) {
             setAppointmentStatus(data.status);
             setBookingConfirmed(true);
-
-            // reload page
-            functions.reloadAppointments();
+            return fetch('http://localhost:5000/api/create_event', {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                "X-CSRF-TOKEN": csrfToken,
+              },
+              body: JSON.stringify(appointmentData),
+              });
           }
+        })
+        .then((response) => response.json())
+        .then((data) =>{
+          const eventId = data.event_id;
+          return fetch(`/student/appointments/update_event_id/${encodeURIComponent(appointmentID)}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              "X-CSRF-TOKEN": csrfToken,
+            },
+            body: JSON.stringify({ event_id: eventId }),
+          });
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          // reload page
+            functions.reloadAppointments();
         })
         .catch((error) => {
           if (!isHandledError) {

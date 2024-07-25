@@ -20,7 +20,8 @@
                 "--no-debugger"
             ],
             "jinja": true,
-            "justMyCode": false
+            "justMyCode": false,
+            "pythonPath": "${workspaceFolder}/backend/venv/bin/python"
         }
     ]
 }

@@ -144,7 +144,7 @@ export default function Navbar() {
               PROFILE
             </CustomLink>
             <CustomLink to="/OutlookCalendar" className="hover:text-gold font-headlines">
-              OutlookCalendar
+              OUTLOOKCALENDAR
             </CustomLink>
 
             {/* Display LOGOUT to admin, instructor, and student on Navbar with its CustomLink set */}

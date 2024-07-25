@@ -62,7 +62,7 @@ export default function ManageAvailabilityTable({ courseId }) {
     } catch (error) {
       console.error("Error fetching availability data:", error);
     }
-  };
+  }; 
 
   ////////////////////////////////////////////////////////
   //               Fetch Post Functions                 //

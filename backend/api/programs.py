@@ -496,13 +496,19 @@ def create_course():
         data = request.get_json()
         name = data.get('name')
         user_id = data.get('user_id')
+        student_ids = data.get('student_ids', [])
 
         if not user_id:
             return jsonify({"error": "Instructor ID is missing."}), 404
         
         if not name:
             return jsonify({"error": "Course Name is missing."}), 404
-
+        
+        
+        print(f"Creating course: {name}")
+        print(f"Instructor ID: {user_id}")
+        print(f"Student IDs: {student_ids}")
+        
         # create a new tuple for CourseDetails
         new_course = CourseDetails(
             instructor_id=user_id,
@@ -523,6 +529,15 @@ def create_course():
 
         # post to the database
         db.session.add(new_member)
+        # Add each student to the course in the CourseMembers table
+        for student_id in student_ids:
+            print(f"Adding student ID: {student_id} to course ID: {new_course_id}")
+            new_student_member = CourseMembers(
+                course_id=new_course_id,
+                user_id=student_id,
+            )
+            db.session.add(new_student_member)
+
         db.session.commit()
 
         return jsonify({"message": "Course created successfully"}), 200
