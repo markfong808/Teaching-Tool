@@ -88,9 +88,7 @@ class OutlookCalendarService:
                 start_date_iso = start_date.isoformat().replace('+00:00', 'Z')
                 end_date_iso = end_date.isoformat().replace('+00:00', 'Z')
 
-                # events_url = f'https://graph.microsoft.com/v1.0/me/calendar/events'
-                # events_url = f'https://graph.microsoft.com/v1.0/me/calendarview?startdatetime=2024-03-01T09:40:20.889Z&enddatetime=2025-12-31T23:59:59Z&' # time is correct
-                events_url = f'https://graph.microsoft.com/v1.0/me/calendarView?startdatetime={start_date_iso}&enddatetime={end_date_iso}&$top=100'
+                events_url = f'https://graph.microsoft.com/v1.0/me/calendarView?startdatetime={start_date_iso}&enddatetime={end_date_iso}'
 
                 events = []
                 while events_url:
