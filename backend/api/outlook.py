@@ -81,11 +81,11 @@ class OutlookCalendarService:
  
                 # Define the start and end datetime for the calendar view
                 now = datetime.now(pytz.utc)  # Current time in UTC
-                # start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of the current month
-                # end_date = (now.replace(year=now.year + 1, month=12, day=31, hour=23, minute=59, second=59))  # End of next year
-                
-                start_date = datetime(now.year, 3, 1, 0, 0, 0, 0, pytz.utc)  # Start of March 1st of the current year
+                start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)  # Start of the current month
                 end_date = (now.replace(year=now.year + 1, month=12, day=31, hour=23, minute=59, second=59))  # End of next year
+                
+                # start_date = datetime(now.year, 3, 1, 0, 0, 0, 0, pytz.utc)  # Start of March 1st of the current year
+                # end_date = (now.replace(year=now.year + 1, month=12, day=31, hour=23, minute=59, second=59))  # End of next year
                 
                 # Convert to ISO 8601 format with 'Z' suffix for UTC
                 start_date_iso = start_date.isoformat().replace('+00:00', 'Z')
@@ -157,6 +157,64 @@ class OutlookCalendarService:
                 return event_id
             except Exception as e:
                 raise Exception(f"Error creating event: {str(e)}")
+            
+    #update event
+    def update_event(self,event_id,event_details):
+        try:
+            token = self.get_calendar_service()
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Prepare the body for the PATCH request
+            body = {}
+            
+            if 'summary' in event_details:
+                body['subject'] = event_details['summary']
+            if 'description' in event_details:
+                body['body'] = {
+                    'contentType': 'HTML',
+                    'content': event_details['description']
+                }
+            if 'start' in event_details and 'end' in event_details:
+                start_time = parser.parse(event_details['start'])
+                end_time = parser.parse(event_details['end'])
+                event_timezone = event_details.get('timeZone', 'UTC')
+                
+                body['start'] = {
+                            'dateTime': start_time.isoformat(),
+                            'timeZone': event_timezone
+                        }
+                body['end'] = {
+                    'dateTime': end_time.isoformat(),
+                    'timeZone': event_timezone
+                }
+            if 'location' in event_details:
+                body['location'] = {
+                    'displayName': event_details['location']
+                }
+            if 'attendees' in event_details:
+                body['attendees'] = [
+                    {
+                        'emailAddress': {
+                            'address': email
+                        },
+                        'type': 'required'
+                    } for email in event_details['attendees']
+                ]
+
+            update_event_url = f'https://graph.microsoft.com/v1.0/me/events/{event_id}'
+            response = requests.patch(update_event_url, headers=headers, json=body)
+            response.raise_for_status()
+
+            updated_event = response.json()
+            print("Event updated:", updated_event)
+            return updated_event
+
+        except Exception as e:
+            raise Exception(f"Error updating event: {str(e)}")
+
             
     #delete event
     def delete_event(self,event_id):
@@ -264,8 +322,22 @@ def delete_event(event_id):
         return jsonify({'message': result}), 200
      except Exception as e:
         return jsonify({'error': str(e)}), 500
- 
-# # clear the session credentials
+
+#update event
+@outlook_calendar_dp.route('/update_event/<event_id>',methods=['PATCH'])
+def update_event(event_id):
+    if 'token_cache' not in session:
+        return jsonify({'error': 'Missing credentials'}), 401
+    
+    event_details = request.json
+    
+    try:
+        updated_event = outlook_calendar_service.update_event(event_id, event_details)
+        return jsonify(updated_event), 200
+    except Exception as e:
+        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
+       
+# clear the session credentials
 @outlook_calendar_dp.route('/logout', methods=['POST'])
 def logout():
     # Clear session data

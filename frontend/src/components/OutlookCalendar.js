@@ -5,6 +5,7 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/CalendarView.css';
 
+import EventModal from './EventModal';
 
 // initialize the moment localizer for react-big-calendar
 // moment localizer handles date and time operations
@@ -14,6 +15,10 @@ function OutlookCalendar() {
   const [events, setEvents] = useState([]); // events data
   const [error, setError] = useState(''); // error messages
   const [isAuthenticated, setIsAuthenticated] = useState(false); // authentication
+  
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   ////////////////////////////////////////////////////////
   //               Fetch Get Functions                  //
@@ -53,7 +58,10 @@ function OutlookCalendar() {
           start: startDate,
           end: endDate,
           allDay: allDay,
-          isOutlookEvent: extendedProperties?.private?.isOutlookEvent === 'true'
+          isOutlookEvent: extendedProperties?.private?.isOutlookEvent === 'true',
+          physical_location: event.physical_location,
+          notes: event.notes,
+          status: event.status
         };
       });
       // update the state with the formatted events
@@ -75,6 +83,16 @@ function OutlookCalendar() {
     }
   };
 
+   const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveEvent = (updatedEvent) => {
+    // Logic to save updated event details
+    console.log('Updated Event:', updatedEvent);
+    // Optionally update state or make an API call to save changes
+  };
   
   ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //
@@ -125,6 +143,7 @@ function OutlookCalendar() {
       </div>
     );
   }
+  
 
   // HTML for webpage
   // if the user is authenticated, render the calendar with events
@@ -132,12 +151,6 @@ function OutlookCalendar() {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div className='text-right'>
         <h1 className="text-purple text-center text-4xl font-headlines p-5">Your Outlook Calendar Events</h1>
-
-        {/* <button onClick={CreateEvent} className="create-event-button bg-gray-200 rounded-lg p-2 border border-gray-200">
-        <div className='text-blue text-center text-sm font-headlines p-1'>
-          Create New Event     
-        </div>
-        </button>           */}
         
         <Calendar
           localizer={localizer}
@@ -147,26 +160,21 @@ function OutlookCalendar() {
           style={{ height: 500, width: 1000 }}
           views={['month', 'week', 'day', 'agenda',]}
           defaultView="month"
-          onSelectEvent={event => alert(event.title)}
+          // onSelectEvent={event => alert(event.title)}
+          onSelectEvent={handleEventClick}
+
           onSelectSlot={slotInfo => console.log(slotInfo)}
           selectable
           eventPropGetter={(event) => ({
             className: event.isOutlookEvent ? 'outlook-event' : ''
           })}
         />
-        {/* {isModalOpen && (
-          <div className="modal">
-            <h2>Create Event</h2>
-            <input
-              type="text"
-              placeholder="Event Title"
-              value={newEvent.title}
-              onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-            />
-            <button onClick={CreateEvent}>Submit</button>
-            <button onClick={() => setIsModalOpen(false)}>Cancel</button>
-          </div>
-        )} */}
+        <EventModal
+          event={selectedEvent}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveEvent}
+        />
       </div>
     </div>
   );

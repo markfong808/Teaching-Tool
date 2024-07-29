@@ -26,6 +26,11 @@ export function formatDate(dateString) {
 
 // format the time string to "hh:mm AM/PM"
 export function formatTime(inputTime) {
+  // Ensure inputTime is a string and has a default value if undefined
+  if (typeof inputTime !== 'string') {
+    console.error('Invalid inputTime:', inputTime);
+    return 'Invalid time';
+  }
   if (/\d{1,2}:\d{2}\s[APap][Mm]/.test(inputTime)) {
     return inputTime;
   }
@@ -36,6 +41,7 @@ export function formatTime(inputTime) {
   const formattedHour = hour % 12 || 12;
   return `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
 }
+
 
 // return the week day from a date object
 export function getDayFromDate(dateString) {

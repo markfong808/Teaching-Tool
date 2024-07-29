@@ -103,6 +103,7 @@ class Appointment(db.Model):
     end_time = db.Column(db.String(150))  # YYYY-MM-DDTHH:MM:SS
     event_id = db.Column(db.String(255)) #new
     physical_location = db.Column(db.String(255))
+    # course_name = db.Column(db.String(255), nullable=True)
     meeting_url = db.Column(db.String(255))
     notes = db.Column(db.Text)
     status = db.Column(db.String(50))  # posted, booked, cancelled

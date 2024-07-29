@@ -221,6 +221,9 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
           if (data) {
             setAppointmentStatus(data.status);
             setBookingConfirmed(true);
+            
+            console.log("Appointment Data:", appointmentData);
+
             return fetch('http://localhost:5000/api/create_event', {
               method: 'POST',
               credentials: 'include',

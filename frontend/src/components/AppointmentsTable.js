@@ -29,6 +29,9 @@ import { Tooltip } from "./Tooltip.js";
 import Comment from "./Comment.js";
 import { isnt_Student_Or_Instructor } from "../utils/CheckUserType.js";
 
+// import UpdateAppointmentForm from "./EventUpdateForm.js";
+
+
 export default function AppointmentsTable({ courseId, reloadTable }) {
   // General Variables
   const { user } = useContext(UserContext);
@@ -45,6 +48,10 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // Appointment Data Variables
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  
+  // Define states for edit mode and form data
+  const [isEditMode, setIsEditMode] = useState(false);
+
   const [programDetails, setProgramDetails] = useState({}); // [type: string]: string
   const [feedbackPresent, setFeedbackPresent] = useState(false);
   const [isProvidingFeedback, setIsProvidingFeedback] = useState(false);
@@ -140,6 +147,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   const fetchFeedback = async () => {
     // If there's no user, return
     if (!selectedAppointment || isnt_Student_Or_Instructor(user)) return;
+    console.log("Fetching feedback for appointment ID:", selectedAppointment?.appointment_id);
 
     try {
       const response = await fetch(
@@ -312,7 +320,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           setActiveTab("upcoming");
           setSelectedAppointment(null); // Deselect the appointment as it is now cancelled
           fetchAppointments(); // Re-fetch appointments to update the list
-           
+          
+          // delete appointment from Outlook Calendar
           const eventID = selectedAppointment.event_id;
           console.log('Deleting Event ID:', eventID);
           
@@ -332,6 +341,64 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       }
     }
   };
+  
+// Function to handle update an appointment
+  const handleSubmitUpdate = async () => {
+  // If there's no user, return
+  if (isnt_Student_Or_Instructor(user)) {
+    return;
+  }
+ // Extract the appointmentId from the selectedAppointment
+  const appointmentId = selectedAppointment?.appointment_id;
+
+  // Debugging: Log the selectedAppointment and appointmentId Before
+  console.log("Selected Appointment:", selectedAppointment);
+  console.log("Appointment ID:", appointmentId);
+  
+  // Construct the endpoint based on account type
+  const updateEndpoint =
+    user.account_type === "instructor"
+      ? `/instructor/appointments/update/${appointmentId}`
+      : `/student/appointments/update/${appointmentId}`;
+  try {
+    // Send the PUT request to the backend with the updated appointment data
+    const response = await fetch(updateEndpoint, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken, 
+      },
+      body: JSON.stringify(formData), // Send the updated data in the request body
+      credentials: 'include',
+    });  
+    console.log("Form Data:", formData);
+
+  if (response.ok) {
+      const updatedAppointment = await response.json();
+      // Handle the response (e.g., show a success message or update the UI)
+      alert(updatedAppointment.message || 'Appointment updated successfully!');
+      setIsEditMode(false); // Exit edit mode
+      // Ensure appointment_id is preserved
+  
+      console.log("UpdatedAppointment:", updatedAppointment);
+      //TODO: Refactor to refresh updated data
+      setSelectedAppointment(prev => ({
+        ...prev,
+        // ...formData,
+        ...updatedAppointment,
+      }));
+
+    } else {
+      // Handle errors from the backend
+      const error = await response.json();
+      alert(error.error || 'Failed to update appointment');
+    }
+  } catch (error) {
+    // Handle network or other errors
+    console.error('Error updating appointment:', error);
+    alert('An error occurred while updating the appointment.');
+  }
+};
 
   ////////////////////////////////////////////////////////
   //                 Handler Functions                  //
@@ -391,6 +458,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         : null,
     });
   };
+  
 
   // sort appointments
   const sortTable = (sort) => {
@@ -454,6 +522,9 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         notes: selectedAppointment.notes || "",
         meeting_url: selectedAppointment.meeting_url || "",
         status: selectedAppointment.status || "",
+        // physical_location: selectedAppointment.physical_location || "",
+        // course_name: selectedAppointment.course_name || "", 
+
       });
     }
   }, [selectedAppointment]);
@@ -570,7 +641,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     if (!selectedAppointment) {
       return null;
     }
-    
+  
     const eventID = selectedAppointment.event_id;
     // HTML for webpage
     return (
@@ -588,11 +659,31 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             onClick={() => {
               setSelectedAppointment(null);
               setIsProvidingFeedback(false);
+              setIsEditMode(false);
             }}
           >
             <i className="fas fa-times"></i>
           </div>
         </div>
+
+
+<div className="flex justify-end">
+        <button
+          className="bg-blue text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
+          onClick={() => setIsEditMode(!isEditMode)}
+        >
+          {isEditMode ? 'Cancel Edit' : 'Update Appointment'}
+        </button>
+        {isEditMode && (
+          <button
+            className="bg-blue text-white p-2 mt-3 ml-2 rounded-md hover:bg-gold"
+            onClick={handleSubmitUpdate}
+          >
+            Save Changes
+          </button>
+        )}
+      </div>
+
 
         {/* Based on account type and when appointment happened, define buttons to approve or cancel appointment, 
             if the appointment was attended or missed, and provide feedback for appointment */}
@@ -612,6 +703,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
                 Cancel Appointment
               </button>
             )}
+            
+            
 
             {/* Instructor can approve or cancel appointment */}
             {user.account_type === "instructor" && activeTab === "pending" && (
@@ -739,13 +832,33 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {/* Course label */}
             <label className="font-bold pt-2">Course</label>
             {selectedAppointment.course_name}
+            {/* {isEditMode ? (
+            <input
+              type="text"
+              name="course_name"
+              value={formData.course_name}
+              onChange={handleInputChange}
+            />
+          ) : (
+            <span>{selectedAppointment.course_name}</span>
+          )} */}
 
             {/* Display physical location if it exists for Appointment */}
             {selectedAppointment.physical_location ? (
               <>
                 {/* Physical Location label */}
                 <label className="font-bold pt-2">Physical Location</label>
-                {selectedAppointment.physical_location}
+                {isEditMode ? (
+            <input
+              type="text"
+              name="physical_location"
+              value={formData.physical_location}
+              onChange={handleInputChange}
+              className="border border-gray-300 p-2"
+            />
+          ) : (
+            <span>{selectedAppointment.physical_location}</span>
+          )}
               </>
             ) : null}
 

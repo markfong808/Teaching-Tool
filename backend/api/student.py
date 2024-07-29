@@ -403,6 +403,48 @@ def get_student_programs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+#get student appointment details by ID
+@student.route('/student/appointments/<appointment_id>', methods=['GET'])
+@jwt_required()
+def get_appointment_details(appointment_id):
+    try:
+        student_id = get_jwt_identity()  
+        
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404     
+         # Fetch the appointment details from the database
+        appointment = Appointment.query.filter_by(id=appointment_id, attendee_id=student_id).first()
+        if not appointment:
+            return jsonify({"error": "Appointment not found"}), 404
+        
+        # Fetch host details if needed
+        host = User.query.get(appointment.host_id) if appointment.host_id else None
+        host_info = {
+            "name": host.name,
+            "title": host.title,
+            "pronouns": host.pronouns,
+            "email": host.email,
+        } if host else {}
+        
+        # Construct the response with appointment details
+        appointment_details = {
+            "appointment_id": appointment.id,
+            "date": appointment.appointment_date,
+            "start_time": appointment.start_time,
+            "end_time": appointment.end_time,
+            'event_id': appointment.event_id,
+            "status": appointment.status,
+            "notes": appointment.notes,
+            "physical_location": appointment.physical_location,
+            "meeting_url": appointment.meeting_url,
+            "host": host_info
+        }
+
+        return jsonify(appointment_details=appointment_details), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+        
 # Cancel a specific appointment by its ID if it has been booked by the student
 @student.route('/student/appointments/cancel/<appointment_id>', methods=['POST'])
 @jwt_required()
@@ -440,7 +482,55 @@ def cancel_appointment(appointment_id):
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+# Update a specific appointment by its ID if it has been booked by the student
+@student.route('/student/appointments/update/<appointment_id>', methods=['PUT'])
+@jwt_required()
+def update_appointment(appointment_id):
+    try:
+        # Get student ID from JWT token
+        student_id = get_jwt_identity()
+        # Check if the user is a student
+        if not is_student(student_id):
+            return jsonify({"error": "Student not found"}), 404
+        
+        appointment = Appointment.query.get(appointment_id)
+        
+        # Fetch the appointment
+        appointment = Appointment.query.filter_by(id=appointment_id, attendee_id=student_id).first()
+        if not appointment:
+            return jsonify({"error": "Appointment not found or access denied"}), 404
+
+        if not appointment:
+            return jsonify({"error": "Appointment doesn't exist"}), 404
+        # Check if the appointment was booked by this student
+        if appointment.attendee_id != student_id:
+            return jsonify({"error": "You do not have permission to update this appointment"}), 403
+        
+        # Get data from the request
+        data = request.get_json()
+        
+        # Update the appointment fields with data from the request
+        appointment.physical_location = data.get('physical_location', appointment.physical_location)
+        appointment.meeting_url = data.get('meeting_url', appointment.meeting_url) 
+        
+        # Commit the changes to the database
+        db.session.commit()
+        
+        # Fetch the updated appointment details
+        updated_appointment = {
+            "appointment_id": appointment.id,
+            "physical_location": appointment.physical_location,
+            "meeting_url": appointment.meeting_url
+            # Add other fields if necessary
+        }
+        
+        return jsonify(updated_appointment), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+   
 # Get all appointment based programs for all courses a student is enrolled in
 @student.route('/student/programs/appointment-based', methods=['GET'])
 @jwt_required()
