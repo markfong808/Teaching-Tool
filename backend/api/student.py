@@ -1,6 +1,6 @@
 """ 
  * student.py
- * Last Edited: 3/26/24
+ * Last Edited: 7/29/24
  *
  * Contains functions which are applicable to
  * student user type
@@ -25,6 +25,9 @@ from .mail import send_email
 from .programs import get_program_name, get_course_name
 from .user import is_student, is_instructor
 from ics import Calendar, Event
+from datetime import datetime, timedelta
+from dateutil import parser
+import pytz
 
 student = Blueprint('student', __name__)
 
@@ -464,7 +467,7 @@ def cancel_appointment(appointment_id):
         if appointment.status == 'reserved' or appointment.status == 'pending' and appointment.attendee_id == student.id:
             current_time = datetime.now() - timedelta(hours=8)
             appointment_datetime = datetime.strptime(appointment.appointment_date + ' ' + appointment.start_time, '%Y-%m-%d %H:%M')
-            
+                                
             #check if the appointment is in the future
             if appointment_datetime > current_time:
                 # Make the appointment available for reservation
@@ -473,6 +476,8 @@ def cancel_appointment(appointment_id):
                 appointment.attendee_id = None
                 appointment.notes = None
                 appointment.event_id = None
+                
+                db.session.delete(appointment)
                 db.session.commit()
                 return jsonify({"message": "Appointment cancelled successfully"}), 200
             else:
@@ -521,10 +526,13 @@ def update_appointment(appointment_id):
         updated_appointment = {
             "appointment_id": appointment.id,
             "physical_location": appointment.physical_location,
-            "meeting_url": appointment.meeting_url
+            "meeting_url": appointment.meeting_url,
+            "notes": appointment.notes,
+            "status": appointment.status
             # Add other fields if necessary
         }
         
+        #return the update events
         return jsonify(updated_appointment), 200
 
     except Exception as e:

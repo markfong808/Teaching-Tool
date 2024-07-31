@@ -52,6 +52,8 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
   // Appointment Data Variables
   const [programDescriptions, setProgramDescriptions] = useState({});
   const [appointmentNotes, setAppointmentNotes] = useState("");
+  const [appointmentLocation, setAppointmentLocation] = useState("");
+
   const [appointmentStatus, setAppointmentStatus] = useState("");
 
   ////////////////////////////////////////////////////////
@@ -182,9 +184,9 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
         )?.name}`,
         start: startTimeUtc,
         end: endTimeUtc,
-        attendees: ['attendee@example.com']      
+        attendees: ['attendee@example.com'],      
+        location: appointmentLocation 
       };
-      
       
       const csrfToken = getCookie("csrf_access_token");
       let isHandledError = false; // flag to indicate if the error has been handled
@@ -281,6 +283,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     selectedTimeslot.resetSelectedTimeState();
     setShowAppointmentPanel(false);
     setAppointmentNotes("");
+    setAppointmentLocation("");
   };
 
   // resets all popup UI and select variables when user exits the Appointment.js screen
@@ -291,6 +294,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     setShowAppointmentPanel(false);
     setSelectedTimeslot(null);
     setAppointmentNotes("");
+    setAppointmentLocation("")
     setShowPopup(false);
   };
 
@@ -403,6 +407,7 @@ const ScheduleAppointmentPopup = ({ onClose, functions }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPopup]);
+  
 
   ////////////////////////////////////////////////////////
   //                 Render Functions                   //

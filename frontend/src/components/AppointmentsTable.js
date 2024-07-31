@@ -29,7 +29,6 @@ import { Tooltip } from "./Tooltip.js";
 import Comment from "./Comment.js";
 import { isnt_Student_Or_Instructor } from "../utils/CheckUserType.js";
 
-// import UpdateAppointmentForm from "./EventUpdateForm.js";
 
 
 export default function AppointmentsTable({ courseId, reloadTable }) {
@@ -59,6 +58,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
   const [formData, setFormData] = useState({
     notes: "",
     meeting_url: "",
+    location: ""
   });
   const [feedbackData, setFeedbackData] = useState({
     satisfaction: "",
@@ -353,7 +353,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
 
   // Debugging: Log the selectedAppointment and appointmentId Before
   console.log("Selected Appointment:", selectedAppointment);
-  console.log("Appointment ID:", appointmentId);
+  // console.log("Appointment ID:", appointmentId);
   
   // Construct the endpoint based on account type
   const updateEndpoint =
@@ -361,6 +361,30 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
       ? `/instructor/appointments/update/${appointmentId}`
       : `/student/appointments/update/${appointmentId}`;
   try {
+  //   // Prepare the form data payload
+  //   const payload = {
+  //     subject: formData.summary || '',  // Optional if needed
+  // body: {
+  //   contentType: 'HTML',
+  //   content: formData.notes || '',
+  // },
+  // // start: {
+  // //   dateTime: formData.start || '',
+  // //   timeZone: formData.timeZone || 'UTC',
+  // // },
+  // // end: {
+  // //   dateTime: formData.end || '',
+  // //   timeZone: formData.timeZone || 'UTC',
+  // // },
+  // location: {
+  //   displayName: formData.location || '',  // Ensure this is set correctly
+  // },
+  // attendees: formData.attendees ? formData.attendees.map(email => ({
+  //   emailAddress: { address: email },
+  //   type: 'required',
+  // })) : [],
+  //   };
+    
     // Send the PUT request to the backend with the updated appointment data
     const response = await fetch(updateEndpoint, {
       method: 'PUT',
@@ -373,20 +397,45 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     });  
     console.log("Form Data:", formData);
 
+
   if (response.ok) {
       const updatedAppointment = await response.json();
       // Handle the response (e.g., show a success message or update the UI)
       alert(updatedAppointment.message || 'Appointment updated successfully!');
+      
+      
+      const eventID = selectedAppointment.event_id;
+      console.log('Updating Event ID:', eventID);
+      
       setIsEditMode(false); // Exit edit mode
-      // Ensure appointment_id is preserved
   
       console.log("UpdatedAppointment:", updatedAppointment);
+
       //TODO: Refactor to refresh updated data
       setSelectedAppointment(prev => ({
         ...prev,
         // ...formData,
         ...updatedAppointment,
       }));
+      
+      // Update event in Outlook calendar
+      const outlookResponse = await fetch(`http://localhost:5000/api/update_event/${eventID}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // body: JSON.stringify(formData),
+        body: JSON.stringify(formData),
+        credentials: "include",
+      });
+      
+      if (outlookResponse.ok) {
+        console.log('Event updated in Outlook calendar successfully.');
+      } else {
+        const outlookError = await outlookResponse.json();
+        console.error('Failed to update event in Outlook calendar:', outlookError);
+      }
+
 
     } else {
       // Handle errors from the backend
@@ -417,6 +466,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
     }
 
     setFormData({ ...formData, [name]: value });
+  
   };
 
   // called when instructor or student clicks on upcoming, pending, or past tab
@@ -522,7 +572,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
         notes: selectedAppointment.notes || "",
         meeting_url: selectedAppointment.meeting_url || "",
         status: selectedAppointment.status || "",
-        // physical_location: selectedAppointment.physical_location || "",
+        physical_location: selectedAppointment.physical_location || "",
         // course_name: selectedAppointment.course_name || "", 
 
       });

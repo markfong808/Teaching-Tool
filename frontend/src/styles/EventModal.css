@@ -1,7 +1,15 @@
+.ReactModal__Overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    /* Ensure the overlay is on top on react calendar*/
+}
+
 .modal {
     position: fixed;
     top: 50%;
     left: 50%;
+    right: auto;
+    bottom: auto;
     transform: translate(-50%, -50%);
     width: 500px;
     /* right: 0;

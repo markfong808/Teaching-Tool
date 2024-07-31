@@ -99,6 +99,7 @@ class OutlookCalendarService:
                     response.raise_for_status()
                     data = response.json()
                     print(f"Received {len(data.get('value', []))} events")
+
                     events.extend(data.get('value', []))
                     events_url = data.get('@odata.nextLink', None)
                 
@@ -109,6 +110,8 @@ class OutlookCalendarService:
 
     def create_event(self, event_details):
             try:
+                print("Event Details:", event_details)
+
                 token = self.get_calendar_service()
                 headers = {
                     'Authorization': f'Bearer {token}',
@@ -170,6 +173,22 @@ class OutlookCalendarService:
             # Prepare the body for the PATCH request
             body = {}
             
+            print("Event details received:", event_details)
+             # Update with available fields in event_details
+            if 'notes' in event_details:
+                body['body'] = {
+                    'contentType': 'HTML',
+                    'content': event_details['notes']
+                }
+            if 'meeting_url' in event_details:
+                pass
+            if 'physical_location' in event_details:
+                body['location'] = {
+                    'displayName': event_details['physical_location']
+                }
+            if 'status' in event_details:
+                pass
+            
             if 'summary' in event_details:
                 body['subject'] = event_details['summary']
             if 'description' in event_details:
@@ -178,22 +197,27 @@ class OutlookCalendarService:
                     'content': event_details['description']
                 }
             if 'start' in event_details and 'end' in event_details:
-                start_time = parser.parse(event_details['start'])
-                end_time = parser.parse(event_details['end'])
-                event_timezone = event_details.get('timeZone', 'UTC')
-                
-                body['start'] = {
+                try:
+                    start_time = parser.parse(str(event_details['start']))
+                    end_time = parser.parse(str(event_details['end']))
+                    event_timezone = event_details.get('timeZone', 'UTC')
+                    
+                    # Ensure start and end times are valid
+                    if start_time and end_time:
+                        body['start'] = {
                             'dateTime': start_time.isoformat(),
                             'timeZone': event_timezone
                         }
-                body['end'] = {
-                    'dateTime': end_time.isoformat(),
-                    'timeZone': event_timezone
-                }
-            if 'location' in event_details:
-                body['location'] = {
-                    'displayName': event_details['location']
-                }
+                        body['end'] = {
+                            'dateTime': end_time.isoformat(),
+                            'timeZone': event_timezone
+                        }
+                    else:
+                        raise ValueError("Start or end date is empty")
+                except (ValueError, TypeError) as e:
+                    print(f"Date parsing error: {e}")
+                    raise ValueError(f"Error parsing start or end date: {str(e)}")
+
             if 'attendees' in event_details:
                 body['attendees'] = [
                     {
@@ -203,6 +227,9 @@ class OutlookCalendarService:
                         'type': 'required'
                     } for email in event_details['attendees']
                 ]
+                
+            print("Updating event with body:", body)
+
 
             update_event_url = f'https://graph.microsoft.com/v1.0/me/events/{event_id}'
             response = requests.patch(update_event_url, headers=headers, json=body)

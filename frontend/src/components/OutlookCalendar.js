@@ -36,8 +36,8 @@ function OutlookCalendar() {
 
       // format the fetched events to match the calendar requirements
       const formattedEvents = result.data.map(event => {
-        const { subject, start, end, id, extendedProperties } = event;
-
+        const { subject, start, end, id, extendedProperties,location} = event;
+        
         let startDate, endDate;
         let allDay = false;
 
@@ -59,9 +59,11 @@ function OutlookCalendar() {
           end: endDate,
           allDay: allDay,
           isOutlookEvent: extendedProperties?.private?.isOutlookEvent === 'true',
-          physical_location: event.physical_location,
+          location: location?.displayName || '',
           notes: event.notes,
-          status: event.status
+          status: event.status,
+          attendees: event.attendees
+         
         };
       });
       // update the state with the formatted events
@@ -82,17 +84,36 @@ function OutlookCalendar() {
       }
     }
   };
+  
 
    const handleEventClick = (event) => {
+    console.log('Clicked Event:', event); 
     setSelectedEvent(event);
     setIsModalOpen(true);
   };
+  
 
-  const handleSaveEvent = (updatedEvent) => {
-    // Logic to save updated event details
-    console.log('Updated Event:', updatedEvent);
-    // Optionally update state or make an API call to save changes
-  };
+  // const handleSaveEvent = async () => {
+  //   // Logic to save updated event details
+  //   try {
+  //   if (selectedEvent) {
+  //     // Send updated event data to the backend
+  //     const response = await axios.put(`http://localhost:5000/api/student/appointments/update/${selectedEvent.id}`, selectedEvent, {
+  //       withCredentials: true,
+  //     });
+
+  //     if (response.status === 200) {
+  //       // Refresh the events to include the updated event
+  //       fetchEvents();
+  //       setIsModalOpen(false); // Close the modal
+  //     } else {
+  //       alert('Failed to save changes');
+  //     }
+  //   }
+  // } catch (error) {
+  //   console.error('Error saving event:', error);
+  //   alert('An error occurred while saving the event.');
+  // }  };
   
   ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //
@@ -162,18 +183,18 @@ function OutlookCalendar() {
           defaultView="month"
           // onSelectEvent={event => alert(event.title)}
           onSelectEvent={handleEventClick}
-
           onSelectSlot={slotInfo => console.log(slotInfo)}
           selectable
-          eventPropGetter={(event) => ({
+          ventPropGetter={(event) => ({
             className: event.isOutlookEvent ? 'outlook-event' : ''
-          })}
+          })}e
+          
         />
         <EventModal
           event={selectedEvent}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSave={handleSaveEvent}
+          // onSave={handleSaveEvent}
         />
       </div>
     </div>

@@ -2,39 +2,84 @@ import React, { useState } from 'react';
 import moment from 'moment';
 import '../styles/EventModal.css'; 
 import Modal from 'react-modal';
-import {
-  formatTime,
-  formatDate,
-  getDayFromDate,
-  capitalizeFirstLetter,
-} from "../utils/FormatDatetime.js";
 
-Modal.setAppElement('#root'); // For accessibility
+// export default EventModal;
+Modal.setAppElement('#root'); // This line is important for accessibility
 
-function EventModal({ event, isOpen, onClose, onSave }) {
-  if (!event) return null;
+const EventModal = ({ event, isOpen, onClose,onSave }) => {
+  const [updatedEvent, setUpdatedEvent] = useState(event);
 
+  const handleChange = (e) => {
+    setUpdatedEvent({
+      ...updatedEvent,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSave = () => {
+    onSave(updatedEvent);
+  };
+  
+   // Destructure and provide default values to avoid undefined issues
+  const {
+    title = 'N/A',
+    start,
+    end,
+    physical_location = 'N/A',
+    organizer = { emailAddress: { name: 'N/A' } },
+    body = { content: 'N/A' },
+    attendees = []
+  } = event || {};
+  
+  const attendeesText = attendees.length
+    ? attendees.map(a => a.emailAddress?.name || 'Unknown').join(', ')
+    : 'None';
   return (
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
       contentLabel="Event Details"
-      className="event-modal"
-      overlayClassName="event-modal-overlay"
+      style={{
+        content: {
+          top: '50%',
+          left: '50%',
+          right: 'auto',
+          bottom: 'auto',
+          marginRight: '-50%',
+          transform: 'translate(-50%, -50%)'
+        }
+      }}
     >
-      <h2>Event Details</h2>
-      <div>
-        <p><strong>Title:</strong> {event.title}</p>
-        <p><strong>Start:</strong> {formatDate(event.start)} at {formatTime(event.start)}</p>
-        <p><strong>End:</strong> {formatDate(event.end)} at {formatTime(event.end)}</p>
-        <p><strong>Location:</strong> {event.physical_location || 'No location specified'}</p>
-        <p><strong>Notes:</strong> {event.notes || 'No notes provided'}</p>
-        <p><strong>Status:</strong> {event.status || 'No status available'}</p>
-        <button onClick={() => onSave(event)}>Save Changes</button>
-        <button onClick={onClose}>Close</button>
-      </div>
-    </Modal>
+      <h2 style={{ color: 'purple', fontSize: '24px', marginBottom: '20px' }}>Event Details</h2>
+      {event && (
+        <div>
+          <p><strong>Title:</strong> {event.title}</p>
+          <p><strong>Start:</strong> {moment(event.start).format('hh:mm A')}</p>
+          <p><strong>End:</strong> {moment(event.end).format('hh:mm A')}</p>
+          <p><strong>Location:</strong> {event.location}</p> 
+          <p><strong>Organizer:</strong> {event.organizer ? event.organizer.emailAddress.name : 'N/A'}</p>
+          <p><strong>Description:</strong> </p>
+          <p><strong>Attendees:</strong> {attendeesText} </p>
+
+        </div>
+      )}
+<button
+        onClick={onClose}
+        style={{
+          backgroundColor: '#0078d4',
+          color: 'white',
+          border: 'none',
+          padding: '10px 20px',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '16px'
+        }}
+      >
+        Close
+      </button>   
+
+       </Modal>
   );
-}
+};
 
 export default EventModal;
