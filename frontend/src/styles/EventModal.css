@@ -1,7 +1,14 @@
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 500px;
+}
+
+
 .ReactModal__Overlay {
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    /* Ensure the overlay is on top on react calendar*/
 }
 
 .modal {
@@ -12,8 +19,6 @@
     bottom: auto;
     transform: translate(-50%, -50%);
     width: 500px;
-    /* right: 0;
-    bottom: 0; */
     background: white;
     display: flex;
     justify-content: center;

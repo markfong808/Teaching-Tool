@@ -882,16 +882,7 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             {/* Course label */}
             <label className="font-bold pt-2">Course</label>
             {selectedAppointment.course_name}
-            {/* {isEditMode ? (
-            <input
-              type="text"
-              name="course_name"
-              value={formData.course_name}
-              onChange={handleInputChange}
-            />
-          ) : (
-            <span>{selectedAppointment.course_name}</span>
-          )} */}
+            
 
             {/* Display physical location if it exists for Appointment */}
             {selectedAppointment.physical_location ? (
@@ -949,7 +940,8 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
           <label className="font-bold pt-2">Appointment Notes</label>
 
           {/* Appointment Notes text area */}
-          <textarea
+          {isEditMode ? (
+          <input
             className={`w-full h-20 ${
               user.account_type !== "student" ? "" : "border border-light-gray"
             }`}
@@ -959,7 +951,11 @@ export default function AppointmentsTable({ courseId, reloadTable }) {
             onBlur={handleSaveChanges}
             disabled={user.account_type !== "student"}
           />
-
+          ) : (
+            <span>{formData.notes}</span>
+          )}
+          
+          
           {/* Display student details if instructor view */}
           {user.account_type === "instructor" &&
             selectedAppointment.attendee && (

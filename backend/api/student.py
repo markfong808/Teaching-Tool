@@ -518,6 +518,7 @@ def update_appointment(appointment_id):
         # Update the appointment fields with data from the request
         appointment.physical_location = data.get('physical_location', appointment.physical_location)
         appointment.meeting_url = data.get('meeting_url', appointment.meeting_url) 
+        appointment.notes = data.get('notes',appointment.notes)
         
         # Commit the changes to the database
         db.session.commit()

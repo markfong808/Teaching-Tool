@@ -4,6 +4,10 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/CalendarView.css';
+import '../styles/MicrosoftLoginButton.css';
+
+import { ClipLoader } from 'react-spinners';
+
 
 import EventModal from './EventModal';
 
@@ -18,7 +22,10 @@ function OutlookCalendar() {
   
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  
+  //load flag indicator
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  
 
   ////////////////////////////////////////////////////////
   //               Fetch Get Functions                  //
@@ -36,7 +43,7 @@ function OutlookCalendar() {
 
       // format the fetched events to match the calendar requirements
       const formattedEvents = result.data.map(event => {
-        const { subject, start, end, id, extendedProperties,location} = event;
+        const { subject, start, end, id, extendedProperties,location,organizer,body} = event;
         
         let startDate, endDate;
         let allDay = false;
@@ -60,14 +67,17 @@ function OutlookCalendar() {
           allDay: allDay,
           isOutlookEvent: extendedProperties?.private?.isOutlookEvent === 'true',
           location: location?.displayName || '',
-          notes: event.notes,
+          notes: body?.content ? body.content.replace(/<\/?[^>]+(>|$)/g, "") : '', 
           status: event.status,
-          attendees: event.attendees
+          attendees: event.attendees,
+          organizerName: organizer?.emailAddress?.name || '',
+          organizerEmail: organizer?.emailAddress?.address || ''
          
         };
       });
       // update the state with the formatted events
       setEvents(formattedEvents);
+      setIsDataLoaded(true);
       console.log('Formatted Events:', formattedEvents);
       // set authentication status to true
       setIsAuthenticated(true);
@@ -155,8 +165,8 @@ function OutlookCalendar() {
       <div>
         <h1 className="text-purple text-center text-4xl font-headlines p-5">Your Outlook Calendar Events</h1>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <button className="outlook-login-button" onClick={() => window.location.href = 'http://localhost:5000/api/login'}>
-            <img src="/microsoft_logo.png" alt="Outlook logo" width="50" height="50" />
+          <button className="microsoft-login-button" onClick={() => window.location.href = 'http://localhost:5000/api/login'}>
+            <img src="/microsoft_logo.png" alt="Outlook logo" width="30" height="30" />
             Continue with Outlook
           </button>
         </div>
@@ -173,6 +183,12 @@ function OutlookCalendar() {
       <div className='text-right'>
         <h1 className="text-purple text-center text-4xl font-headlines p-5">Your Outlook Calendar Events</h1>
         
+        {!isDataLoaded ? (
+          <div className="spinner-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <ClipLoader size={100} color="#00ff00" />
+            <p>Loading Outlook Calendar events data...</p>          
+            </div>
+        ) : (
         <Calendar
           localizer={localizer}
           events={events}
@@ -190,6 +206,7 @@ function OutlookCalendar() {
           })}e
           
         />
+        )}
         <EventModal
           event={selectedEvent}
           isOpen={isModalOpen}

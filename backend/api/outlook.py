@@ -37,11 +37,11 @@ class OutlookCalendarService:
     ]
 
     def __init__(self):
-        self.client_id = '47eccb95-1b86-438f-96e0-f3735b6a29b0'
-        self.client_secret = '~L18Q~NnPg3g4oy~HQEPw8aHBzKHLNqeJmyXccX6'
-        self.tenant_id = 'f6b6dd5b-f02f-441a-99a0-162ac5060bd2'
-        self.authority = f'https://login.microsoftonline.com/{self.tenant_id}'
-        self.redirect_uri = 'http://localhost:5000/api/callback'
+        self.client_id = os.getenv('CLIENT_ID')
+        self.client_secret = os.getenv('CLIENT_SECRET')
+        self.tenant_id = os.getenv('TENANT_ID')
+        self.authority = os.getenv('AUTHORITY')
+        self.redirect_uri = os.getenv('REDIRECT_URI')
         self.cache = SerializableTokenCache()
         
         # MSAL ConfidentialClientApplication instance 
@@ -173,7 +173,8 @@ class OutlookCalendarService:
             # Prepare the body for the PATCH request
             body = {}
             
-            print("Event details received:", event_details)
+            # print("Event details received:", event_details)
+            
              # Update with available fields in event_details
             if 'notes' in event_details:
                 body['body'] = {
@@ -182,6 +183,7 @@ class OutlookCalendarService:
                 }
             if 'meeting_url' in event_details:
                 pass
+             #change the locaton attribute
             if 'physical_location' in event_details:
                 body['location'] = {
                     'displayName': event_details['physical_location']
