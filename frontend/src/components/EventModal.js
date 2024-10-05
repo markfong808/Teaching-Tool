@@ -58,9 +58,13 @@ const EventModal = ({ event, isOpen, onClose,onSave }) => {
           <p><strong>End:</strong> {moment(event.end).format('hh:mm A')}</p>
           <p><strong>Location:</strong> {event.location}</p> 
           <p><strong>Organizer:</strong> {event.organizerName} ({event.organizerEmail})</p>
+          {/* <p><strong>Organizer:</strong> {'John'}</p> */}
+
           <p><strong>Description notes:  </strong> </p>
           <p>{event.notes}</p>
           <p><strong>Attendees:</strong> {attendeesText} </p>
+          {/* <p><strong>Attendees:</strong> Liam , Sarah , Kenny</p> */}
+
 
         </div>
       )}

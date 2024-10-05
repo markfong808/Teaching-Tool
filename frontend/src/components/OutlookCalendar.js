@@ -102,29 +102,6 @@ function OutlookCalendar() {
     setIsModalOpen(true);
   };
   
-
-  // const handleSaveEvent = async () => {
-  //   // Logic to save updated event details
-  //   try {
-  //   if (selectedEvent) {
-  //     // Send updated event data to the backend
-  //     const response = await axios.put(`http://localhost:5000/api/student/appointments/update/${selectedEvent.id}`, selectedEvent, {
-  //       withCredentials: true,
-  //     });
-
-  //     if (response.status === 200) {
-  //       // Refresh the events to include the updated event
-  //       fetchEvents();
-  //       setIsModalOpen(false); // Close the modal
-  //     } else {
-  //       alert('Failed to save changes');
-  //     }
-  //   }
-  // } catch (error) {
-  //   console.error('Error saving event:', error);
-  //   alert('An error occurred while saving the event.');
-  // }  };
-  
   ////////////////////////////////////////////////////////
   //               UseEffect Functions                  //
   ////////////////////////////////////////////////////////
@@ -139,7 +116,7 @@ function OutlookCalendar() {
         });
         // set authentication status to true if request is successful
         setIsAuthenticated(true);
-        // fetch events if authenticated
+        // // fetch events if authenticated
         fetchEvents();
       } catch (error) {
         // set authentication status to false if request fails
@@ -174,7 +151,6 @@ function OutlookCalendar() {
       </div>
     );
   }
-  
 
   // HTML for webpage
   // if the user is authenticated, render the calendar with events
@@ -211,7 +187,6 @@ function OutlookCalendar() {
           event={selectedEvent}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          // onSave={handleSaveEvent}
         />
       </div>
     </div>

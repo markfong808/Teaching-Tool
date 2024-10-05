@@ -24,16 +24,10 @@ CORS(outlook_calendar_dp, supports_credentials=True)  # Allow CORS with credenti
 
 class OutlookCalendarService:
     SCOPES = [
-        'User.Read',
         'Calendars.Read',
         'Calendars.ReadBasic',
-        'Calendars.ReadWrite'
-        # 'openid',
-        # 'profile',
-        # 'email',
-        # 'https://graph.microsoft.com/Calendars.Read',
-        # 'https://graph.microsoft.com/Calendars.ReadWrite',
-        # 'https://graph.microsoft.com/User.Read'
+        'Calendars.ReadWrite',
+        'User.Read'
     ]
 
     def __init__(self):
@@ -51,6 +45,7 @@ class OutlookCalendarService:
             authority=self.authority,
             token_cache=self.cache
         )    
+        
        
     def get_token_from_cache(self):
             if 'token_cache' in session:
@@ -170,11 +165,8 @@ class OutlookCalendarService:
                 'Content-Type': 'application/json'
             }
             
-            # Prepare the body for the PATCH request
             body = {}
-            
-            # print("Event details received:", event_details)
-            
+                        
              # Update with available fields in event_details
             if 'notes' in event_details:
                 body['body'] = {
@@ -266,26 +258,32 @@ class OutlookCalendarService:
     # Generate the authorization URL and save the state in the session       
     def login(self):
             auth_url = self.client_app.get_authorization_request_url(self.SCOPES, redirect_uri=self.redirect_uri)
+            print(f"Redirecting to authorization URL: {auth_url}")
             return auth_url       
             
     def callback(self,url):
             code = request.args.get('code')
             if not code:
                 raise Exception("Authorization code not found")
-            result = self.client_app.acquire_token_by_authorization_code(code, scopes=self.SCOPES, redirect_uri=self.redirect_uri)
-            if "error" in result:
-                raise Exception(f"Error acquiring token: {result.get('error_description')}")
-            session['token_cache'] = self.cache.serialize() #Store Token Cache in Session
-            print(f"Token acquired: {result['access_token']}")
+            try:
+                result = self.client_app.acquire_token_by_authorization_code(code, scopes=self.SCOPES, redirect_uri=self.redirect_uri)
+                if "error" in result:
+                    raise Exception(f"Error acquiring token: {result.get('error_description')}")
+                session['token_cache'] = self.cache.serialize() #Store Token Cache in Session
+                print(f"Token acquired: {result['access_token']}")
+                
+                print(f"Token cache: {session['token_cache']}")
 
-            id_info = jwt.decode(result['id_token'], options={"verify_signature": False})
-            user_email = id_info.get('preferred_username')
-            user = User.query.filter_by(email=user_email).first()
-            if not user:
-                user = User(email=user_email, account_type='instructor', status='active')
-                db.session.add(user)
-            db.session.commit()
-            return 'http://localhost:3000/OutlookCalendar'
+                id_info = jwt.decode(result['id_token'], options={"verify_signature": False})
+                user_email = id_info.get('preferred_username')
+                user = User.query.filter_by(email=user_email).first()
+                if not user:
+                    user = User(email=user_email, account_type='instructor', status='active')
+                    db.session.add(user)
+                    db.session.commit()
+                return 'http://localhost:3000/OutlookCalendar'
+            except Exception as e:
+                raise Exception(f"Error during callback: {str(e)}")
          
         
 
@@ -302,7 +300,7 @@ def get_calendar_events():
         return jsonify({'error': 'Missing credentials'}), 401
     try:
         events = outlook_calendar_service.get_events()
-        return jsonify(events)
+        return jsonify(events) 
     except Exception as e:
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
